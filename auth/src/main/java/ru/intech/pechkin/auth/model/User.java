@@ -47,47 +47,6 @@ public class User implements UserDetails {
 //    @JoinColumn(name = "user_id", table = "attr")
     private List<Attribute> attributes;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setUsername(String username) {
-        if (username.matches(USERNAME_VALIDATION))
-            this.username = username;
-    }
-
-    public Date getBegDate() {
-        return begDate;
-    }
-
-    public void setBegDate(Date begDate) {
-        this.begDate = begDate;
-    }
-
-    public Date getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(Date endDate) {
-        this.endDate = endDate;
-    }
-
-    public List<Group> getGroups() {
-        return groups;
-    }
-
-    public void setGroups(List<Group> groups) {
-        this.groups = groups;
-    }
-
-    public List<Attribute> getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(List<Attribute> attributes) {
-        this.attributes = attributes;
-    }
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return mapToGrantedAuthorities(groups);

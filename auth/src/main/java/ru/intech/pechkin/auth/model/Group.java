@@ -27,24 +27,4 @@ public class Group {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "grp_type_id", foreignKey = @ForeignKey(name = "grp_grp_type_id_fkey"))
     private GroupType groupType;
-
-    public Long getId() {
-        return id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public GroupType getGroupType() {
-        return groupType;
-    }
-
-    public void setGroupType(GroupType groupType) {
-        this.groupType = groupType;
-    }
 }

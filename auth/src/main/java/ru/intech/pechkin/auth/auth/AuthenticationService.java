@@ -44,7 +44,8 @@ public class AuthenticationService {
                     " также оно должно содержать не меньше 4-х и не более 32-х знаков");
         }
 
-        final Date END_DATE = Date.from(LocalDate.now().plusMonths(6).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        final Date END_DATE = Date
+                .from(LocalDate.now().plusMonths(6).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
         registerAttributes.add(
                 getBuiltAttribute(

@@ -35,48 +35,4 @@ public class AttributeType {
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "attributeType")
 //    @JoinColumn(name = "attr_type_id", table = "attr")
     private List<Attribute> attributes;
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getValidation() {
-        return validation;
-    }
-
-    public void setValidation(String validation) {
-        this.validation = validation;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getValidationDescription() {
-        return validationDescription;
-    }
-
-    public void setValidationDescription(String validationDescription) {
-        this.validationDescription = validationDescription;
-    }
-
-    public List<Attribute> getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(List<Attribute> attributes) {
-        this.attributes = attributes;
-    }
 }
