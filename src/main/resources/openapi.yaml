@@ -1,0 +1,348 @@
+openapi: 3.0.3
+info:
+  title: API Траффик-детектора
+  version: v1.r1
+  contact:
+    name: Фролов Иван
+paths:
+  /api/detector:
+    description: Получение текущего состояния детектора
+    get:
+      tags: [ detector ]
+      operationId: getDetector
+      description: Получение информации по детектору
+      responses:
+        200:
+          description: Успешное получение детектора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detector'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/detector/initialized:
+    description: Инициализация детектора
+    put:
+      tags: [ detector ]
+      operationId: detectorInitialize
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DetectorInitialize'
+      responses:
+        204:
+          description: Успешная инициализация детектора
+        400:
+          $ref: '#/components/responses/BadRequest'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/detector/active:
+    description: Активация детектора
+    put:
+      tags: [ detector ]
+      operationId: detectorActivate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DetectorActivate'
+      responses:
+        204:
+          description: Успешная активация детектора
+        400:
+          $ref: '#/components/responses/BadRequest'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/detector/setup:
+    description: Перевести в настройку
+    put:
+      tags: [ detector ]
+      operationId: detectorSetup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DetectorSetup'
+      responses:
+        204:
+          description: Успешный перевод в настройку
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/detector/reset:
+    description: Сбросить настройки
+    put:
+      tags: [ detector ]
+      operationId: detectorReset
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DetectorReset'
+      responses:
+        204:
+          description: Успешный сброс настроек
+        500:
+          $ref: '#/components/responses/InternalServerError'
+components:
+  securitySchemes: {}
+  schemas:
+    Detector:
+      description: Информация по детектору
+      required:
+        - state
+      properties:
+        state:
+          $ref: '#/components/schemas/State'
+        serialNumber:
+          description: |
+            Серийный номер
+          type: string
+          minLength: 6
+          maxLength: 50
+          pattern: '^[a-zA-Z0-9-]*$'
+          example: "001614-1"
+        model:
+          description: Производитель, модель
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: Спектр-Д
+        address:
+          description: Адрес установки
+          type: string
+          maxLength: 512
+          example: Россия, Таврово, 2-й Магистральный мкр.
+        location:
+          $ref: '#/components/schemas/GpsCoord'
+        zone:
+          $ref: '#/components/schemas/Zone'
+        conformityCertificate:
+          description: Свидетельство средства измерения
+          required:
+            - number
+            - expirationDate
+          properties:
+            number:
+              description: Номер свидетельства
+              type: string
+              maxLength: 50
+              example: "74935"
+            expirationDate:
+              description: Срок действия свидетельства в формате ISO8601
+              type: string
+              format: date
+              example: "2024-12-09"
+    Zone:
+      description: Зона обзора
+      required:
+        - location
+        - address
+        - vrpDetectionArea
+      properties:
+        location:
+          $ref: '#/components/schemas/GpsCoord'
+        address:
+          description: Адрес зоны обзора
+          type: string
+          minLength: 1
+          maxLength: 512
+          example: Россия, Таврово, 2-й Магистральный мкр.
+        vrpDetectionArea:
+          description: Координаты зоны детекции ГРЗ на кадре. В пикселях.
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            $ref: '#/components/schemas/Point'
+          example: [
+            {
+              "x": 1263,
+              "y": 198
+            },
+            {
+              "x": 1575,
+              "y": 461
+            }
+          ]
+    Point:
+      description: |
+        координата точки на фото.
+        точкой x=0,y=0 считается левая верхняя точка изображения
+      properties:
+        x:
+          description: x координата
+          type: integer
+          minimum: 0
+          maximum: 3840
+        y:
+          description: y координата
+          type: integer
+          minimum: 0
+          maximum: 2160
+    State:
+      description: |
+        Режим работы детектора
+        
+        * *NEW*    - Новый
+        
+        * *SETUP*   - В настройке
+        
+        * *ACTIVE*   - Активный
+
+      type: string
+      enum:
+        - "NEW"
+        - "SETUP"
+        - "ACTIVE"
+      example: "NEW"
+    GpsCoord:
+      description: GPS координаты
+      required:
+        - latitude
+        - longitude
+      type: object
+      properties:
+        latitude:
+          description: Широта. В градусах
+          type: number
+          format: double
+          minimum: -90.0
+          maximum: 90.0
+          example: 50.506485
+        longitude:
+          description: Долгота. В градусах
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: 36.608693
+    DetectorInitialize:
+      description: Параметры инициализации
+      required:
+        - serialNumber
+        - model
+        - conformityCertificate
+      properties:
+        serialNumber:
+          description: |
+            Серийный номер
+          type: string
+          minLength: 6
+          maxLength: 50
+          pattern: '^[a-zA-Z0-9-]*$'
+          example: "001614-1"
+        model:
+          description: Производитель, модель
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: Спектр-Д
+        conformityCertificate:
+          description: Свидетельство средства измерения
+          required:
+            - number
+            - expirationDate
+          properties:
+            number:
+              description: Номер свидетельства
+              type: string
+              maxLength: 50
+              example: "74935"
+            expirationDate:
+              description: Срок действия свидетельства в формате ISO8601
+              type: string
+              format: date
+              example: "2024-12-09"
+    DetectorActivate:
+      description: Параметры активации
+      required:
+        - address
+        - location
+        - zone
+      properties:
+        address:
+          description: Адрес установки
+          type: string
+          maxLength: 512
+          example: Россия, Таврово, 2-й Магистральный мкр.
+        location:
+          $ref: '#/components/schemas/GpsCoord'
+        zone:
+          $ref: '#/components/schemas/Zone'
+    DetectorSetup:
+      description: Параметры перевода в настройку
+      example: {}
+    DetectorReset:
+      description: Параметры сброса настоек
+      example: {}
+    Problem:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+          description: >
+            A relative URI reference that uniquely identifies the problem type.
+            Opposed to the specification in RFC-7807, it is not required to be
+            dereferencable and point to a human-readable documentation for the
+            problem type, e.g. using HTML.
+          default: 'about:blank'
+          example: '/problem/internal-server-error'
+        title:
+          type: string
+          description: >
+            A short, summary of the problem type. Written in english and readable
+            for engineers, usually not suited for non technical stakeholders and
+            not localized.
+          example: Internal server error
+        status:
+          type: integer
+          format: int32
+          description: >
+            The HTTP status code generated by the origin server for this occurrence
+            of the problem.
+          minimum: 100
+          maximum: 600
+          exclusiveMaximum: true
+          example: 500
+        detail:
+          type: string
+          description: >
+            A human readable explanation specific to this occurrence of the
+            problem. Written in english and readable for engineers, usually not
+            suited for non technical stakeholders and not localized.
+          example: Save data error
+        instance:
+          type: string
+          format: uri
+          description: >
+            An relative URI reference that identifies the specific occurrence of
+            the problem, e.g. by adding a fragment identifier or sub-path to the
+            problem type. May be used to locate the root of this problem in the
+            source code.
+          example: '1fce307c-da74-11ec-9d64-0242ac120002'
+  headers: {}
+  responses:
+    BadRequest:
+      description: Ошибка в параметрах запроса. Запрос не следует повторять
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    InternalServerError:
+      description: Ошибка сервера при выполнении запроса. Запрос следует повторить позднее
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  parameters: {}
+tags:
+  - name: detector
+    description: Операции с детектором
+
+servers:
+  - url: http://localhost
+    description: ''
+security: []

@@ -1,0 +1,19 @@
+server:
+  port: 8080
+spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  data:
+    mongodb:
+      authentication-database: admin
+      database: messenger
+      port: 27017
+logging:
+  level:
+    org:
+      springframework: ERROR
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss.sss} [%thread] %-5level %logger{36}: %msg%n"
+  file:
+    name: logs/pechkin.log
+    path: logs/
