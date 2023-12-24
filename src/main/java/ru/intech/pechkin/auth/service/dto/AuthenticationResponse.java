@@ -1,6 +1,5 @@
 package ru.intech.pechkin.auth.service.dto;
 
-import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Data;
 

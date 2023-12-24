@@ -48,20 +48,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
         userRepository.save(user);
 
-        return AuthenticationResponse.builder()
-                .token(jwtService.generateToken(user))
-                .id(user.getId())
-                .username(user.getUsername())
-                .fio(user.getFio())
-                .email(user.getEmail())
-                .phoneNumber(user.getPhoneNumber())
-                .department(user.getDepartment())
-                .position(user.getPosition())
-                .build();
+        return mapper.entityToResponse(jwtService.generateToken(user), user);
     }
 
     @Override
-    public AuthenticationResponse authenticate(AuthenticateDto dto) {
+    public AuthenticationResponse authenticate(@Valid AuthenticateDto dto) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         dto.getUsername(),
@@ -69,16 +60,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 )
         );
         User user = userRepository.findByUsername(dto.getUsername())
-                .orElseThrow();
-        return AuthenticationResponse.builder()
-                .token(jwtService.generateToken(user))
-                .id(user.getId())
-                .username(user.getUsername())
-                .fio(user.getFio())
-                .email(user.getEmail())
-                .phoneNumber(user.getPhoneNumber())
-                .department(user.getDepartment())
-                .position(user.getPosition())
-                .build();
+                .orElseThrow(NullPointerException::new);
+        return mapper.entityToResponse(jwtService.generateToken(user), user);
     }
 }
