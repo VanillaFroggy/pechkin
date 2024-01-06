@@ -12,4 +12,6 @@ public interface UserRoleChatRepository extends MongoRepository<UserRoleChat, UU
     List<UserRoleChat> findAllByChatId(UUID chatId);
 
     void deleteAllByChatId(UUID chatId);
+
+    void deleteByUserId(UUID userId);
 }

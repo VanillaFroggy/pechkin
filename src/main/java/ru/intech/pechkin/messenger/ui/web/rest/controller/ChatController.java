@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/messenger")
+@RequestMapping("/api/v1/messenger")
 @RequiredArgsConstructor
 public class ChatController {
     private final ChatService chatService;
@@ -31,13 +31,13 @@ public class ChatController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/createP2PChat")
+    @PostMapping("/createP2PChat")
     public ResponseEntity<Void> createP2PChat(@RequestBody CreateP2PChatRequest request) {
         chatService.createP2PChat(mapper.createP2PChatRequestToDto(request));
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/createGroupChat")
+    @PostMapping("/createGroupChat")
     public ResponseEntity<Void> createGroupChat(@RequestBody CreateGroupChatRequest request) {
         chatService.createGroupChat(mapper.createGroupChatRequestToDto(request));
         return ResponseEntity.noContent().build();

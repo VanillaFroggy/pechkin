@@ -10,10 +10,14 @@ import ru.intech.pechkin.messenger.infrastructure.persistance.entity.Role;
 import ru.intech.pechkin.messenger.infrastructure.persistance.entity.UserRoleChat;
 import ru.intech.pechkin.messenger.infrastructure.persistance.repo.*;
 import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.ChatDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.CreateGroupChatDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.CreateP2PChatDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.UpdateGroupChatDto;
 import ru.intech.pechkin.messenger.infrastructure.service.mapper.ChatServiceMapper;
 
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -30,8 +34,8 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public List<ChatDto> getAllChats(UUID userId) {
-        List<UserRoleChat> userRoleChats = userRoleChatRepository.findAllByUserId(userId);
-        List<Chat> chats = chatRepository.findAllByIdIn(userRoleChats.stream()
+        List<Chat> chats = chatRepository.findAllByIdIn(userRoleChatRepository.findAllByUserId(userId)
+                .stream()
                 .map(UserRoleChat::getChatId)
                 .toList());
         if (chats.isEmpty())
@@ -41,19 +45,20 @@ public class ChatServiceImpl implements ChatService {
                 .toList();
         chatDtos.forEach(chatDto ->
                 chatDto.setMessage(messageRepository.findFirstByChatIdOrderByDateTimeDesc(chatDto.getId())));
-
-        chatDtos.forEach(chatDto -> chatDto.setUsersWithRole(userRoleChats.stream()
-                .filter(userRoleChat -> userRoleChat.getChatId().equals(chatDto.getId()))
-                .map(userRoleChat -> userRepository.findById(userRoleChat.getUserId())
-                        .orElseThrow(NullPointerException::new))
-                .map(user -> mapper.userAndRoleToUserWithRoleDto(
-                        user,
-                        userRoleChats.stream()
-                                .filter(userRoleChat -> userRoleChat.getUserId().equals(user.getId()))
-                                .findFirst()
-                                .orElseThrow(NullPointerException::new)
-                                .getUserRole()))
-                .toList()));
+        chatDtos.forEach(chatDto -> {
+            List<UserRoleChat> userRoleChats = userRoleChatRepository.findAllByChatId(chatDto.getId());
+            chatDto.setUsersWithRole(userRoleChats.stream()
+                    .map(userRoleChat -> userRepository.findById(userRoleChat.getUserId())
+                            .orElseThrow(NullPointerException::new))
+                    .map(user -> mapper.userAndRoleToUserWithRoleDto(
+                            user,
+                            userRoleChats.stream()
+                                    .filter(userRoleChat -> userRoleChat.getUserId().equals(user.getId()))
+                                    .findFirst()
+                                    .orElseThrow(NullPointerException::new)
+                                    .getUserRole()))
+                    .toList());
+        });
         return chatDtos;
     }
 
@@ -118,6 +123,15 @@ public class ChatServiceImpl implements ChatService {
         List<UserRoleChat> userRoleChats = userRoleChatRepository.findAllByChatId(dto.getChatId());
         chat.setTitle(dto.getTitle());
         chatRepository.save(chat);
+        userRoleChats.forEach(userRoleChat -> {
+            Map.Entry<UUID, Role> filteredDto = dto.getUsers().entrySet().stream()
+                    .filter(entry -> entry.getKey().equals(userRoleChat.getUserId()))
+                    .findFirst()
+                    .orElse(null);
+            if (filteredDto == null)
+                userRoleChatRepository.deleteByUserId(userRoleChat.getUserId());
+        });
+        userRoleChats.removeIf(userRoleChat -> !dto.getUsers().containsKey(userRoleChat.getUserId()));
         dto.getUsers().forEach((key, value) -> {
             UserRoleChat filteredUserRoleChat = userRoleChats.stream()
                     .filter(userRoleChat -> key.equals(userRoleChat.getUserId()))
