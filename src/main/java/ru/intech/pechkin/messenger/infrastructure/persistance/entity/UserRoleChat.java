@@ -1,18 +1,19 @@
 package ru.intech.pechkin.messenger.infrastructure.persistance.entity;
 
+import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.UUID;
 
 @Data
-@RequiredArgsConstructor
-@Document("data")
-public class MessageData {
+@Builder
+@Document("userRoleChats")
+public class UserRoleChat {
     @Id
-    private UUID id;
-    private MessageType messageType;
-    private String value;
+    UUID id;
+    UUID chatId;
+    UUID userId;
+    Role userRole;
 }

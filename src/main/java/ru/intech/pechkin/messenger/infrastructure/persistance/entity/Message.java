@@ -17,7 +17,9 @@ public class Message {
     @Id
     private UUID id;
 
-    private User publisher;
+    private UUID chatId;
+
+    private UUID publisher;
 
     private List<MessageData> datas;
 

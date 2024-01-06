@@ -8,25 +8,25 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.NoSuchElementException;
 
 @RestControllerAdvice
-public class DetectorExceptionHandler {
+public class MessengerExceptionHandler {
     @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<String> handleNoSuchElementException() {
-        return new ResponseEntity<>("Список детекторов пока что пуст", HttpStatus.NO_CONTENT);
+    public ResponseEntity<String> handleNoSuchElementException(NoSuchElementException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<String> handleNullPointerException() {
         return new ResponseEntity<>(
-                "Ошибка в параметрах запроса. Запрос не следует повторять",
-                HttpStatus.BAD_REQUEST
+                "Не удалось найти запрашиваемую запись",
+                HttpStatus.NOT_FOUND
         );
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgumentException() {
+    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException exception) {
         return new ResponseEntity<>(
-                "Ошибка сервера при выполнении запроса. Запрос следует повторить позднее",
-                HttpStatus.INTERNAL_SERVER_ERROR
+                exception.getMessage(),
+                HttpStatus.BAD_REQUEST
         );
     }
 }

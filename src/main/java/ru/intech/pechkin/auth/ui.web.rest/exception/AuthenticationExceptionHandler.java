@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class AuthenticationExceptionHandler {
     @ExceptionHandler({NullPointerException.class, AuthenticationException.class})
     public ResponseEntity<String> handleNullPointerOrAuthenticationException() {
-        return new ResponseEntity<>("Такого пользователя нет", HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>("Неверный логин или пароль", HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

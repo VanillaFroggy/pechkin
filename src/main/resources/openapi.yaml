@@ -1,346 +1,808 @@
 openapi: 3.0.3
 info:
-  title: API Траффик-детектора
+  title: API Мессенджера
   version: v1.r1
   contact:
     name: Фролов Иван
 paths:
-  /api/detector:
-    description: Получение текущего состояния детектора
-    get:
-      tags: [ detector ]
-      operationId: getDetector
-      description: Получение информации по детектору
+  /api/v1/auth/authenticate:
+    description: Аутентификация пользователя
+    post:
+      tags: [ auth ]
+      operationId: authenticate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticateRequest'
       responses:
         200:
-          description: Успешное получение детектора
+          description: Успешная аутентификация пользователя
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Detector'
-        500:
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/detector/initialized:
-    description: Инициализация детектора
-    put:
-      tags: [ detector ]
-      operationId: detectorInitialize
+                $ref: '#/components/schemas/AuthenticationResponse'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /api/v1/auth/register:
+    description: Регистрация пользователя
+    post:
+      tags: [ auth ]
+      operationId: register
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DetectorInitialize'
+              $ref: '#/components/schemas/RegisterRequest'
       responses:
-        204:
-          description: Успешная инициализация детектора
-        400:
-          $ref: '#/components/responses/BadRequest'
+        200:
+          description: Успешная регистрация пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponse'
+        409:
+          $ref: '#/components/responses/Conflict'
+  /api/v1/messenger/getAllChats/{id}:
+    description: Получить все чаты пользователя по его id
+    get:
+      tags: [ chat ]
+      operationId: getAllChats
+      responses:
+        200:
+          $ref: '#/components/schemas/ChatDto'
+        404:
+          $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /api/detector/active:
-    description: Активация детектора
-    put:
-      tags: [ detector ]
-      operationId: detectorActivate
+  /api/v1/messenger/createFavoritesChat/{id}:
+    description: Создать чат "Избранное" для пользователя с определённым id
+    post:
+      tags: [ chat ]
+      operationId: createFavoritesChat
+      responses:
+        204:
+          description: Успешное создание чата "Избранное"
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/createP2PChat:
+    description: Создать приватный чат
+    post:
+      tags: [ chat ]
+      operationId: createP2PChat
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DetectorActivate'
+              $ref: '#/components/schemas/CreateP2PChatRequest'
       responses:
         204:
-          description: Успешная активация детектора
-        400:
-          $ref: '#/components/responses/BadRequest'
+          description: Успешное создание приватного чата
         500:
           $ref: '#/components/responses/InternalServerError'
-  /api/detector/setup:
-    description: Перевести в настройку
-    put:
-      tags: [ detector ]
-      operationId: detectorSetup
+  /api/v1/messenger/createGroupChat:
+    description: Создать групповой чат
+    post:
+      tags: [ chat ]
+      operationId: createGroupChat
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DetectorSetup'
+              $ref: '#/components/schemas/CreateGroupChatRequest'
       responses:
         204:
-          description: Успешный перевод в настройку
+          description: Успешное создание группового чата
         500:
           $ref: '#/components/responses/InternalServerError'
-  /api/detector/reset:
-    description: Сбросить настройки
+  /api/v1/messenger/updateGroupChat:
+    description: Обновить параметры группового чата
     put:
-      tags: [ detector ]
-      operationId: detectorReset
+      tags: [ chat ]
+      operationId: updateChat
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DetectorReset'
+              $ref: '#/components/schemas/UpdateGroupChatRequest'
       responses:
         204:
-          description: Успешный сброс настроек
+          description: Групповой чат успешно обновлён
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/deleteChat/{id}:
+    description: Удалить чат
+    delete:
+      tags: [ chat ]
+      operationId: deleteChat
+      responses:
+        204:
+          description: Чат успешно удалён
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getAllMessages:
+    description: Получить все сообщения чата по его id
+    get:
+      tags: [ message ]
+      operationId: getAllMessages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PageOfMessagesRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/PageOfMessages'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/sendMessage:
+    description: Отправить сообщение
+    post:
+      tags: [ message ]
+      operationId: sendMessage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        204:
+          description: Сообщение успешно отправлено
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/updateMessages/{id}:
+    description: Обновить список сообщений
+    get:
+      tags: [ message ]
+      operationId: updateMessages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMessagesRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/PageOfMessages'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/setMessageChecked:
+    description: Пометить сообщение прочитанным
+    put:
+      tags: [ message ]
+      operationId: readMessage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetMessageCheckedRequest'
+      responses:
+        204:
+          description: Сообщение помечено, как "Прочитано"
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/findMessageByValue:
+    description: Найти сообщение по его содержимому
+    get:
+      tags: [ message ]
+      operationId: findMessage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FindMessageByValueRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/PageOfMessages'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/replyToMessage:
+    description: Ответить на сообщение
+    post:
+      tags: [ message ]
+      operationId: replyToMessage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReplyToMessageRequest'
+      responses:
+        204:
+          description: Сообщение успешно отправлено
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/editMessage:
+    description: Изменить сообщение
+    put:
+      tags: [ message ]
+      operationId: editMessage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditMessageRequest'
+      responses:
+        204:
+          description: Сообщение успешно изменено
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/deleteMessage:
+    description: Удалить сообщение
+    delete:
+      tags: [ message ]
+      operationId: deleteMessage
+      requestBody:
+        content:
+          application/json:
+            schema:
+                    $ref: '#/components/schemas/DeleteMessageRequest'
+      responses:
+        204:
+          description: Сообщение успешно удалено
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getUserById/{id}:
+    description: Найти пользователя по его идентификационному номеру
+    get:
+      tags: [ user ]
+      operationId: getUserById
+      responses:
+        200:
+          $ref: '#/components/schemas/UserDto'
+        404:
+          $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
 components:
   securitySchemes: {}
   schemas:
-    Detector:
-      description: Информация по детектору
+    ChatDto:
+      description: Информация по чату
       required:
-        - state
+        - chatType
       properties:
-        state:
-          $ref: '#/components/schemas/State'
-        serialNumber:
+        id:
           description: |
-            Серийный номер
+            Идентификационный номер
           type: string
-          minLength: 6
-          maxLength: 50
-          pattern: '^[a-zA-Z0-9-]*$'
-          example: "001614-1"
-        model:
-          description: Производитель, модель
+        chatType:
+          $ref: "#/components/schemas/ChatType"
+        title:
+          description: |
+            Название чата
           type: string
-          minLength: 1
-          maxLength: 50
-          example: Спектр-Д
-        address:
-          description: Адрес установки
-          type: string
-          maxLength: 512
-          example: Россия, Таврово, 2-й Магистральный мкр.
-        location:
-          $ref: '#/components/schemas/GpsCoord'
-        zone:
-          $ref: '#/components/schemas/Zone'
-        conformityCertificate:
-          description: Свидетельство средства измерения
-          required:
-            - number
-            - expirationDate
-          properties:
-            number:
-              description: Номер свидетельства
-              type: string
-              maxLength: 50
-              example: "74935"
-            expirationDate:
-              description: Срок действия свидетельства в формате ISO8601
-              type: string
-              format: date
-              example: "2024-12-09"
-    Zone:
-      description: Зона обзора
-      required:
-        - location
-        - address
-        - vrpDetectionArea
-      properties:
-        location:
-          $ref: '#/components/schemas/GpsCoord'
-        address:
-          description: Адрес зоны обзора
-          type: string
-          minLength: 1
-          maxLength: 512
-          example: Россия, Таврово, 2-й Магистральный мкр.
-        vrpDetectionArea:
-          description: Координаты зоны детекции ГРЗ на кадре. В пикселях.
+        usersWithRole:
+          description: |
+            Список пользователей с их ролями
           type: array
-          minItems: 2
-          maxItems: 2
           items:
-            $ref: '#/components/schemas/Point'
-          example: [
-            {
-              "x": 1263,
-              "y": 198
-            },
-            {
-              "x": 1575,
-              "y": 461
-            }
-          ]
-    Point:
+            $ref: '#/components/schemas/UserWithRoleDto'
+        message:
+          description: |
+            Последнее сообщение для отображения
+          $ref: '#/components/schemas/Message'
+    ChatType:
       description: |
-        координата точки на фото.
-        точкой x=0,y=0 считается левая верхняя точка изображения
-      properties:
-        x:
-          description: x координата
-          type: integer
-          minimum: 0
-          maximum: 3840
-        y:
-          description: y координата
-          type: integer
-          minimum: 0
-          maximum: 2160
-    State:
-      description: |
-        Режим работы детектора
-        
-        * *NEW*    - Новый
-        
-        * *SETUP*   - В настройке
-        
-        * *ACTIVE*   - Активный
+        Информация по типу чата
+
+        * *FAVORITES*    - Избранное
+
+        * *P2P*   - Личный чат
+
+        * *GROUP*   - Групповой чат
 
       type: string
       enum:
-        - "NEW"
-        - "SETUP"
-        - "ACTIVE"
-      example: "NEW"
-    GpsCoord:
-      description: GPS координаты
-      required:
-        - latitude
-        - longitude
-      type: object
+        - "FAVORITES"
+        - "P2P"
+        - "GROUP"
+      example: "FAVORITES"
+    Message:
+      description: Информация по сообщению
       properties:
-        latitude:
-          description: Широта. В градусах
-          type: number
-          format: double
-          minimum: -90.0
-          maximum: 90.0
-          example: 50.506485
-        longitude:
-          description: Долгота. В градусах
-          type: number
-          format: double
-          minimum: -180
-          maximum: 180
-          example: 36.608693
-    DetectorInitialize:
-      description: Параметры инициализации
-      required:
-        - serialNumber
-        - model
-        - conformityCertificate
-      properties:
-        serialNumber:
+        id:
           description: |
-            Серийный номер
+            Идентификационный номер
           type: string
-          minLength: 6
-          maxLength: 50
-          pattern: '^[a-zA-Z0-9-]*$'
-          example: "001614-1"
-        model:
-          description: Производитель, модель
+        publisher:
+          description: |
+            Идентификационный номер пользователя, что послал сообщение
           type: string
-          minLength: 1
-          maxLength: 50
-          example: Спектр-Д
-        conformityCertificate:
-          description: Свидетельство средства измерения
-          required:
-            - number
-            - expirationDate
-          properties:
-            number:
-              description: Номер свидетельства
-              type: string
-              maxLength: 50
-              example: "74935"
-            expirationDate:
-              description: Срок действия свидетельства в формате ISO8601
-              type: string
-              format: date
-              example: "2024-12-09"
-    DetectorActivate:
-      description: Параметры активации
+        datas:
+          description: |
+            Список данных из сообщений
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageData'
+        relatesTo:
+          description: |
+            Другое сообщение, на которое представленное ссылается
+            (необязательно)
+          $ref: '#/components/schemas/Message'
+        dateTime:
+          description: |
+            Время отправки сообщения
+          type: string
+          format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+          example: "2000-10-31T01:30:00.000-05:00"
+        checked:
+          description: |
+            Прочитано ли сообщение
+          type: boolean
+    MessageData:
+      description: Информация по типу и содержимому сообщения
+      properties:
+        id:
+          description: |
+            Идентификационный номер
+          type: string
+        messageType:
+          $ref: '#/components/schemas/MessageType'
+        value:
+          description: |
+            Содержимое сообщения
+          type: string
+    MessageType:
+      description: |
+        Информация по типу сообщения
+
+        * *TEXT*    - Текст
+
+        * *LINK*   - Ссылка
+
+        * *FILE*   - Файл
+
+      type: string
+      enum:
+        - "TEXT"
+        - "LINK"
+        - "FILE"
+      example: "TEXT"
+    UserDto:
+      description: Информация о пользователе
+      properties:
+        id:
+          description: |
+            Идентификационный номер
+          type: string
+        username:
+          description: |
+            Никнейм пользователя
+          type: string
+        fio:
+          description: |
+            ФИО пользователя
+          type: string
+        phoneNumber:
+          description: |
+            Номер телефона
+          type: string
+        email:
+          description: |
+            Электронная почта
+          type: string
+          format: email
+        department:
+          description: |
+            Отдел работника
+          type: string
+        position:
+          description: |
+            Позиция работника
+          type: string
+    UserWithRoleDto:
+      description: Информация о пользователе и его роли в чате
+      properties:
+        id:
+          description: |
+            Идентификационный номер
+          type: string
+        username:
+          description: |
+            Никнейм пользователя
+          type: string
+        role:
+          description: |
+            Роль пользователя в чате
+          $ref: "#/components/schemas/Role"
+        fio:
+          description: |
+            ФИО пользователя
+          type: string
+        phoneNumber:
+          description: |
+            Номер телефона
+          type: string
+        email:
+          description: |
+            Электронная почта
+          type: string
+          format: email
+        department:
+          description: |
+            Отдел работника
+          type: string
+        position:
+          description: |
+            Позиция работника
+          type: string
+    Role:
+      description: |
+        Информация по роли пользователя
+
+        * *ADMIN*    - Администратор
+
+        * *USER*   - Пользователь
+
+      type: string
+      enum:
+        - "ADMIN"
+        - "USER"
+      example: "USER"
+
+#    requests
+    AuthenticateRequest:
+      description: Запрос на аутентификацию
       required:
-        - address
-        - location
-        - zone
+        - username
+        - password
       properties:
-        address:
-          description: Адрес установки
+        username:
+          description: |
+            Никнейм пользователя
           type: string
-          maxLength: 512
-          example: Россия, Таврово, 2-й Магистральный мкр.
-        location:
-          $ref: '#/components/schemas/GpsCoord'
-        zone:
-          $ref: '#/components/schemas/Zone'
-    DetectorSetup:
-      description: Параметры перевода в настройку
-      example: {}
-    DetectorReset:
-      description: Параметры сброса настоек
-      example: {}
-    Problem:
-      type: object
+          format: username
+          pattern: "^\\w{4,32}$"
+          example: "DostoevskyFM"
+        password:
+          description: |
+            Пароль пользователя
+          type: string
+          format: password
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).{12,50}$"
+          example: "Let'sL0veEach0ver4ever!"
+    RegisterRequest:
+      description: Запрос на регистрацию
+      required:
+        - username
+        - password
+        - fio
+        - phoneNumber
+        - email
+        - department
+        - position
       properties:
-        type:
+        username:
+          description: |
+            Никнейм пользователя
           type: string
-          format: uri
-          description: >
-            A relative URI reference that uniquely identifies the problem type.
-            Opposed to the specification in RFC-7807, it is not required to be
-            dereferencable and point to a human-readable documentation for the
-            problem type, e.g. using HTML.
-          default: 'about:blank'
-          example: '/problem/internal-server-error'
+          format: username
+          pattern: "^\\w{4,32}$"
+          example: "DostoevskyFM"
+        password:
+          description: |
+            Пароль пользователя
+          type: string
+          format: password
+          pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).{12,50}$"
+          example: "Let'sFuck4ever!"
+        fio:
+          description: |
+            ФИО пользователя
+          type: string
+          format: fio
+          pattern: "^[\\w\\s]{4,32}$"
+          example: "Dostoevsky Fyodor Mikhailovich"
+        phoneNumber:
+          description: |
+            Номер телефона
+          type: string
+          format: phoneNumber
+          pattern: "^(\\+7|8)[(]?\\d{3}[)]?[-\\s\\.]?\\d{3}[-\\s.]?\\d{4}$"
+          example: "88005553535"
+        email:
+          description: |
+            Электронная почта
+          type: string
+          format: email
+          pattern: "^[\\w.%+-]+@[a-z\\d.-]+\\.[a-z]{2,6}$"
+          example: "dostoevsky.fm@gmail.com"
+        department:
+          description: |
+            Отдел работника
+          type: string
+          pattern: "^\\w{4,32}$"
+          example: "seo"
+        position:
+          description: |
+            Позиция работника
+          type: string
+          pattern: "^\\w{4,32}$"
+          example: "copywriter"
+    CreateP2PChatRequest:
+      description: Запрос на создание приватного чата
+      properties:
+        users:
+          description: |
+            2 идентификационных номера пользователей
+          type: array
+          items:
+            type: string
+            format: id
+    CreateGroupChatRequest:
+      description: Запрос на создание группового чата
+      properties:
         title:
+          description: |
+            Название чата
           type: string
-          description: >
-            A short, summary of the problem type. Written in english and readable
-            for engineers, usually not suited for non technical stakeholders and
-            not localized.
-          example: Internal server error
-        status:
+        users:
+          description: |
+            Список записей, состоящих из идентификационного номера пользователя и его роли
+          type: array
+          items:
+            type: string
+            format: id,
+            $ref: '#/components/schemas/Role'
+    UpdateGroupChatRequest:
+      description: Запрос на обновление данных группового чата
+      properties:
+        id:
+          description: |
+            Идентификационный номер чата
+          type: string
+        title:
+          description: |
+            Название чата
+          type: string
+        users:
+          description: |
+            Список записей, состоящих из идентификационного номера пользователя и его роли
+          type: array
+          items:
+            type: string
+            format: id,
+            $ref: '#/components/schemas/Role'
+    PageOfMessagesRequest:
+      description: Запрос на получение страницы сообщений
+      properties:
+        pageNumber:
+          description: |
+            Номер страницы
+          minimum: 0
           type: integer
-          format: int32
-          description: >
-            The HTTP status code generated by the origin server for this occurrence
-            of the problem.
-          minimum: 100
-          maximum: 600
-          exclusiveMaximum: true
-          example: 500
-        detail:
+        pageSize:
+          description: |
+            Количество элементов на странице
+          minimum: 1
+          maximum: 50
+          type: integer
+        chatId:
+          description: |
+            Идентификационный номер чата
           type: string
-          description: >
-            A human readable explanation specific to this occurrence of the
-            problem. Written in english and readable for engineers, usually not
-            suited for non technical stakeholders and not localized.
-          example: Save data error
-        instance:
+    SendMessageRequest:
+      description: Запрос на отправку сообщения
+      properties:
+        chatId:
+          description: |
+            Идентификационный номер чата
           type: string
-          format: uri
-          description: >
-            An relative URI reference that identifies the specific occurrence of
-            the problem, e.g. by adding a fragment identifier or sub-path to the
-            problem type. May be used to locate the root of this problem in the
-            source code.
-          example: '1fce307c-da74-11ec-9d64-0242ac120002'
+        userId:
+          description: |
+            Идентификационный номер пользователя
+          type: string
+        datas:
+          description: |
+            Массив содержимого сообщений разных типов
+          minimum: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageData'
+    UpdateMessagesRequest:
+      description: Запрос на обновление списка сообщений
+      properties:
+        pageNumber:
+          description: |
+            Номер страницы
+          minimum: 0
+          type: integer
+        pageSize:
+          description: |
+            Количество элементов на странице
+          minimum: 1
+          maximum: 50
+          type: integer
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
+        datetime:
+          description: |
+            Время отправки последнего прочитанного сообщения (любым пользователем)
+          type: string
+          format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+          example: "2000-10-31T01:30:00.000-05:00"
+    SetMessageCheckedRequest:
+      description: Запрос на прочтение сообщения
+      properties:
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
+        messageId:
+          description: |
+            Идентификационный номер сообщения
+          type: string
+    FindMessageByValueRequest:
+      description: Запрос на поиск сообщения по содержимому
+      properties:
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
+        value:
+          description: |
+            Содержимое сообщения
+          type: string
+    ReplyToMessageRequest:
+      description: Запрос на отправку ответа на сообщение
+      properties:
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
+        userId:
+          description: |
+            Идентификационный номер пользователя
+          type: string
+        messageId:
+          description: |
+            Идентификационный номер сообщения
+          type: string
+        datas:
+          description: |
+            Массив содержимого сообщений разных типов
+          minimum: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageData'
+    EditMessageRequest:
+      description: Запрос на изменение содержимого сообщения
+      properties:
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
+        messageId:
+          description: |
+            Идентификационный номер сообщения
+          type: string
+        datas:
+          description: |
+            Массив содержимого сообщений разных типов
+          minimum: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageData'
+    DeleteMessageRequest:
+      description: Запрос на удаление сообщения
+      properties:
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
+        messageId:
+          description: |
+            Идентификационный номер сообщения
+          type: string
+
+#   responses dto
+    AuthenticationResponse:
+      description: Возврат токена для входа и параметров пользователя
+      properties:
+        token:
+          description: |
+            Токен для входа
+          type: string
+        id:
+          description: |
+            Идентификационный номер
+          type: string
+        username:
+          description: |
+            Никнейм пользователя
+          type: string
+        fio:
+          description: |
+            ФИО пользователя
+          type: string
+        phoneNumber:
+          description: |
+            Номер телефона
+          type: string
+        email:
+          description: |
+            Электронная почта
+          type: string
+          format: email
+        department:
+          description: |
+            Отдел работника
+          type: string
+        position:
+          description: |
+            Позиция работника
+          type: string
+    PageOfMessages:
+      description: Возврат страницы сообщений
+      properties:
+        pageNumber:
+          description: |
+            Номер страницы
+          minimum: 0
+          type: integer
+        pageSize:
+          description: |
+            Количество элементов на странице
+          minimum: 1
+          maximum: 50
+          type: integer
+        content:
+          description: |
+            Список сообщений
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+
   headers: {}
   responses:
+    #    Присылаем на фронтенд код ошибки и строку, которую надо вывести
+    NotFound:
+      description: Искомое не найдено
+      content:
+        application/problem+json:
+          example: "Неверный логин или пароль"
+    Conflict:
+      description: Данные пользователя уже используются
+      content:
+        application/problem+json:
+          example: "Это имя пользователя уже используется"
     BadRequest:
       description: Ошибка в параметрах запроса. Запрос не следует повторять
       content:
         application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problem'
+          example: "Неверный логин или пароль"
     InternalServerError:
       description: Ошибка сервера при выполнении запроса. Запрос следует повторить позднее
       content:
         application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problem'
+          example: "Неверный логин или пароль"
   parameters: {}
 tags:
-  - name: detector
-    description: Операции с детектором
+  - name: auth
+    description: Операции со входом пользователя в систему
+  - name: chat
+    description: Операции взаимодействия с чатами
+  - name: message
+    description: Операции взаимодействия с сообщениями
+  - name: user
+    description: Операции взаимодействия с пользователями
 
 servers:
   - url: http://localhost

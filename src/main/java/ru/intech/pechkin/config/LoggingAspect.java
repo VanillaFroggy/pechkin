@@ -19,16 +19,16 @@ public class LoggingAspect {
     private void callAtAuthenticationService() {
     }
 
-    @Pointcut("execution(* ru.intech.pechkin.messenger.infrastructure.service.DetectorService.*(..))")
-    private void callAtDetectorService() {
+    @Pointcut("execution(* ru.intech.pechkin.messenger.infrastructure.service.ChatService.*(..))")
+    private void callAtChatService() {
     }
 
-    @Before("callAtAuthenticationService() || callAtDetectorService()")
+    @Before("callAtAuthenticationService() || callAtChatService()")
     public void beforeServiceMethodAdvice(JoinPoint jp) {
         log.info(jp + ", args=[" + getArgs(jp) + "]");
     }
 
-    @AfterThrowing(pointcut = "callAtAuthenticationService() || callAtDetectorService()s", throwing = "exception")
+    @AfterThrowing(pointcut = "callAtAuthenticationService() || callAtChatService()s", throwing = "exception")
     public void afterThrowingServiceAdvice(JoinPoint jp, Throwable exception) {
         log.error(jp + ", args=[" + getArgs(jp) + "]");
         log.error(exception.toString());
