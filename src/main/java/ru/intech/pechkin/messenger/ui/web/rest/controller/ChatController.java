@@ -49,7 +49,7 @@ public class ChatController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/deleteChat{id}")
+    @DeleteMapping("/deleteChat/{id}")
     public ResponseEntity<Void> deleteChat(@PathVariable("id") UUID id) {
         chatService.deleteChat(id);
         return ResponseEntity.noContent().build();
