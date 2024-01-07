@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Data
 @RequiredArgsConstructor
-@Document("data")
+@Document("messagesData")
 public class MessageData {
     @Id
     private UUID id;

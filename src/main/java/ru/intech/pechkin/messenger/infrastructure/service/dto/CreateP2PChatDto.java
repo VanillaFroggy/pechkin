@@ -8,4 +8,5 @@ import java.util.UUID;
 @Data
 public class CreateP2PChatDto {
     List<UUID> users;
+    CreateP2PChatMessageDto messageDto;
 }

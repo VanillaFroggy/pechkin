@@ -339,7 +339,7 @@ components:
             Время отправки сообщения
           type: string
           format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
-          example: "2000-10-31T01:30:00.000-05:00"
+          example: "2000-10-31T01:30:00.000"
         checked:
           description: |
             Прочитано ли сообщение
@@ -544,6 +544,36 @@ components:
           items:
             type: string
             format: id
+        messageDto:
+          $ref: "#/components/schemas/CreateP2PChatMessageDto"
+    CreateP2PChatMessageDto:
+      description: Сообщение для создания приватного чата
+      properties:
+        publisher:
+          description: |
+            Идентификационный номер пользователя, что послал сообщение
+          type: string
+        dataDtos:
+          description: |
+            Список данных из первого сообщения для приватного чата
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageDataDto'
+        dateTime:
+          description: |
+            Время отправки сообщения
+          type: string
+          format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+          example: "2000-10-31T01:30:00.000"
+    MessageDataDto:
+      description: Данные из первого сообщения для создания приватного чата
+      properties:
+        messageType:
+          $ref: '#/components/schemas/MessageType'
+        value:
+          description: |
+            Содержимое сообщения
+          type: string
     CreateGroupChatRequest:
       description: Запрос на создание группового чата
       properties:

@@ -1,25 +1,17 @@
 package ru.intech.pechkin.messenger.infrastructure.service.impl;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import ru.intech.pechkin.messenger.infrastructure.persistance.entity.Chat;
-import ru.intech.pechkin.messenger.infrastructure.persistance.entity.ChatMessageDataMessage;
-import ru.intech.pechkin.messenger.infrastructure.persistance.entity.Role;
-import ru.intech.pechkin.messenger.infrastructure.persistance.entity.UserRoleChat;
+import ru.intech.pechkin.messenger.infrastructure.persistance.entity.*;
 import ru.intech.pechkin.messenger.infrastructure.persistance.repo.*;
 import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.ChatDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.CreateGroupChatDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.CreateP2PChatDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.UpdateGroupChatDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
 import ru.intech.pechkin.messenger.infrastructure.service.mapper.ChatServiceMapper;
 
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -77,12 +69,14 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public void createP2PChat(CreateP2PChatDto dto) {
+    public void createP2PChat(@Valid CreateP2PChatDto dto) {
         if (dto.getUsers().size() != 2 ||
                 userRepository.findByIdIn(dto.getUsers())
                         .orElseThrow(NullPointerException::new)
                         .size() != 2) {
             throw new IllegalArgumentException("В приватном чате должно быть лишь два пользователя");
+        } else if (dto.getMessageDto() == null) {
+            throw new IllegalArgumentException("При создании в приватном чате должно быть первое сообщение");
         }
         Chat chat = Chat.createP2P();
         chatRepository.save(chat);
@@ -94,6 +88,33 @@ public class ChatServiceImpl implements ChatService {
                         .userRole(Role.ADMIN)
                         .build()
         ));
+        List<MessageData> datas = dto.getMessageDto()
+                .getDataDtos()
+                .stream()
+                .map(createP2PChatMessageDataDto -> mapper.MessageDataDtoToEntity(
+                                UUID.randomUUID(),
+                                createP2PChatMessageDataDto)
+                )
+                .toList();
+        Message message = Message.builder()
+                .id(UUID.randomUUID())
+                .chatId(chat.getId())
+                .publisher(dto.getMessageDto().getPublisher())
+                .datas(datas)
+                .relatesTo(null)
+                .dateTime(dto.getMessageDto().getDateTime())
+                .checked(false)
+                .build();
+        datas.forEach(messageData -> chatMessageDataMessageRepository.save(
+                ChatMessageDataMessage.builder()
+                        .id(UUID.randomUUID())
+                        .chatId(chat.getId())
+                        .messageId(message.getId())
+                        .messageDataId(messageData.getId())
+                        .build()
+        ));
+        messageDataRepository.saveAll(datas);
+        messageRepository.save(message);
     }
 
     @Override

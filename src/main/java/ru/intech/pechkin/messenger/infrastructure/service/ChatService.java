@@ -1,5 +1,6 @@
 package ru.intech.pechkin.messenger.infrastructure.service;
 
+import jakarta.validation.Valid;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.ChatDto;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.CreateGroupChatDto;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.CreateP2PChatDto;
@@ -13,7 +14,7 @@ public interface ChatService {
 
     void createFavoritesChat(UUID userId);
 
-    void createP2PChat(CreateP2PChatDto dto);
+    void createP2PChat(@Valid CreateP2PChatDto dto);
 
     void createGroupChat(CreateGroupChatDto dto);
 
