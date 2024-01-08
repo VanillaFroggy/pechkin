@@ -8,9 +8,13 @@ import org.springframework.stereotype.Service;
 import ru.intech.pechkin.messenger.infrastructure.persistance.entity.*;
 import ru.intech.pechkin.messenger.infrastructure.persistance.repo.*;
 import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.ChatDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.CreateGroupChatDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.CreateP2PChatDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.UpdateGroupChatDto;
 import ru.intech.pechkin.messenger.infrastructure.service.mapper.ChatServiceMapper;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -51,7 +55,13 @@ public class ChatServiceImpl implements ChatService {
                                     .getUserRole()))
                     .toList());
         });
-        return chatDtos;
+        chatDtos = chatDtos.stream()
+                .sorted(Comparator.comparing(chatDto -> chatDto.getMessage().getDateTime()))
+                .toList();
+        List<ChatDto> result = new ArrayList<>();
+        for (int i = chatDtos.size() - 1; i >= 0; i--)
+            result.add(chatDtos.get(i));
+        return result;
     }
 
     @Override
@@ -66,6 +76,7 @@ public class ChatServiceImpl implements ChatService {
                         .userRole(Role.ADMIN)
                         .build()
         );
+        createFirstMessageForFavoritesOrGroupChat(chat.getId());
     }
 
     @Override
@@ -92,8 +103,8 @@ public class ChatServiceImpl implements ChatService {
                 .getDataDtos()
                 .stream()
                 .map(createP2PChatMessageDataDto -> mapper.MessageDataDtoToEntity(
-                                UUID.randomUUID(),
-                                createP2PChatMessageDataDto)
+                        UUID.randomUUID(),
+                        createP2PChatMessageDataDto)
                 )
                 .toList();
         Message message = Message.builder()
@@ -101,7 +112,6 @@ public class ChatServiceImpl implements ChatService {
                 .chatId(chat.getId())
                 .publisher(dto.getMessageDto().getPublisher())
                 .datas(datas)
-                .relatesTo(null)
                 .dateTime(dto.getMessageDto().getDateTime())
                 .checked(false)
                 .build();
@@ -119,10 +129,9 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void createGroupChat(CreateGroupChatDto dto) {
-        if (dto.getUsers().size() <= 2 ||
+        if (dto.getUsers().isEmpty() ||
                 userRepository.findByIdIn(dto.getUsers().keySet().stream().toList())
-                        .orElseThrow(NullPointerException::new)
-                        .size() <= 2) {
+                        .orElseThrow(NullPointerException::new).isEmpty()) {
             throw new IllegalArgumentException("В групповом чате должно быть больше двух пользователей");
         }
         Chat chat = Chat.createGroup(dto.getTitle());
@@ -135,7 +144,9 @@ public class ChatServiceImpl implements ChatService {
                         .build()
         ));
         chatRepository.save(chat);
+        createFirstMessageForFavoritesOrGroupChat(chat.getId());
     }
+
 
     @Override
     public void updateGroupChat(UpdateGroupChatDto dto) {
@@ -207,4 +218,30 @@ public class ChatServiceImpl implements ChatService {
             );
         } while (!page.isLast());
     }
+
+    private void createFirstMessageForFavoritesOrGroupChat(UUID chatId) {
+        MessageData messageData = new MessageData(
+                UUID.randomUUID(),
+                MessageType.TEXT,
+                "Chat is created"
+        );
+        Message message = Message.builder()
+                .id(UUID.randomUUID())
+                .chatId(chatId)
+                .datas(List.of(messageData))
+                .dateTime(LocalDateTime.now())
+                .checked(false)
+                .build();
+        chatMessageDataMessageRepository.save(
+                ChatMessageDataMessage.builder()
+                        .id(UUID.randomUUID())
+                        .chatId(chatId)
+                        .messageId(message.getId())
+                        .messageDataId(messageData.getId())
+                        .build()
+        );
+        messageDataRepository.save(messageData);
+        messageRepository.save(message);
+    }
+
 }
