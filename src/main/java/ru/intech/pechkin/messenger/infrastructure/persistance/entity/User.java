@@ -26,6 +26,8 @@ public class User implements UserDetails {
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).{12,50}$")
     private String password;
 
+    private String icon;
+
     @Pattern(regexp = "^[\\w\\s]{4,32}$")
     private String fio;
 

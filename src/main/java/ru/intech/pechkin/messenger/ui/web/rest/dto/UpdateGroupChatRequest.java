@@ -10,5 +10,6 @@ import java.util.UUID;
 public class UpdateGroupChatRequest {
     private UUID chatId;
     private String title;
+    private String icon;
     private Map<UUID, Role> users;
 }

@@ -11,6 +11,8 @@ import ru.intech.pechkin.auth.service.AuthenticationService;
 import ru.intech.pechkin.auth.service.dto.AuthenticateDto;
 import ru.intech.pechkin.auth.service.dto.AuthenticationResponse;
 import ru.intech.pechkin.auth.service.dto.RegisterDto;
+import ru.intech.pechkin.auth.service.exception.IllegalRegisterParameterException;
+import ru.intech.pechkin.auth.service.exception.NoSuchUsernameAndPasswordException;
 import ru.intech.pechkin.auth.service.mapper.AuthenticationServiceMapper;
 import ru.intech.pechkin.messenger.infrastructure.persistance.entity.User;
 import ru.intech.pechkin.messenger.infrastructure.persistance.repo.UserRepository;
@@ -29,17 +31,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public AuthenticationResponse register(@Valid RegisterDto dto) {
         if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
-            throw new IllegalArgumentException("Пользователь с таким именем уже существует");
+            throw new IllegalRegisterParameterException("Пользователь с таким именем уже существует");
         } else if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Этот email уже зарегестрирован");
+            throw new IllegalRegisterParameterException("Этот email уже зарегестрирован");
         } else if (userRepository.findByPhoneNumber(dto.getPhoneNumber()).isPresent()) {
-            throw new IllegalArgumentException("Этот номер телефона уже зарегестрирован");
+            throw new IllegalRegisterParameterException("Этот номер телефона уже зарегестрирован");
         }
 
         User user = User.builder()
                 .id(UUID.randomUUID())
                 .username(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword()))
+                .icon(dto.getIcon())
                 .fio(dto.getFio())
                 .email(dto.getEmail())
                 .phoneNumber(dto.getPhoneNumber())
@@ -60,7 +63,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 )
         );
         User user = userRepository.findByUsername(dto.getUsername())
-                .orElseThrow(NullPointerException::new);
+                .orElseThrow(NoSuchUsernameAndPasswordException::new);
         return mapper.entityToResponse(jwtService.generateToken(user), user);
     }
 }

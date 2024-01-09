@@ -9,11 +9,12 @@ import java.util.UUID;
 
 @Data
 @Builder
-@Document("userRoleChats")
-public class UserRoleChat {
+@Document("userRoleMutedChats")
+public class UserRoleMutedChat {
     @Id
     UUID id;
     UUID chatId;
     UUID userId;
     Role userRole;
+    Boolean muted;
 }

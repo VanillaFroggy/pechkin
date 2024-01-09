@@ -9,5 +9,6 @@ import java.util.UUID;
 @Data
 public class CreateGroupChatDto {
     private String title;
+    private String icon;
     private Map<UUID, Role> users;
 }

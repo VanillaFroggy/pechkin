@@ -99,7 +99,7 @@ paths:
     description: Обновить параметры группового чата
     put:
       tags: [ chat ]
-      operationId: updateChat
+      operationId: updateGroupChat
       requestBody:
         content:
           application/json:
@@ -108,6 +108,23 @@ paths:
       responses:
         204:
           description: Групповой чат успешно обновлён
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/updateChatMutedStatus:
+    description: Замутить или размутить чат
+    put:
+      tags: [ chat ]
+      operationId: updateChatMutedStatus
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateChatMutedStatusRequest'
+      responses:
+        204:
+          description: Чат успешно замучен/размучен
         404:
           $ref: '#/components/responses/NotFound'
         500:
@@ -286,6 +303,10 @@ components:
           description: |
             Название чата
           type: string
+        icon:
+          description: |
+            Ссылка на иконку на FTP-сервере
+          type: string
         usersWithRole:
           description: |
             Список пользователей с их ролями
@@ -296,6 +317,14 @@ components:
           description: |
             Последнее сообщение для отображения
           $ref: '#/components/schemas/Message'
+        unreadMessagesCount:
+          description: |
+            Количество непрочитанных сообщений
+          type: integer
+        muted:
+          description: |
+            В муте ли чат
+          type: boolean
     ChatType:
       description: |
         Информация по типу чата
@@ -384,6 +413,10 @@ components:
           description: |
             Никнейм пользователя
           type: string
+        icon:
+          description: |
+            Ссылка на иконку на FTP-сервере
+          type: string
         fio:
           description: |
             ФИО пользователя
@@ -420,6 +453,10 @@ components:
           description: |
             Роль пользователя в чате
           $ref: "#/components/schemas/Role"
+        icon:
+          description: |
+            Ссылка на иконку на FTP-сервере
+          type: string
         fio:
           description: |
             ФИО пользователя
@@ -501,6 +538,10 @@ components:
           format: password
           pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).{12,50}$"
           example: "Let'sFuck4ever!"
+        icon:
+          description: |
+            Ссылка на иконку на FTP-сервере
+          type: string
         fio:
           description: |
             ФИО пользователя
@@ -581,6 +622,10 @@ components:
           description: |
             Название чата
           type: string
+        icon:
+          description: |
+            Ссылка на иконку на FTP-сервере
+          type: string
         users:
           description: |
             Список записей, состоящих из идентификационного номера пользователя и его роли
@@ -592,13 +637,17 @@ components:
     UpdateGroupChatRequest:
       description: Запрос на обновление данных группового чата
       properties:
-        id:
+        chatId:
           description: |
             Идентификационный номер чата
           type: string
         title:
           description: |
             Название чата
+          type: string
+        icon:
+          description: |
+            Ссылка на иконку на FTP-сервере
           type: string
         users:
           description: |
@@ -608,6 +657,21 @@ components:
             type: string
             format: id,
             $ref: '#/components/schemas/Role'
+    UpdateChatMutedStatusRequest:
+      description: Запрос на обновление данных группового чата
+      properties:
+        userId:
+          description: |
+            Идентификационный номер пользователя
+          type: string
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
+        muted:
+          description: |
+            Мут/размут (true/false)
+          type: boolean
     PageOfMessagesRequest:
       description: Запрос на получение страницы сообщений
       properties:
@@ -758,6 +822,10 @@ components:
           description: |
             Никнейм пользователя
           type: string
+        icon:
+          description: |
+            Ссылка на иконку на FTP-сервере
+          type: string
         fio:
           description: |
             ФИО пользователя
@@ -817,12 +885,12 @@ components:
       description: Ошибка в параметрах запроса. Запрос не следует повторять
       content:
         application/problem+json:
-          example: "Неверный логин или пароль"
+          example: "Ошибка в параметрах запроса"
     InternalServerError:
       description: Ошибка сервера при выполнении запроса. Запрос следует повторить позднее
       content:
         application/problem+json:
-          example: "Неверный логин или пароль"
+          example: "Сервер лёг, поздравляю, можно выйты на улицу и потрогать траву"
   parameters: {}
 tags:
   - name: auth

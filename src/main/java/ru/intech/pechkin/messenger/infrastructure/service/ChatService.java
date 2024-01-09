@@ -1,10 +1,7 @@
 package ru.intech.pechkin.messenger.infrastructure.service;
 
 import jakarta.validation.Valid;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.ChatDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.CreateGroupChatDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.CreateP2PChatDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.UpdateGroupChatDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,6 +16,8 @@ public interface ChatService {
     void createGroupChat(CreateGroupChatDto dto);
 
     void updateGroupChat(UpdateGroupChatDto dto);
+
+    void updateChatMutedStatus(UpdateChatMutedStatusDto dto);
 
     void deleteChat(UUID chatId);
 }

@@ -16,12 +16,14 @@ public class Chat {
     private UUID id;
     private ChatType chatType;
     private String title;
+    private String icon;
 
     public static Chat createFavorites() {
         return Chat.builder()
                 .id(UUID.randomUUID())
                 .chatType(ChatType.FAVORITES)
                 .title("Favorites")
+                .icon("favorites.png") // TODO добавить ссылку на базовую иконку Избранного, или попросить прислыть её
                 .build();
     }
 
@@ -33,11 +35,12 @@ public class Chat {
     }
 
     @NonNull
-    public static Chat createGroup(String title) {
+    public static Chat createGroup(String title, String icon) {
         return Chat.builder()
                 .id(UUID.randomUUID())
                 .chatType(ChatType.GROUP)
                 .title(title)
+                .icon(icon)
                 .build();
     }
 }

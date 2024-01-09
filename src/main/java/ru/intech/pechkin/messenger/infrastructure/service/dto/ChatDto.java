@@ -14,6 +14,9 @@ public class ChatDto {
     private UUID id;
     private ChatType chatType;
     private String title;
+    private String icon;
     private List<UserWithRoleDto> usersWithRole;
     private Message message;
+    private Long unreadMessagesCount;
+    private Boolean muted;
 }

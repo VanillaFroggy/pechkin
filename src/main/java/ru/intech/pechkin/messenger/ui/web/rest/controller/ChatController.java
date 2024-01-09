@@ -49,6 +49,12 @@ public class ChatController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/updateChatMutedStatus")
+    public ResponseEntity<Void> updateChatMutedStatus(@RequestBody UpdateChatMutedStatusRequest request) {
+        chatService.updateChatMutedStatus(mapper.updateChatMutedStatusRequestToDto(request));
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/deleteChat/{id}")
     public ResponseEntity<Void> deleteChat(@PathVariable("id") UUID id) {
         chatService.deleteChat(id);

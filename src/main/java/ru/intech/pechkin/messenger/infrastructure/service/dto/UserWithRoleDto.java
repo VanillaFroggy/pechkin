@@ -11,6 +11,7 @@ import java.util.UUID;
 public class UserWithRoleDto {
     private UUID id;
     private String username;
+    private String icon;
     private Role role;
     private String fio;
     private String phoneNumber;
