@@ -27,6 +27,4 @@ public class Message {
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime dateTime;
-
-    private Boolean checked;
 }

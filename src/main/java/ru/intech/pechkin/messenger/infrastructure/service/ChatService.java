@@ -9,11 +9,11 @@ import java.util.UUID;
 public interface ChatService {
     List<ChatDto> getAllChats(UUID userId);
 
-    void createFavoritesChat(UUID userId);
+    ChatCreationResponse createFavoritesChat(UUID userId);
 
-    void createP2PChat(@Valid CreateP2PChatDto dto);
+    ChatCreationResponse createP2PChat(@Valid CreateP2PChatDto dto);
 
-    void createGroupChat(CreateGroupChatDto dto);
+    ChatCreationResponse createGroupChat(CreateGroupChatDto dto);
 
     void updateGroupChat(UpdateGroupChatDto dto);
 

@@ -61,8 +61,8 @@ paths:
       tags: [ chat ]
       operationId: createFavoritesChat
       responses:
-        204:
-          description: Успешное создание чата "Избранное"
+        201:
+          $ref: '#/components/schemas/ChatCreationResponse'
         500:
           $ref: '#/components/responses/InternalServerError'
   /api/v1/messenger/createP2PChat:
@@ -76,8 +76,8 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateP2PChatRequest'
       responses:
-        204:
-          description: Успешное создание приватного чата
+        201:
+          $ref: '#/components/schemas/ChatCreationResponse'
         500:
           $ref: '#/components/responses/InternalServerError'
   /api/v1/messenger/createGroupChat:
@@ -91,8 +91,8 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateGroupChatRequest'
       responses:
-        204:
-          description: Успешное создание группового чата
+        201:
+          $ref: '#/components/schemas/ChatCreationResponse'
         500:
           $ref: '#/components/responses/InternalServerError'
   /api/v1/messenger/updateGroupChat:
@@ -316,7 +316,7 @@ components:
         message:
           description: |
             Последнее сообщение для отображения
-          $ref: '#/components/schemas/Message'
+          $ref: '#/components/schemas/MessageDto'
         unreadMessagesCount:
           description: |
             Количество непрочитанных сообщений
@@ -341,7 +341,7 @@ components:
         - "P2P"
         - "GROUP"
       example: "FAVORITES"
-    Message:
+    MessageDto:
       description: Информация по сообщению
       properties:
         id:
@@ -362,7 +362,7 @@ components:
           description: |
             Другое сообщение, на которое представленное ссылается
             (необязательно)
-          $ref: '#/components/schemas/Message'
+          $ref: '#/components/schemas/MessageDto'
         dateTime:
           description: |
             Время отправки сообщения
@@ -547,7 +547,6 @@ components:
             ФИО пользователя
           type: string
           format: fio
-          pattern: "^[\\w\\s]{4,32}$"
           example: "Dostoevsky Fyodor Mikhailovich"
         phoneNumber:
           description: |
@@ -847,6 +846,14 @@ components:
           description: |
             Позиция работника
           type: string
+    ChatCreationResponse:
+      description: Возврат id созданного чата
+      properties:
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
+          pattern: id
     PageOfMessages:
       description: Возврат страницы сообщений
       properties:
@@ -866,7 +873,7 @@ components:
             Список сообщений
           type: array
           items:
-            $ref: '#/components/schemas/Message'
+            $ref: '#/components/schemas/MessageDto'
 
   headers: {}
   responses:

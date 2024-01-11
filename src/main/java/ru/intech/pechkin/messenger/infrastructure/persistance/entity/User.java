@@ -28,7 +28,6 @@ public class User implements UserDetails {
 
     private String icon;
 
-    @Pattern(regexp = "^[\\w\\s]{4,32}$")
     private String fio;
 
     @Pattern(regexp = "^(\\+7|8)[(]?\\d{3}[)]?[-\\s\\\\.]?\\d{3}[-\\s.]?\\d{4}$")

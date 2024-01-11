@@ -23,6 +23,7 @@ public class ChatServiceImpl implements ChatService {
     private final MessageDataRepository messageDataRepository;
     private final UserRepository userRepository;
     private final ChatMessageDataMessageRepository chatMessageDataMessageRepository;
+    private final UserChatCheckedMessageRepository userChatCheckedMessageRepository;
     private final ChatServiceMapper mapper;
 
     @Override
@@ -37,7 +38,11 @@ public class ChatServiceImpl implements ChatService {
                 .map(mapper::chatToChatDto)
                 .toList();
         chatDtos.forEach(chatDto -> {
-            chatDto.setMessage(messageRepository.findFirstByChatIdOrderByDateTimeDesc(chatDto.getId()));
+            Message message = messageRepository.findFirstByChatIdOrderByDateTimeDesc(chatDto.getId());
+            boolean checked = userChatCheckedMessageRepository.findByUserIdAndChatIdAndMessageId(
+                    userId, chatDto.getId(), message.getId()
+            ).orElseThrow(NullPointerException::new).getChecked();
+            chatDto.setMessage(mapper.messageToMessageDto(message, checked));
 
             List<UserRoleMutedChat> userRoleMutedChats = userRoleMutedChatRepository.findAllByChatId(chatDto.getId());
             chatDto.setUsersWithRole(userRoleMutedChats.stream()
@@ -52,10 +57,14 @@ public class ChatServiceImpl implements ChatService {
                                     .getUserRole()))
                     .toList());
 
+            List<UserChatCheckedMessage> userChatCheckedMessages = userChatCheckedMessageRepository
+                    .findAllByUserIdAndChatIdAndChecked(userId, chatDto.getId(), false);
             chatDto.setUnreadMessagesCount(
-                    messageRepository.findAllByChatId(chatDto.getId())
-                            .stream()
-                            .filter(message -> !message.getChecked() && message.getPublisher() != userId)
+                    userChatCheckedMessages.stream()
+                            .filter(userChatCheckedMessage -> !userChatCheckedMessage.getUserId()
+                                    .equals(messageRepository.findById(userChatCheckedMessage.getMessageId())
+                                            .orElseThrow(NullPointerException::new)
+                                            .getPublisher()))
                             .count()
             );
 
@@ -71,7 +80,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public void createFavoritesChat(UUID userId) {
+    public ChatCreationResponse createFavoritesChat(UUID userId) {
         Chat chat = Chat.createFavorites();
         chatRepository.save(chat);
         userRoleMutedChatRepository.save(
@@ -83,11 +92,21 @@ public class ChatServiceImpl implements ChatService {
                         .muted(false)
                         .build()
         );
-        createFirstMessageForFavoritesOrGroupChat(chat.getId());
+        UUID messageId = createFirstMessageForFavoritesOrGroupChat(chat.getId());
+        userChatCheckedMessageRepository.save(
+                UserChatCheckedMessage.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .chatId(chat.getId())
+                        .messageId(messageId)
+                        .checked(false)
+                        .build()
+        );
+        return new ChatCreationResponse(chat.getId());
     }
 
     @Override
-    public void createP2PChat(@Valid CreateP2PChatDto dto) {
+    public ChatCreationResponse createP2PChat(@Valid CreateP2PChatDto dto) {
         if (dto.getUsers().size() != 2 ||
                 userRepository.findByIdIn(dto.getUsers())
                         .orElseThrow(NullPointerException::new)
@@ -110,7 +129,7 @@ public class ChatServiceImpl implements ChatService {
         List<MessageData> datas = dto.getMessageDto()
                 .getDataDtos()
                 .stream()
-                .map(createP2PChatMessageDataDto -> mapper.MessageDataDtoToEntity(
+                .map(createP2PChatMessageDataDto -> mapper.messageDataDtoToEntity(
                         UUID.randomUUID(),
                         createP2PChatMessageDataDto)
                 )
@@ -121,7 +140,6 @@ public class ChatServiceImpl implements ChatService {
                 .publisher(dto.getMessageDto().getPublisher())
                 .datas(datas)
                 .dateTime(dto.getMessageDto().getDateTime())
-                .checked(false)
                 .build();
         datas.forEach(messageData -> chatMessageDataMessageRepository.save(
                 ChatMessageDataMessage.builder()
@@ -133,10 +151,20 @@ public class ChatServiceImpl implements ChatService {
         ));
         messageDataRepository.saveAll(datas);
         messageRepository.save(message);
+        dto.getUsers().forEach(uuid -> userChatCheckedMessageRepository.save(
+                UserChatCheckedMessage.builder()
+                        .id(UUID.randomUUID())
+                        .userId(uuid)
+                        .chatId(chat.getId())
+                        .messageId(message.getId())
+                        .checked(false)
+                        .build()
+        ));
+        return new ChatCreationResponse(chat.getId());
     }
 
     @Override
-    public void createGroupChat(CreateGroupChatDto dto) {
+    public ChatCreationResponse createGroupChat(CreateGroupChatDto dto) {
         if (dto.getUsers().isEmpty() ||
                 userRepository.findByIdIn(dto.getUsers().keySet().stream().toList())
                         .orElseThrow(NullPointerException::new).isEmpty()) {
@@ -153,7 +181,17 @@ public class ChatServiceImpl implements ChatService {
                         .build()
         ));
         chatRepository.save(chat);
-        createFirstMessageForFavoritesOrGroupChat(chat.getId());
+        UUID messageId = createFirstMessageForFavoritesOrGroupChat(chat.getId());
+        dto.getUsers().forEach((key, value) -> userChatCheckedMessageRepository.save(
+                UserChatCheckedMessage.builder()
+                        .id(UUID.randomUUID())
+                        .userId(key)
+                        .chatId(chat.getId())
+                        .messageId(messageId)
+                        .checked(false)
+                        .build()
+        ));
+        return new ChatCreationResponse(chat.getId());
     }
 
 
@@ -238,7 +276,7 @@ public class ChatServiceImpl implements ChatService {
         } while (!page.isLast());
     }
 
-    private void createFirstMessageForFavoritesOrGroupChat(UUID chatId) {
+    private UUID createFirstMessageForFavoritesOrGroupChat(UUID chatId) {
         MessageData messageData = new MessageData(
                 UUID.randomUUID(),
                 MessageType.TEXT,
@@ -249,7 +287,6 @@ public class ChatServiceImpl implements ChatService {
                 .chatId(chatId)
                 .datas(List.of(messageData))
                 .dateTime(LocalDateTime.now())
-                .checked(false)
                 .build();
         chatMessageDataMessageRepository.save(
                 ChatMessageDataMessage.builder()
@@ -261,6 +298,6 @@ public class ChatServiceImpl implements ChatService {
         );
         messageDataRepository.save(messageData);
         messageRepository.save(message);
+        return message.getId();
     }
-
 }

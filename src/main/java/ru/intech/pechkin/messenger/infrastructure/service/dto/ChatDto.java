@@ -3,7 +3,6 @@ package ru.intech.pechkin.messenger.infrastructure.service.dto;
 import lombok.Builder;
 import lombok.Data;
 import ru.intech.pechkin.messenger.infrastructure.persistance.entity.ChatType;
-import ru.intech.pechkin.messenger.infrastructure.persistance.entity.Message;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +15,7 @@ public class ChatDto {
     private String title;
     private String icon;
     private List<UserWithRoleDto> usersWithRole;
-    private Message message;
+    private MessageDto message;
     private Long unreadMessagesCount;
     private Boolean muted;
 }
