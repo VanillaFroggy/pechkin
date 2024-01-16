@@ -141,16 +141,16 @@ paths:
           $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /api/v1/messenger/getAllMessages:
-    description: Получить все сообщения чата по его id
+  /api/v1/messenger/getPageOfMessages:
+    description: Получить страницу с последними сообщениями чата
     get:
       tags: [ message ]
-      operationId: getAllMessages
+      operationId: getPageOfMessages
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PageOfMessagesRequest'
+              $ref: '#/components/schemas/GetPageOfMessagesRequest'
       responses:
         200:
           $ref: '#/components/schemas/PageOfMessages'
@@ -167,12 +167,12 @@ paths:
             schema:
               $ref: '#/components/schemas/SendMessageRequest'
       responses:
-        204:
-          description: Сообщение успешно отправлено
+        201:
+            $ref: '#/components/schemas/MessageSendingResponse'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /api/v1/messenger/updateMessages/{id}:
-    description: Обновить список сообщений
+  /api/v1/messenger/updateMessageList:
+    description: Обновить список сообщений чата
     get:
       tags: [ message ]
       operationId: updateMessages
@@ -180,7 +180,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateMessagesRequest'
+              $ref: '#/components/schemas/UpdateMessageListRequest'
       responses:
         200:
           $ref: '#/components/schemas/PageOfMessages'
@@ -233,8 +233,8 @@ paths:
             schema:
               $ref: '#/components/schemas/ReplyToMessageRequest'
       responses:
-        204:
-          description: Сообщение успешно отправлено
+        201:
+          $ref: '#/components/schemas/MessageSendingResponse'
         404:
           $ref: '#/components/responses/NotFound'
         500:
@@ -265,7 +265,7 @@ paths:
         content:
           application/json:
             schema:
-                    $ref: '#/components/schemas/DeleteMessageRequest'
+              $ref: '#/components/schemas/DeleteMessageRequest'
       responses:
         204:
           description: Сообщение успешно удалено
@@ -671,9 +671,13 @@ components:
           description: |
             Мут/размут (true/false)
           type: boolean
-    PageOfMessagesRequest:
+    GetPageOfMessagesRequest:
       description: Запрос на получение страницы сообщений
       properties:
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
         pageNumber:
           description: |
             Номер страницы
@@ -685,10 +689,6 @@ components:
           minimum: 1
           maximum: 50
           type: integer
-        chatId:
-          description: |
-            Идентификационный номер чата
-          type: string
     SendMessageRequest:
       description: Запрос на отправку сообщения
       properties:
@@ -700,16 +700,30 @@ components:
           description: |
             Идентификационный номер пользователя
           type: string
-        datas:
+        dataDtos:
           description: |
             Массив содержимого сообщений разных типов
           minimum: 1
           type: array
           items:
-            $ref: '#/components/schemas/MessageData'
-    UpdateMessagesRequest:
+            $ref: '#/components/schemas/MessageDataDto'
+        dateTime:
+          description: |
+            Время отправки сообщения
+          type: string
+          format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+          example: "2000-10-31T01:30:00.000-05:00"
+    UpdateMessageListRequest:
       description: Запрос на обновление списка сообщений
       properties:
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
+        userId:
+          description: |
+            Идентификационный номер пользователя
+          type: string
         pageNumber:
           description: |
             Номер страницы
@@ -721,11 +735,7 @@ components:
           minimum: 1
           maximum: 50
           type: integer
-        chatId:
-          description: |
-            Идентификационный номер чата
-          type: string
-        datetime:
+        dateTime:
           description: |
             Время отправки последнего прочитанного сообщения (любым пользователем)
           type: string
@@ -737,6 +747,10 @@ components:
         chatId:
           description: |
             Идентификационный номер чата
+          type: string
+        userId:
+          description: |
+            Идентификационный номер пользователя
           type: string
         messageId:
           description: |
@@ -768,13 +782,19 @@ components:
           description: |
             Идентификационный номер сообщения
           type: string
-        datas:
+        dataDtos:
           description: |
             Массив содержимого сообщений разных типов
           minimum: 1
           type: array
           items:
-            $ref: '#/components/schemas/MessageData'
+            $ref: '#/components/schemas/MessageDataDto'
+        dateTime:
+          description: |
+            Время отправки последнего прочитанного сообщения (любым пользователем)
+          type: string
+          format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+          example: "2000-10-31T01:30:00.000-05:00"
     EditMessageRequest:
       description: Запрос на изменение содержимого сообщения
       properties:
@@ -874,6 +894,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MessageDto'
+    MessageSendingResponse:
+      description: Возврат id созданного сообщения и его содержимого
+      properties:
+        messageId:
+          description: |
+            Идентификационный номер сообщения
+          type: string
+          pattern: id
+        datas:
+          description: |
+            Массив содержимого сообщений разных типов
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageData'
 
   headers: {}
   responses:

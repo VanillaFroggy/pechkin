@@ -13,4 +13,6 @@ public interface UserChatCheckedMessageRepository extends MongoRepository<UserCh
     Optional<UserChatCheckedMessage> findByUserIdAndChatIdAndMessageId(UUID userId, UUID chatId, UUID messageId);
 
     List<UserChatCheckedMessage> findAllByUserIdAndChatIdAndChecked(UUID userId, UUID chatId, Boolean checked);
+
+    void deleteAllByChatId(UUID chatId);
 }

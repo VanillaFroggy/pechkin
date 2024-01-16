@@ -255,6 +255,7 @@ public class ChatServiceImpl implements ChatService {
         chatRepository.deleteById(chatId);
         userRoleMutedChatRepository.deleteAllByChatId(chatId);
         messageRepository.deleteAllByChatId(chatId);
+        userChatCheckedMessageRepository.deleteAllByChatId(chatId);
         Page<ChatMessageDataMessage> page;
         do {
             page = chatMessageDataMessageRepository

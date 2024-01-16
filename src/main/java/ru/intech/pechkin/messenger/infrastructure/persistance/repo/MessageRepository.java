@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Repository
 public interface MessageRepository extends MongoRepository<Message, UUID> {
-    Page<Message> findMessagesByChatIdOrderByDateTimeDesc(UUID chatId, Pageable pageable);
+    Page<Message> findAllByChatIdOrderByDateTimeDesc(UUID chatId, Pageable pageable);
 
     Message findFirstByChatIdOrderByDateTimeDesc(UUID chatId);
 
