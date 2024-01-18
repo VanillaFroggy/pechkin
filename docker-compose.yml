@@ -13,6 +13,7 @@ services:
       - SPRING_DATA_MONGODB_HOST=mongo
     depends_on:
       - mongo
+      - minio
     networks:
       - app-network
 
@@ -26,6 +27,18 @@ services:
       MONGO_INITDB_DATABASE: "messenger"
     volumes:
       - ./mongoVolume:/data/db
+    networks:
+      - app-network
+
+  minio:
+    container_name: messenger-file-storage
+    image: bitnami/minio:latest
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      - MINIO_ROOT_USER=root
+      - MINIO_ROOT_PASSWORD=37e809008f5b0c98cbf0
     networks:
       - app-network
 

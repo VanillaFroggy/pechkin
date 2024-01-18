@@ -8,6 +8,19 @@ spring:
       authentication-database: admin
       database: messenger
       port: 27017
+  servlet:
+    multipart:
+      enabled: true
+      file-size-threshold: 2MB
+      max-file-size: 1GB
+      max-request-size: 1GB
+cloud:
+  aws:
+    credentials:
+      accessKey: vQJ1SbOjLtIBSnFyG8yA
+      secretKey: AZpH9VA22Y38JaNcv0qWNCXenUVU49Im3lYr3zLp
+    region:
+      static: us-east-1
 logging:
   level:
     org:
