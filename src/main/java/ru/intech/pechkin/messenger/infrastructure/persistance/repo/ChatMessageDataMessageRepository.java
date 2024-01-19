@@ -14,7 +14,11 @@ import java.util.UUID;
 public interface ChatMessageDataMessageRepository extends MongoRepository<ChatMessageDataMessage, UUID> {
     Optional<Page<ChatMessageDataMessage>> findAllByChatId(UUID chatId, Pageable pageable);
 
+    List<ChatMessageDataMessage> findAllByChatIdAndMessageId(UUID chatId, UUID messageId);
+
     void deleteAllByChatIdAndIdIn(UUID chatId, List<UUID> ids);
 
     void deleteAllByChatId(UUID chatId);
+
+    void deleteAllByMessageIdAndChatId(UUID messageId, UUID chatId);
 }

@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 import ru.intech.pechkin.messenger.infrastructure.persistance.entity.Message;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,7 +15,13 @@ import java.util.UUID;
 public interface MessageRepository extends MongoRepository<Message, UUID> {
     Page<Message> findAllByChatIdOrderByDateTimeDesc(UUID chatId, Pageable pageable);
 
+    Page<Message> findAllByChatIdAndDateTimeAfterOrderByDateTimeDesc(
+            UUID chatId, LocalDateTime dateTime, Pageable pageable
+    );
+
     Message findFirstByChatIdOrderByDateTimeDesc(UUID chatId);
+
+    Optional<Message> findByIdAndChatId(UUID id, UUID chatId);
 
     Optional<Page<Message>> findAllByChatIdAndIdIn(UUID chatId, List<UUID> ids, Pageable pageable);
 

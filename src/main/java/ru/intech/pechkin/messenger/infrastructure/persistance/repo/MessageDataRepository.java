@@ -3,6 +3,7 @@ package ru.intech.pechkin.messenger.infrastructure.persistance.repo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import ru.intech.pechkin.messenger.infrastructure.persistance.entity.MessageData;
 
@@ -12,6 +13,7 @@ import java.util.UUID;
 
 @Repository
 public interface MessageDataRepository extends MongoRepository<MessageData, UUID> {
+    @Query(value = "{ 'id' : { $in : ?0 }, 'value' : { $regex: ?1, $options: 'i' } }", count = true)
     Optional<Page<MessageData>> findAllByIdInAndValueLikeIgnoreCase(List<UUID> ids, String value, Pageable pageable);
 
     void deleteAllByIdIn(List<UUID> ids);

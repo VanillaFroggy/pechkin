@@ -9,6 +9,8 @@ import java.util.UUID;
 public class GetPageOfMessagesDto {
     private UUID chatId;
 
+    private UUID userId;
+
     @Size()
     private int pageNumber;
 

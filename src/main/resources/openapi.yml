@@ -678,6 +678,10 @@ components:
           description: |
             Идентификационный номер чата
           type: string
+        userId:
+          description: |
+            Идентификационный номер пользователя
+          type: string
         pageNumber:
           description: |
             Номер страницы
@@ -931,7 +935,7 @@ components:
       description: Ошибка сервера при выполнении запроса. Запрос следует повторить позднее
       content:
         application/problem+json:
-          example: "Сервер лёг, поздравляю, можно выйты на улицу и потрогать траву"
+          example: "Сервер лёг, поздравляю, можно выйти на улицу и потрогать траву"
   parameters: {}
 tags:
   - name: auth

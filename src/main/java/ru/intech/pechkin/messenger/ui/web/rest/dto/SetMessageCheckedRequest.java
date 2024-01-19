@@ -8,5 +8,6 @@ import java.util.UUID;
 public class SetMessageCheckedRequest {
     private UUID chatId;
     private UUID userId;
+    private UUID publisherId;
     private UUID messageId;
 }

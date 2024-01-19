@@ -14,7 +14,7 @@ public class ReplyToMessageDto {
 
     private UUID userId;
 
-    private UUID messageId;
+    private UUID messageToReplyId;
 
     @Min(1)
     private List<MessageDataDto> dataDtos;

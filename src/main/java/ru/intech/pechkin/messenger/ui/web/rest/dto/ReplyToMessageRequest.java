@@ -11,7 +11,7 @@ import java.util.UUID;
 public class ReplyToMessageRequest {
     private UUID chatId;
     private UUID userId;
-    private UUID messageId;
+    private UUID messageToReplyId;
     private List<MessageDataDto> dataDtos;
     private LocalDateTime dateTime;
 }

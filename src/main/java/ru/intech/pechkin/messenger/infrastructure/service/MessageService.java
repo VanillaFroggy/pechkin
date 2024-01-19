@@ -20,5 +20,5 @@ public interface MessageService {
 
     void editMessage(EditMessageDto dto);
 
-    void deleteMessage(DeleteMessageDto chatId);
+    void deleteMessage(DeleteMessageDto dto);
 }

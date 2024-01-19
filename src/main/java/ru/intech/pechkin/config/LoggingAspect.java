@@ -27,13 +27,18 @@ public class LoggingAspect {
     private void callAtFileStorageService() {
     }
 
-    @Before("callAtAuthenticationService() || callAtChatService() || callAtFileStorageService()")
+    @Pointcut("execution(* ru.intech.pechkin.messenger.infrastructure.service.MessageService.*(..))")
+    private void callAtMessageService() {
+    }
+
+    @Before("callAtAuthenticationService() || callAtChatService() " +
+            "|| callAtFileStorageService() || callAtMessageService()")
     public void beforeServiceMethodAdvice(JoinPoint jp) {
         log.info(jp + ", args=[" + getArgs(jp) + "]");
     }
 
     @AfterThrowing(pointcut = "callAtAuthenticationService() || callAtChatService() " +
-            "|| callAtFileStorageService()", throwing = "exception")
+            "|| callAtFileStorageService() || callAtMessageService()", throwing = "exception")
     public void afterThrowingServiceAdvice(JoinPoint jp, Throwable exception) {
         log.error(jp + ", args=[" + getArgs(jp) + "]");
         log.error(exception.toString());

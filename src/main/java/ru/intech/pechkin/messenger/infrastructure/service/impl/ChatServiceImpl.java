@@ -9,7 +9,7 @@ import ru.intech.pechkin.messenger.infrastructure.persistance.entity.*;
 import ru.intech.pechkin.messenger.infrastructure.persistance.repo.*;
 import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
-import ru.intech.pechkin.messenger.infrastructure.service.mapper.ChatServiceMapper;
+import ru.intech.pechkin.messenger.infrastructure.service.mapper.MessengerServiceMapper;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -24,7 +24,7 @@ public class ChatServiceImpl implements ChatService {
     private final UserRepository userRepository;
     private final ChatMessageDataMessageRepository chatMessageDataMessageRepository;
     private final UserChatCheckedMessageRepository userChatCheckedMessageRepository;
-    private final ChatServiceMapper mapper;
+    private final MessengerServiceMapper mapper;
 
     @Override
     public List<ChatDto> getAllChats(UUID userId) {
