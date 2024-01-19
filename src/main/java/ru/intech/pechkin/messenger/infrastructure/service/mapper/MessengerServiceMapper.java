@@ -4,10 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 import ru.intech.pechkin.messenger.infrastructure.persistance.entity.*;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.ChatDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.MessageDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.MessageDataDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.UserWithRoleDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
 
 import java.util.UUID;
 
@@ -20,4 +17,6 @@ public interface MessengerServiceMapper {
     MessageData messageDataDtoToEntity(UUID id, MessageDataDto dto);
 
     MessageDto messageToMessageDto(Message message, Boolean checked);
+
+    UserDto userToUserDto(User user);
 }
