@@ -3,12 +3,11 @@ package ru.intech.pechkin.messenger.ui.web.rest.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.intech.pechkin.messenger.infrastructure.service.UserService;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.UserDto;
+import ru.intech.pechkin.messenger.ui.web.rest.dto.UpdateUserIconRequest;
+import ru.intech.pechkin.messenger.ui.web.rest.mapper.UserRestMapper;
 
 import java.util.UUID;
 
@@ -17,6 +16,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final UserRestMapper mapper;
 
     @GetMapping("/getUserById/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable("id") UUID id) {
@@ -32,5 +32,11 @@ public class UserController {
                 userService.getUserByUsername(username),
                 HttpStatus.OK
         );
+    }
+
+    @PutMapping("/updateUserIcon")
+    public ResponseEntity<Void> updateUserIcon(@RequestBody UpdateUserIconRequest request) {
+        userService.updateUserIcon(mapper.updateUserIconRequestToDto(request));
+        return ResponseEntity.noContent().build();
     }
 }
