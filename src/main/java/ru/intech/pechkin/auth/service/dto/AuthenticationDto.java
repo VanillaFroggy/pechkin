@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Data
 @Builder
-public class AuthenticationResponse {
+public class AuthenticationDto {
     private String token;
     private UUID id;
     private String username;

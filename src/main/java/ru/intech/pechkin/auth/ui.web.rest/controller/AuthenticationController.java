@@ -7,8 +7,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.intech.pechkin.auth.service.AuthenticationService;
-import ru.intech.pechkin.auth.service.dto.AuthenticationResponse;
+import ru.intech.pechkin.auth.service.dto.AuthenticationDto;
 import ru.intech.pechkin.auth.ui.web.rest.dto.AuthenticateRequest;
+import ru.intech.pechkin.auth.ui.web.rest.dto.AuthenticationResponse;
 import ru.intech.pechkin.auth.ui.web.rest.dto.RegisterRequest;
 import ru.intech.pechkin.auth.ui.web.rest.mapper.AuthenticationRestMapper;
 
@@ -21,11 +22,17 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(@RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(service.register(mapper.registerRequestToDto(request)));
+        AuthenticationDto dto = service.register(mapper.registerRequestToDto(request));
+        return ResponseEntity.ok()
+                .header("Authorization", dto.getToken())
+                .body(mapper.authenticationDtoToResponse(dto));
     }
 
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticateRequest request) {
-        return ResponseEntity.ok(service.authenticate(mapper.authenticateRequestToDto(request)));
+        AuthenticationDto dto = service.authenticate(mapper.authenticateRequestToDto(request));
+        return ResponseEntity.ok()
+                .header("Authorization", dto.getToken())
+                .body(mapper.authenticationDtoToResponse(dto));
     }
 }

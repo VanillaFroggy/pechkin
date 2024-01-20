@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import ru.intech.pechkin.auth.config.JwtService;
 import ru.intech.pechkin.auth.service.AuthenticationService;
 import ru.intech.pechkin.auth.service.dto.AuthenticateDto;
-import ru.intech.pechkin.auth.service.dto.AuthenticationResponse;
+import ru.intech.pechkin.auth.service.dto.AuthenticationDto;
 import ru.intech.pechkin.auth.service.dto.RegisterDto;
 import ru.intech.pechkin.auth.service.exception.IllegalRegisterParameterException;
 import ru.intech.pechkin.auth.service.exception.NoSuchUsernameAndPasswordException;
@@ -29,7 +29,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     @Override
-    public AuthenticationResponse register(@Valid RegisterDto dto) {
+    public AuthenticationDto register(@Valid RegisterDto dto) {
         if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
             throw new IllegalRegisterParameterException("Пользователь с таким именем уже существует");
         } else if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
@@ -55,7 +55,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public AuthenticationResponse authenticate(@Valid AuthenticateDto dto) {
+    public AuthenticationDto authenticate(@Valid AuthenticateDto dto) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         dto.getUsername(),
