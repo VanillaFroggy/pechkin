@@ -11,7 +11,7 @@ paths:
       tags: [ auth ]
       operationId: authenticate
       security:
-        - noAuth: []
+        - noAuth: [ ]
       requestBody:
         content:
           application/json:
@@ -283,6 +283,100 @@ paths:
           $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getUserByUsername/{username}:
+    description: Найти пользователя по его никнейму
+    get:
+      tags: [ user ]
+      operationId: getUserByUsername
+      responses:
+        200:
+          $ref: '#/components/schemas/UserDto'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/updateUserIcon:
+    description: Установить другую аватарку для пользователя
+    put:
+      tags: [ user ]
+      operationId: updateUserIcon
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUerIconRequest'
+      responses:
+        204:
+          description: Аватарка пользователя успешно изменена
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/file/upload/{folder}:
+    description: Загрузить файл на файловый сервер, указав в строке запроса папку дислоцирования
+    post:
+      tags: [ file ]
+      operationId: uploadFile
+      parameters:
+        - in: path
+          name: folder
+          required: true
+          description: Папка, в которую будет загружен файл
+          schema:
+            type: string
+        - in: query
+          name: file
+          required: true
+          description: Загружаемый файл
+          schema:
+            type: string
+            format: binary
+      responses:
+        201:
+          $ref: '#/components/schemas/UploadingFileResponse'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/file/download:
+    description: Загрузить файл с файлового сервера
+    get:
+      tags: [ file ]
+      operationId: downloadFile
+      parameters:
+        - in: query
+          name: objectKey
+          required: true
+          description: Путь к файлу на файловом сервере
+          schema:
+            type: string
+      responses:
+        200:
+          description: Возвращается массив байтов
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/file/delete:
+    description: Удалить файл на файловом сервере
+    delete:
+      tags: [ file ]
+      operationId: deleteFile
+      parameters:
+        - in: query
+          name: objectKey
+          required: true
+          description: Путь к файлу на файловом сервере
+          schema:
+            type: string
+      responses:
+        204:
+          description: Файл успешно удалён
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
 components:
   securitySchemes:
     BearerAuth:
@@ -762,6 +856,10 @@ components:
           description: |
             Идентификационный номер пользователя
           type: string
+        publisherId:
+          description: |
+            Идентификационный номер отправителя сообщения
+          type: string
         messageId:
           description: |
             Идентификационный номер сообщения
@@ -773,10 +871,25 @@ components:
           description: |
             Идентификационный номер чата
           type: string
+        userId:
+          description: |
+            Идентификационный номер пользователя, пославшего запрос
+          type: string
         value:
           description: |
             Содержимое сообщения
           type: string
+        pageNumber:
+          description: |
+            Номер страницы
+          minimum: 0
+          type: integer
+        pageSize:
+          description: |
+            Количество элементов на странице
+          minimum: 1
+          maximum: 50
+          type: integer
     ReplyToMessageRequest:
       description: Запрос на отправку ответа на сообщение
       properties:
@@ -788,9 +901,9 @@ components:
           description: |
             Идентификационный номер пользователя
           type: string
-        messageId:
+        messageToReplyId:
           description: |
-            Идентификационный номер сообщения
+            Идентификационный номер сообщения, на которое послан ответ
           type: string
         dataDtos:
           description: |
@@ -833,6 +946,17 @@ components:
         messageId:
           description: |
             Идентификационный номер сообщения
+          type: string
+    UpdateUerIconRequest:
+      description: Запрос на изменение аватарки пользователя
+      properties:
+        userId:
+          description: |
+            Идентификационный номер пользователя
+          type: string
+        icon:
+          description: |
+            Ссылка на иконку на файловом сервере
           type: string
 
     #   responses dto
@@ -914,6 +1038,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MessageData'
+    UploadingFileResponse:
+      description: Возврат ссылки на скачивание файла для дальнейшей обрезки и отправки в бд
+      properties:
+        fileUrl:
+          description: |
+            Ссылка на скачивание файла с файлового сервера
+          type: string
 
   headers: { }
   responses:
@@ -948,9 +1079,11 @@ tags:
     description: Операции взаимодействия с сообщениями
   - name: user
     description: Операции взаимодействия с пользователями
+  - name: file
+    description: Операции взаимодействия с файловым сервером
 
 servers:
   - url: http://localhost
     description: ''
 security:
-  - BearerAuth: []
+  - BearerAuth: [ ]
