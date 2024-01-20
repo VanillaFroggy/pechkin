@@ -10,5 +10,5 @@ import ru.intech.pechkin.messenger.infrastructure.persistance.entity.User;
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = ComponentModel.SPRING)
 public interface AuthenticationServiceMapper {
     @Mapping(target = "token", source = "token")
-    AuthenticationDto entityToResponse(String token, User user);
+    AuthenticationDto entityToDto(String token, User user);
 }

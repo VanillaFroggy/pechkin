@@ -10,6 +10,8 @@ paths:
     post:
       tags: [ auth ]
       operationId: authenticate
+      security:
+        - noAuth: []
       requestBody:
         content:
           application/json:
@@ -168,7 +170,7 @@ paths:
               $ref: '#/components/schemas/SendMessageRequest'
       responses:
         201:
-            $ref: '#/components/schemas/MessageSendingResponse'
+          $ref: '#/components/schemas/MessageSendingResponse'
         500:
           $ref: '#/components/responses/InternalServerError'
   /api/v1/messenger/updateMessageList:
@@ -286,7 +288,15 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 components:
-  securitySchemes: {}
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT-токен, содержащийся во всех запросах, кроме запросов аутентификации
+        обновляется при каждом запросе, присылая новое значанеие в заголовке ответа сервера
+      name: Authorization
+      in: header
   schemas:
     ChatDto:
       description: Информация по чату
@@ -492,7 +502,7 @@ components:
         - "USER"
       example: "USER"
 
-#    requests
+    #    requests
     AuthenticateRequest:
       description: Запрос на аутентификацию
       required:
@@ -829,14 +839,10 @@ components:
             Идентификационный номер сообщения
           type: string
 
-#   responses dto
+    #   responses dto
     AuthenticationResponse:
       description: Возврат токена для входа и параметров пользователя
       properties:
-        token:
-          description: |
-            Токен для входа
-          type: string
         id:
           description: |
             Идентификационный номер
@@ -913,7 +919,7 @@ components:
           items:
             $ref: '#/components/schemas/MessageData'
 
-  headers: {}
+  headers: { }
   responses:
     #    Присылаем на фронтенд код ошибки и строку, которую надо вывести
     NotFound:
@@ -936,7 +942,7 @@ components:
       content:
         application/problem+json:
           example: "Сервер лёг, поздравляю, можно выйти на улицу и потрогать траву"
-  parameters: {}
+  parameters: { }
 tags:
   - name: auth
     description: Операции со входом пользователя в систему
@@ -950,4 +956,5 @@ tags:
 servers:
   - url: http://localhost
     description: ''
-security: []
+security:
+  - BearerAuth: []

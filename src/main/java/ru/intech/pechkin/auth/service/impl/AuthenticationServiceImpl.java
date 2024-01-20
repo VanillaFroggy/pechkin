@@ -29,7 +29,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     @Override
-    public AuthenticationDto register(@Valid RegisterDto dto) {
+    public void register(@Valid RegisterDto dto) {
         if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
             throw new IllegalRegisterParameterException("Пользователь с таким именем уже существует");
         } else if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
@@ -50,8 +50,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .position(dto.getPosition())
                 .build();
         userRepository.save(user);
-
-        return mapper.entityToResponse(jwtService.generateToken(user), user);
     }
 
     @Override
@@ -64,6 +62,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         );
         User user = userRepository.findByUsername(dto.getUsername())
                 .orElseThrow(NoSuchUsernameAndPasswordException::new);
-        return mapper.entityToResponse(jwtService.generateToken(user), user);
+        return mapper.entityToDto(jwtService.generateToken(user), user);
     }
 }

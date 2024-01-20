@@ -21,11 +21,9 @@ public class AuthenticationController {
     private final AuthenticationRestMapper mapper;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody RegisterRequest request) {
-        AuthenticationDto dto = service.register(mapper.registerRequestToDto(request));
-        return ResponseEntity.ok()
-                .header("Authorization", dto.getToken())
-                .body(mapper.authenticationDtoToResponse(dto));
+    public ResponseEntity<Void> register(@RequestBody RegisterRequest request) {
+        service.register(mapper.registerRequestToDto(request));
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/authenticate")
