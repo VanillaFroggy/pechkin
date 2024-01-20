@@ -18,7 +18,7 @@ paths:
             schema:
               $ref: '#/components/schemas/AuthenticateRequest'
       responses:
-        200:
+        204:
           description: Успешная аутентификация пользователя
           content:
             application/json:
@@ -37,12 +37,8 @@ paths:
             schema:
               $ref: '#/components/schemas/RegisterRequest'
       responses:
-        200:
+        204:
           description: Успешная регистрация пользователя
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthenticationResponse'
         409:
           $ref: '#/components/responses/Conflict'
   /api/v1/messenger/getAllChats/{id}:
@@ -293,7 +289,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWT-токен, содержащийся во всех запросах, кроме запросов аутентификации
+      description: JWT-токен, содержащийся во всех запросах, кроме запроса аутентификации
         обновляется при каждом запросе, присылая новое значанеие в заголовке ответа сервера
       name: Authorization
       in: header
