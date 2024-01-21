@@ -48,6 +48,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .phoneNumber(dto.getPhoneNumber())
                 .department(dto.getDepartment())
                 .position(dto.getPosition())
+                .blocked(false)
                 .build();
         userRepository.save(user);
     }

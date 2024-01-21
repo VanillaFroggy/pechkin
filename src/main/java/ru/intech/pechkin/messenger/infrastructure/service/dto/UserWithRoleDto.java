@@ -18,4 +18,5 @@ public class UserWithRoleDto {
     private String email;
     private String department;
     private String position;
+    private Boolean blocked;
 }

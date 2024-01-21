@@ -312,6 +312,30 @@ paths:
           $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/blockUser/{id}:
+    description: Заблокировать пользователя по его id
+    put:
+      tags: [ user ]
+      operationId: blockUser
+      responses:
+        204:
+          description: Пользователь успешно заблокирован
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/unblockUser/{id}:
+    description: Разблокировать пользователя по его id
+    put:
+      tags: [ user ]
+      operationId: unblockUser
+      responses:
+        204:
+          description: Пользователь успешно разблокирован
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/file/upload/{folder}:
     description: Загрузить файл на файловый сервер, указав в строке запроса папку дислоцирования
     post:

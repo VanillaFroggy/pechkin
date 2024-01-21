@@ -39,4 +39,16 @@ public class UserController {
         userService.updateUserIcon(mapper.updateUserIconRequestToDto(request));
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/blockUser/{id}")
+    public ResponseEntity<Void> blockUser(@PathVariable("id") UUID id) {
+        userService.blockUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/unblockUser/{id}")
+    public ResponseEntity<Void> unblockUser(@PathVariable("id") UUID id) {
+        userService.unblockUser(id);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -42,6 +42,8 @@ public class User implements UserDetails {
     @Pattern(regexp = "^\\w{4,32}$")
     private String position;
 
+    private Boolean blocked;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("USER"));
@@ -54,7 +56,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !blocked;
     }
 
     @Override

@@ -11,4 +11,8 @@ public interface UserService {
     UserDto getUserByUsername(String username);
 
     void updateUserIcon(UpdateUserIconDto dto);
+
+    void blockUser(UUID id);
+
+    void unblockUser(UUID id);
 }

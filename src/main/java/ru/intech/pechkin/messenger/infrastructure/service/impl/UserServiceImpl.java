@@ -40,4 +40,20 @@ public class UserServiceImpl implements UserService {
         user.setIcon(dto.getIcon());
         repository.save(user);
     }
+
+    @Override
+    public void blockUser(UUID id) {
+        User user = repository.findById(id)
+                .orElseThrow(NullPointerException::new);
+        user.setBlocked(true);
+        repository.save(user);
+    }
+
+    @Override
+    public void unblockUser(UUID id) {
+        User user = repository.findById(id)
+                .orElseThrow(NullPointerException::new);
+        user.setBlocked(false);
+        repository.save(user);
+    }
 }
