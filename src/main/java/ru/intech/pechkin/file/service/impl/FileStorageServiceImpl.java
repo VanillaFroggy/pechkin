@@ -1,64 +1,60 @@
 package ru.intech.pechkin.file.service.impl;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.intech.pechkin.file.service.FileStorageService;
 import ru.intech.pechkin.file.service.dto.UploadingFileResponse;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Service
-@RequiredArgsConstructor
 public class FileStorageServiceImpl implements FileStorageService {
-    private final S3Client s3Client;
-    private final String bucketName = "pechkin";
+
+    private final String fileStorageDirectory = "file-storage/";
 
     @Override
-    public UploadingFileResponse uploadFile(String  folder, MultipartFile file) throws IOException {
-        String objectKey = folder + "/" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        s3Client.putObject(
-                PutObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(objectKey)
-                        .contentType(file.getContentType())
-                        .build(),
-                RequestBody.fromByteBuffer(ByteBuffer.wrap(file.getBytes()))
+    public UploadingFileResponse uploadFile(String folder, MultipartFile file) throws IOException {
+        File filePath = new File(fileStorageDirectory + folder);
+        if (!filePath.exists()) {
+            filePath.mkdir();
+        }
+        Path path = Paths.get(
+                filePath.getPath(),
+                System.currentTimeMillis() + "_" + file.getOriginalFilename()
         );
-        return new UploadingFileResponse(getObjectUrl(objectKey));
+        try (OutputStream os = Files.newOutputStream(path)) {
+            os.write(file.getBytes());
+        }
+        return new UploadingFileResponse(
+                path.toString()
+                        .replaceAll("\\\\", "/")
+        );
     }
 
     @Override
     public byte[] downloadFile(String objectKey) throws IOException {
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(objectKey)
-                .build();
-        return s3Client.getObject(getObjectRequest).readAllBytes();
+        Path path = Paths.get(
+                fileStorageDirectory,
+                objectKey
+        );
+        byte[] fileData;
+        try (InputStream is = Files.newInputStream(path)) {
+            fileData = is.readAllBytes();
+        }
+        return fileData;
     }
 
     @Override
-    public void deleteFile(String objectKey) throws S3Exception {
-        s3Client.deleteObject(
-                DeleteObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(objectKey)
-                        .build()
-        );
-    }
-
-    private String getObjectUrl(String objectKey) {
-        // Составить URL для доступа к загруженному файлу
-        return s3Client.utilities()
-                .getUrl(
-                        GetUrlRequest.builder()
-                                .bucket(bucketName)
-                                .key(objectKey)
-                                .build())
-                .toExternalForm();
+    public void deleteFile(String objectKey) {
+        File file = new File(fileStorageDirectory + objectKey);
+        if (!file.delete()) {
+            throw new NullPointerException();
+        }
     }
 }

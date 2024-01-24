@@ -8,12 +8,14 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SERVER_PORT=8080
-      - MONGODB_URI=mongodb://mongo/messenger
-      - SPRING_DATA_MONGODB_HOST=mongo
+      SERVER_PORT: 8080
+      MONGODB_URI: mongodb://mongo/messenger
+      SPRING_DATA_MONGODB_HOST: mongo
+      MAX_FILE_SIZE: "1GB"
+      MAX_REQUEST_SIZE: "1GB"
+      FILE-SIZE-THRESHOLD: "2MB"
     depends_on:
       - mongo
-      - minio
     networks:
       - app-network
 
@@ -27,18 +29,6 @@ services:
       MONGO_INITDB_DATABASE: "messenger"
     volumes:
       - ./mongoVolume:/data/db
-    networks:
-      - app-network
-
-  minio:
-    container_name: messenger-file-storage
-    image: bitnami/minio:latest
-    ports:
-      - '9000:9000'
-      - '9001:9001'
-    environment:
-      - MINIO_ROOT_USER=root
-      - MINIO_ROOT_PASSWORD=37e809008f5b0c98cbf0
     networks:
       - app-network
 

@@ -11,16 +11,9 @@ spring:
   servlet:
     multipart:
       enabled: true
-      file-size-threshold: 2MB
-      max-file-size: 1GB
-      max-request-size: 1GB
-cloud:
-  aws:
-    credentials:
-      accessKey: vQJ1SbOjLtIBSnFyG8yA
-      secretKey: AZpH9VA22Y38JaNcv0qWNCXenUVU49Im3lYr3zLp
-    region:
-      static: us-east-1
+      file-size-threshold: ${FILE_SIZE_THRESHOLD:2MB}
+      max-file-size: ${MAX_FILE_SIZE:1GB}
+      max-request-size: ${MAX_REQUEST_SIZE:1GB}
 logging:
   level:
     org:
