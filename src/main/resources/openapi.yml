@@ -519,6 +519,12 @@ components:
         * *LINK*   - Ссылка
 
         * *FILE*   - Файл
+        
+        * *IMAGE*   - Изображение
+        
+        * *VIDEO*   - Видео файл
+        
+        * *AUDIO*   - Аудио файл
 
       type: string
       enum:
