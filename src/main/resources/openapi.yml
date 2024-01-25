@@ -531,6 +531,9 @@ components:
         - "TEXT"
         - "LINK"
         - "FILE"
+        - "IMAGE"
+        - "VIDEO"
+        - "AUDIO"
       example: "TEXT"
     UserDto:
       description: Информация о пользователе
