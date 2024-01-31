@@ -16,6 +16,7 @@ import ru.intech.pechkin.auth.service.exception.NoSuchUsernameAndPasswordExcepti
 import ru.intech.pechkin.auth.service.mapper.AuthenticationServiceMapper;
 import ru.intech.pechkin.messenger.infrastructure.persistance.entity.User;
 import ru.intech.pechkin.messenger.infrastructure.persistance.repo.UserRepository;
+import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
 
 import java.util.UUID;
 
@@ -27,6 +28,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthenticationServiceMapper mapper;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final ChatService chatService;
 
     @Override
     public void register(@Valid RegisterDto dto) {
@@ -50,6 +52,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .position(dto.getPosition())
                 .blocked(false)
                 .build();
+        chatService.createFavoritesChat(user.getId());
         userRepository.save(user);
     }
 

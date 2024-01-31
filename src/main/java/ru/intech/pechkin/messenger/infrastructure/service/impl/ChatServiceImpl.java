@@ -57,6 +57,18 @@ public class ChatServiceImpl implements ChatService {
                                     .getUserRole()))
                     .toList());
 
+            if (chatDto.getChatType().equals(ChatType.P2P)) {
+                User otherUser = userRepository.findById(
+                        userRoleMutedChats.stream()
+                                .filter(userRoleMutedChat -> !userRoleMutedChat.getUserId().equals(userId))
+                                .findFirst()
+                                .orElseThrow(NullPointerException::new)
+                                .getUserId()
+                ).orElseThrow(NullPointerException::new);
+                chatDto.setTitle(otherUser.getUsername());
+                chatDto.setIcon(otherUser.getIcon());
+            }
+
             List<UserChatCheckedMessage> userChatCheckedMessages = userChatCheckedMessageRepository
                     .findAllByUserIdAndChatIdAndChecked(userId, chatDto.getId(), false);
             chatDto.setUnreadMessagesCount(

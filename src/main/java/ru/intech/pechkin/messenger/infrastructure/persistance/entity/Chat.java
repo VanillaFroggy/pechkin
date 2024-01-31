@@ -23,7 +23,6 @@ public class Chat {
                 .id(UUID.randomUUID())
                 .chatType(ChatType.FAVORITES)
                 .title("Favorites")
-                .icon("favorites.png") // TODO добавить ссылку на базовую иконку Избранного, или попросить прислыть её
                 .build();
     }
 
