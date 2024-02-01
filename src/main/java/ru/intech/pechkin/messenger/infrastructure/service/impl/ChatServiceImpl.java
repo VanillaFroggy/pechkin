@@ -39,6 +39,11 @@ public class ChatServiceImpl implements ChatService {
                 .toList();
         chatDtos.forEach(chatDto -> {
             Message message = messageRepository.findFirstByChatIdOrderByDateTimeDesc(chatDto.getId());
+            message.getDatas().forEach(messageData -> {
+                if (messageData.getMessageType().equals(MessageType.TEXT) && messageData.getValue().length() > 50) {
+                    messageData.setValue(messageData.getValue().substring(0, 50));
+                }
+            });
             boolean checked = userChatCheckedMessageRepository.findByUserIdAndChatIdAndMessageId(
                     userId, chatDto.getId(), message.getId()
             ).orElseThrow(NullPointerException::new).getChecked();
