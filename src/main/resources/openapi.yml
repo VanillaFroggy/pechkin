@@ -1040,12 +1040,12 @@ components:
     PageOfMessages:
       description: Возврат страницы сообщений
       properties:
-        pageNumber:
+        number:
           description: |
             Номер страницы
           minimum: 0
           type: integer
-        pageSize:
+        numberOfElements:
           description: |
             Количество элементов на странице
           minimum: 1
