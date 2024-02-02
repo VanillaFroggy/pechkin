@@ -18,7 +18,5 @@ public interface ChatMessageDataMessageRepository extends MongoRepository<ChatMe
 
     void deleteAllByChatIdAndIdIn(UUID chatId, List<UUID> ids);
 
-    void deleteAllByChatId(UUID chatId);
-
     void deleteAllByMessageIdAndChatId(UUID messageId, UUID chatId);
 }

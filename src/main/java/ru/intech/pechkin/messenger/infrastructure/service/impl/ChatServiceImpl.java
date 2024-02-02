@@ -44,10 +44,13 @@ public class ChatServiceImpl implements ChatService {
                     messageData.setValue(messageData.getValue().substring(0, 50));
                 }
             });
-            boolean checked = userChatCheckedMessageRepository.findByUserIdAndChatIdAndMessageId(
-                    userId, chatDto.getId(), message.getId()
-            ).orElseThrow(NullPointerException::new).getChecked();
-            chatDto.setMessage(mapper.messageToMessageDto(message, checked));
+            chatDto.setMessage(mapper.messageToMessageDto(
+                    message,
+                    userChatCheckedMessageRepository
+                            .findByUserIdAndChatIdAndMessageId(userId, chatDto.getId(), message.getId())
+                            .orElseThrow(NullPointerException::new)
+                            .getChecked()
+            ));
 
             List<UserRoleMutedChat> userRoleMutedChats = userRoleMutedChatRepository.findAllByChatId(chatDto.getId());
             chatDto.setUsersWithRole(userRoleMutedChats.stream()

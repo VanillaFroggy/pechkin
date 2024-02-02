@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository;
 import ru.intech.pechkin.messenger.infrastructure.persistance.entity.Message;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,10 +21,6 @@ public interface MessageRepository extends MongoRepository<Message, UUID> {
     Message findFirstByChatIdOrderByDateTimeDesc(UUID chatId);
 
     Optional<Message> findByIdAndChatId(UUID id, UUID chatId);
-
-    Optional<Page<Message>> findAllByChatIdAndIdIn(UUID chatId, List<UUID> ids, Pageable pageable);
-
-    Optional<Message> findAllByChatId(UUID chatId);
 
     void deleteAllByChatId(UUID chatId);
 }
