@@ -160,6 +160,7 @@ public class ChatServiceImpl implements ChatService {
                 .publisher(dto.getMessageDto().getPublisher())
                 .datas(datas)
                 .dateTime(dto.getMessageDto().getDateTime())
+                .edited(false)
                 .build();
         datas.forEach(messageData -> chatMessageDataMessageRepository.save(
                 ChatMessageDataMessage.builder()

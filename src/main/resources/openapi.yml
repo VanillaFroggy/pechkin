@@ -497,6 +497,10 @@ components:
           description: |
             Прочитано ли сообщение
           type: boolean
+        edited:
+          description: |
+            Менялось ли содержимое сообщения
+          type: boolean
     MessageData:
       description: Информация по типу и содержимому сообщения
       properties:

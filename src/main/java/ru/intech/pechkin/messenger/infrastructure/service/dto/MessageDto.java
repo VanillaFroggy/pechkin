@@ -19,4 +19,5 @@ public class MessageDto {
     private Message relatesTo;
     private LocalDateTime dateTime;
     private Boolean checked;
+    private Boolean edited;
 }

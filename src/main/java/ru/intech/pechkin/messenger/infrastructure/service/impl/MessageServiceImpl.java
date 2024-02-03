@@ -52,6 +52,7 @@ public class MessageServiceImpl implements MessageService {
                 .publisher(dto.getUserId())
                 .datas(datas)
                 .dateTime(dto.getDateTime())
+                .edited(false)
                 .build();
         return getMessageSendingResponse(datas, message);
     }
@@ -140,6 +141,7 @@ public class MessageServiceImpl implements MessageService {
                 .relatesTo(messageRepository.findById(dto.getMessageToReplyId())
                         .orElseThrow(NullPointerException::new))
                 .dateTime(dto.getDateTime())
+                .edited(false)
                 .build();
         return getMessageSendingResponse(datas, message);
     }
@@ -186,6 +188,7 @@ public class MessageServiceImpl implements MessageService {
         Message message = messageRepository.findByIdAndChatId(dto.getMessageId(), dto.getChatId())
                 .orElseThrow(NullPointerException::new);
         message.setDatas(dto.getDatas());
+        message.setEdited(true);
         messageRepository.save(message);
     }
 
