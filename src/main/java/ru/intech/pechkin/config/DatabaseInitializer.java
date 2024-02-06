@@ -1,6 +1,11 @@
 package ru.intech.pechkin.config;
 
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,8 +20,13 @@ import java.util.UUID;
 public class DatabaseInitializer implements ApplicationRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MinioClient minioClient;
+
+    @Value("${spring.minio.bucket}")
+    private String bucket;
 
     @Override
+    @SneakyThrows
     public void run(ApplicationArguments args) {
         if (userRepository.count() == 0) {
             User user = User.builder()
@@ -27,6 +37,13 @@ public class DatabaseInitializer implements ApplicationRunner {
                     .blocked(false)
                     .build();
             userRepository.save(user);
+        }
+        if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build())) {
+            minioClient.makeBucket(
+                    MakeBucketArgs.builder()
+                            .bucket(bucket)
+                            .build()
+            );
         }
     }
 }

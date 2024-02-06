@@ -14,6 +14,12 @@ spring:
       file-size-threshold: ${FILE_SIZE_THRESHOLD:2MB}
       max-file-size: ${MAX_FILE_SIZE:1GB}
       max-request-size: ${MAX_REQUEST_SIZE:1GB}
+  minio:
+    url: ${MINIO_URL:http://localhost:9000}
+    bucket: ${MINIO_BUCKET:file-storage}
+    access-key: ${MINIO_ROOT_USER:vQJ1SbOjLtIBSnFyG8yA}
+    secret-key: ${MINIO_ROOT_PASSWORD:AZpH9VA22Y38JaNcv0qWNCXenUVU49Im3lYr3zLp}
+    region: ${MINIO_REGION:us-east-1}
 logging:
   level:
     org:

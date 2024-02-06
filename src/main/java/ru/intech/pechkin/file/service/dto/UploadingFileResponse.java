@@ -1,10 +1,10 @@
 package ru.intech.pechkin.file.service.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 @Data
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UploadingFileResponse {
-    private String fileUrl;
+    private final String fileUrl;
 }

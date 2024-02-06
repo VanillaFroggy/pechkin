@@ -1,60 +1,71 @@
 package ru.intech.pechkin.file.service.impl;
 
+import io.minio.*;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.intech.pechkin.file.service.FileStorageService;
 import ru.intech.pechkin.file.service.dto.UploadingFileResponse;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @Service
+@RequiredArgsConstructor
 public class FileStorageServiceImpl implements FileStorageService {
+    private final MinioClient minioClient;
 
-    private final String fileStorageDirectory = "file-storage/";
+    @Value("${spring.minio.bucket}")
+    private String bucket;
 
     @Override
-    public UploadingFileResponse uploadFile(String folder, MultipartFile file) throws IOException {
-        File filePath = new File(fileStorageDirectory + folder);
-        if (!filePath.exists()) {
-            filePath.mkdir();
-        }
-        Path path = Paths.get(
-                filePath.getPath(),
-                System.currentTimeMillis() + "_" + file.getOriginalFilename()
-        );
-        try (OutputStream os = Files.newOutputStream(path)) {
-            os.write(file.getBytes());
-        }
+    @SneakyThrows
+    public UploadingFileResponse uploadFile(String folder, MultipartFile file) {
+        Path filePath = File.createTempFile("temp", null).toPath();
+        file.transferTo(filePath);
         return new UploadingFileResponse(
-                path.toString()
-                        .replaceAll("\\\\", "/")
+                minioClient.uploadObject(
+                        UploadObjectArgs.builder()
+                                .bucket(bucket)
+                                .object(folder + "/" + System.currentTimeMillis()
+                                        + "_" + file.getOriginalFilename())
+                                .filename(filePath.toString())
+                                .build()
+                ).object()
         );
     }
 
     @Override
-    public byte[] downloadFile(String objectKey) throws IOException {
-        Path path = Paths.get(
-                fileStorageDirectory,
-                objectKey
-        );
+    @SneakyThrows
+    public byte[] downloadFile(String objectKey) {
         byte[] fileData;
-        try (InputStream is = Files.newInputStream(path)) {
+        try (InputStream is = minioClient.getObject(
+                GetObjectArgs.builder()
+                        .bucket(bucket)
+                        .object(objectKey)
+                        .build())) {
             fileData = is.readAllBytes();
         }
         return fileData;
     }
 
     @Override
+    @SneakyThrows
     public void deleteFile(String objectKey) {
-        File file = new File(fileStorageDirectory + objectKey);
-        if (!file.delete()) {
-            throw new NullPointerException();
-        }
+        minioClient.statObject(
+                StatObjectArgs.builder()
+                        .bucket(bucket)
+                        .object(objectKey)
+                        .build()
+        );
+        minioClient.removeObject(
+                RemoveObjectArgs.builder()
+                        .bucket(bucket)
+                        .object(objectKey)
+                        .build()
+        );
     }
 }
