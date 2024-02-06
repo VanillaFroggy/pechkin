@@ -5,8 +5,8 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class UpdateChatMutedStatusRequest {
+public class UpdateChatMutedOrPinnedStatusRequest {
     private UUID userId;
     private UUID chatId;
-    private Boolean muted;
+    private Boolean status;
 }

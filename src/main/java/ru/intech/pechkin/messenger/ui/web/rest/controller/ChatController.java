@@ -9,7 +9,7 @@ import ru.intech.pechkin.messenger.infrastructure.service.dto.ChatCreationRespon
 import ru.intech.pechkin.messenger.infrastructure.service.dto.ChatDto;
 import ru.intech.pechkin.messenger.ui.web.rest.dto.CreateGroupChatRequest;
 import ru.intech.pechkin.messenger.ui.web.rest.dto.CreateP2PChatRequest;
-import ru.intech.pechkin.messenger.ui.web.rest.dto.UpdateChatMutedStatusRequest;
+import ru.intech.pechkin.messenger.ui.web.rest.dto.UpdateChatMutedOrPinnedStatusRequest;
 import ru.intech.pechkin.messenger.ui.web.rest.dto.UpdateGroupChatRequest;
 import ru.intech.pechkin.messenger.ui.web.rest.mapper.ChatRestMapper;
 
@@ -56,8 +56,14 @@ public class ChatController {
     }
 
     @PutMapping("/updateChatMutedStatus")
-    public ResponseEntity<Void> updateChatMutedStatus(@RequestBody UpdateChatMutedStatusRequest request) {
-        chatService.updateChatMutedStatus(mapper.updateChatMutedStatusRequestToDto(request));
+    public ResponseEntity<Void> updateChatMutedStatus(@RequestBody UpdateChatMutedOrPinnedStatusRequest request) {
+        chatService.updateChatMutedStatus(mapper.updateChatMutedOrPinnedStatusRequestToDto(request));
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/updateChatPinnedStatus")
+    public ResponseEntity<Void> updateChatPinnedStatus(@RequestBody UpdateChatMutedOrPinnedStatusRequest request) {
+        chatService.updateChatPinnedStatus(mapper.updateChatMutedOrPinnedStatusRequestToDto(request));
         return ResponseEntity.noContent().build();
     }
 

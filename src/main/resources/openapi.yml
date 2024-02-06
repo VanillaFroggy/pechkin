@@ -119,10 +119,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateChatMutedStatusRequest'
+              $ref: '#/components/schemas/UpdateChatMutedOrPinnedStatusRequest'
       responses:
         204:
           description: Чат успешно замучен/размучен
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/updateChatPinnedStatus:
+    description: Закрепить или открепить чат
+    put:
+      tags: [ chat ]
+      operationId: updateChatPinnedStatus
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateChatMutedOrPinnedStatusRequest'
+      responses:
+        204:
+          description: Чат успешно закреплён/откреплён
         404:
           $ref: '#/components/responses/NotFound'
         500:
@@ -449,6 +466,10 @@ components:
           description: |
             В муте ли чат
           type: boolean
+        pinned:
+          description: |
+            Закреплён ли чат для пользователя
+          type: boolean
     ChatType:
       description: |
         Информация по типу чата
@@ -474,8 +495,9 @@ components:
           type: string
         publisher:
           description: |
-            Идентификационный номер пользователя, что послал сообщение
-          type: string
+            Краткая информация о пользователе, что послал сообщение
+          type: object
+          $ref: "#/components/schemas/MessagePublisherDto"
         datas:
           description: |
             Список данных из сообщений
@@ -539,6 +561,21 @@ components:
         - "VIDEO"
         - "AUDIO"
       example: "TEXT"
+    MessagePublisherDto:
+      description: Краткая информация об отправителе сообщения
+      properties:
+        id:
+          description: |
+            Идентификационный номер
+          type: string
+        username:
+          description: |
+            Никнейм пользователя
+          type: string
+        icon:
+          description: |
+            Ссылка на иконку на FTP-сервере
+          type: string
     UserDto:
       description: Информация о пользователе
       properties:
@@ -793,8 +830,8 @@ components:
             type: string
             format: id,
             $ref: '#/components/schemas/Role'
-    UpdateChatMutedStatusRequest:
-      description: Запрос на обновление данных группового чата
+    UpdateChatMutedOrPinnedStatusRequest:
+      description: Запрос на обновление статуса (мут/закреп) группового чата
       properties:
         userId:
           description: |
@@ -804,9 +841,9 @@ components:
           description: |
             Идентификационный номер чата
           type: string
-        muted:
+        status:
           description: |
-            Мут/размут (true/false)
+            Мут/размут, Закрепить/открепить (true/false)
           type: boolean
     GetPageOfMessagesRequest:
       description: Запрос на получение страницы сообщений

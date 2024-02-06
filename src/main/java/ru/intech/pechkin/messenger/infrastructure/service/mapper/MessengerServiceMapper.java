@@ -1,6 +1,7 @@
 package ru.intech.pechkin.messenger.infrastructure.service.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 import ru.intech.pechkin.messenger.infrastructure.persistance.entity.*;
@@ -16,7 +17,11 @@ public interface MessengerServiceMapper {
 
     MessageData messageDataDtoToEntity(UUID id, MessageDataDto dto);
 
-    MessageDto messageToMessageDto(Message message, Boolean checked);
+    @Mapping(target = "id", source = "message.id")
+    @Mapping(target = "publisher", source = "publisherDto")
+    MessageDto messageToMessageDto(Message message, MessagePublisherDto publisherDto, Boolean checked);
+
+    MessagePublisherDto userToMessagePublisherDto(User user);
 
     UserDto userToUserDto(User user);
 }

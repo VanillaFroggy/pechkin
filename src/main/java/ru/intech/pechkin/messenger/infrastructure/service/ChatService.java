@@ -17,7 +17,9 @@ public interface ChatService {
 
     void updateGroupChat(UpdateGroupChatDto dto);
 
-    void updateChatMutedStatus(UpdateChatMutedStatusDto dto);
+    void updateChatMutedStatus(UpdateChatMutedOrPinnedStatusDto dto);
+
+    void updateChatPinnedStatus(UpdateChatMutedOrPinnedStatusDto dto);
 
     void deleteChat(UUID chatId);
 }

@@ -18,4 +18,5 @@ public class ChatDto {
     private MessageDto message;
     private Long unreadMessagesCount;
     private Boolean muted;
+    private Boolean pinned;
 }

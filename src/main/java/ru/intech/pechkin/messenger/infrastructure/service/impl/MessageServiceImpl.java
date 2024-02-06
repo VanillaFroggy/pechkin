@@ -18,11 +18,12 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class MessageServiceImpl implements MessageService {
-    private final UserRoleMutedChatRepository userRoleMutedChatRepository;
+    private final UserRoleMutedPinnedChatRepository userRoleMutedPinnedChatRepository;
     private final MessageRepository messageRepository;
     private final MessageDataRepository messageDataRepository;
     private final ChatMessageDataMessageRepository chatMessageDataMessageRepository;
     private final UserChatCheckedMessageRepository userChatCheckedMessageRepository;
+    private final UserRepository userRepository;
     private final MessengerServiceMapper mapper;
 
     @Override
@@ -105,14 +106,7 @@ public class MessageServiceImpl implements MessageService {
                                 .orElseThrow(NullPointerException::new)
                                 .getMessageId())
                         .orElseThrow(NullPointerException::new))
-                .map(message -> mapper.messageToMessageDto(
-                        message,
-                        userChatCheckedMessageRepository.findByUserIdAndChatIdAndMessageId(
-                                dto.getUserId(),
-                                dto.getChatId(),
-                                message.getId()
-                        ).orElseThrow(NullPointerException::new).getChecked()
-                ))
+                .map(message -> convertMessageToDto(message, dto.getUserId()))
                 .distinct()
                 .sorted(Comparator.comparing(MessageDto::getDateTime).reversed())
                 .toList();
@@ -209,20 +203,30 @@ public class MessageServiceImpl implements MessageService {
     private PageImpl<MessageDto> getMessageDtoPage(UUID userId, Page<Message> messagePage) {
         return new PageImpl<>(
                 messagePage.stream()
-                        .map(message ->
-                                mapper.messageToMessageDto(
-                                        message,
-                                        userChatCheckedMessageRepository.findByUserIdAndChatIdAndMessageId(
-                                                        userId,
-                                                        message.getChatId(),
-                                                        message.getId())
-                                                .orElseThrow(NullPointerException::new)
-                                                .getChecked()
-                                ))
+                        .map(message -> convertMessageToDto(message, userId))
                         .sorted(Comparator.comparing(MessageDto::getDateTime))
                         .toList(),
                 messagePage.getPageable(),
                 messagePage.getTotalElements()
+        );
+    }
+
+    private MessageDto convertMessageToDto(Message message, UUID userId) {
+        MessagePublisherDto publisherDto = null;
+        if (message.getPublisher() != null) {
+            publisherDto = mapper.userToMessagePublisherDto(
+                    userRepository.findById(message.getPublisher())
+                            .orElseThrow(NullPointerException::new)
+            );
+        }
+        return mapper.messageToMessageDto(
+                message,
+                publisherDto,
+                userChatCheckedMessageRepository.findByUserIdAndChatIdAndMessageId(
+                        userId,
+                        message.getChatId(),
+                        message.getId()
+                ).orElseThrow(NullPointerException::new).getChecked()
         );
     }
 
@@ -237,11 +241,11 @@ public class MessageServiceImpl implements MessageService {
         ));
         messageDataRepository.saveAll(datas);
         messageRepository.save(message);
-        List<UserRoleMutedChat> userRoleMutedChats = userRoleMutedChatRepository.findAllByChatId(message.getChatId());
-        userRoleMutedChats.forEach(userRoleMutedChat -> userChatCheckedMessageRepository.save(
+        List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats = userRoleMutedPinnedChatRepository.findAllByChatId(message.getChatId());
+        userRoleMutedPinnedChats.forEach(userRoleMutedPinnedChat -> userChatCheckedMessageRepository.save(
                 UserChatCheckedMessage.builder()
                         .id(UUID.randomUUID())
-                        .userId(userRoleMutedChat.getUserId())
+                        .userId(userRoleMutedPinnedChat.getUserId())
                         .chatId(message.getChatId())
                         .messageId(message.getId())
                         .checked(false)

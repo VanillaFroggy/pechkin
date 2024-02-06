@@ -14,7 +14,7 @@ import java.util.UUID;
 public class MessageDto {
     private UUID id;
     private UUID chatId;
-    private UUID publisher;
+    private MessagePublisherDto publisher;
     private List<MessageData> datas;
     private Message relatesTo;
     private LocalDateTime dateTime;
