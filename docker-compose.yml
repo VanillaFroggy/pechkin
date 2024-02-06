@@ -37,6 +37,7 @@ services:
   minio:
     container_name: messenger-file-storage
     image: bitnami/minio:latest
+    restart: always
     ports:
       - "9000:9000"
     environment:
