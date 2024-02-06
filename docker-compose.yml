@@ -16,6 +16,8 @@ services:
       FILE-SIZE-THRESHOLD: "2MB"
     depends_on:
       - mongo
+    volumes:
+      - ./file-storage:/file-storage
     networks:
       - app-network
 
