@@ -1,10 +1,13 @@
 package ru.intech.pechkin.messenger.infrastructure.service.impl;
 
+import jakarta.validation.Valid;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.intech.pechkin.messenger.infrastructure.persistance.entity.*;
 import ru.intech.pechkin.messenger.infrastructure.persistance.repo.*;
 import ru.intech.pechkin.messenger.infrastructure.service.MessageService;
@@ -16,6 +19,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class MessageServiceImpl implements MessageService {
     private final UserRoleMutedPinnedChatRepository userRoleMutedPinnedChatRepository;
@@ -27,7 +31,7 @@ public class MessageServiceImpl implements MessageService {
     private final MessengerServiceMapper mapper;
 
     @Override
-    public Page<MessageDto> getPageOfMessages(GetPageOfMessagesDto dto) {
+    public Page<MessageDto> getPageOfMessages(@Valid GetPageOfMessagesDto dto) {
         return getMessageDtoPage(
                 dto.getUserId(),
                 messageRepository.findAllByChatIdOrderByDateTimeDesc(
@@ -38,28 +42,17 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public MessageSendingResponse sendMessage(SendMessageDto dto) {
-        List<MessageData> datas = dto
-                .getDataDtos()
-                .stream()
-                .map(dataDto -> mapper.messageDataDtoToEntity(
-                        UUID.randomUUID(),
-                        dataDto)
+    public MessageSendingResponse sendMessage(@Valid SendMessageDto dto) {
+        return getMessageSendingResponse(
+                mapper.sendMessageDtoToSendOrReplyToMessageDto(
+                        dto,
+                        null
                 )
-                .toList();
-        Message message = Message.builder()
-                .id(UUID.randomUUID())
-                .chatId(dto.getChatId())
-                .publisher(dto.getUserId())
-                .datas(datas)
-                .dateTime(dto.getDateTime())
-                .edited(false)
-                .build();
-        return getMessageSendingResponse(datas, message);
+        );
     }
 
     @Override
-    public Page<MessageDto> updateMessageList(UpdateMessageListDto dto) {
+    public Page<MessageDto> updateMessageList(@Valid UpdateMessageListDto dto) {
         return getMessageDtoPage(
                 dto.getUserId(),
                 messageRepository.findAllByChatIdAndDateTimeAfterOrderByDateTimeDesc(
@@ -84,32 +77,23 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public Page<MessageDto> findMessageByValue(FindMessageByValueDto dto) {
+    public Page<MessageDto> findMessageByValue(@Valid FindMessageByValueDto dto) {
         List<ChatMessageDataMessage> chatMessageDataMessages = chatMessageDataMessageRepository.findAllByChatId(
                 dto.getChatId(),
                 PageRequest.of(dto.getPageNumber(), dto.getPageSize())
         ).orElseThrow(NullPointerException::new).getContent();
-        List<UUID> messageDataIds = chatMessageDataMessages.stream()
-                .map(ChatMessageDataMessage::getMessageDataId)
-                .toList();
         Page<MessageData> messageDataPage = messageDataRepository.findAllByIdInAndValueLikeIgnoreCase(
-                messageDataIds,
+                chatMessageDataMessages.stream()
+                        .map(ChatMessageDataMessage::getMessageDataId)
+                        .toList(),
                 dto.getValue(),
                 PageRequest.of(dto.getPageNumber(), dto.getPageSize())
         ).orElseThrow(NullPointerException::new);
-        List<MessageDto> messageDtos = messageDataPage.stream()
-                .map(messageData -> messageRepository.findById(chatMessageDataMessages.stream()
-                                .filter(chatMessageDataMessage ->
-                                        chatMessageDataMessage.getMessageDataId()
-                                                .equals(messageData.getId()))
-                                .findFirst()
-                                .orElseThrow(NullPointerException::new)
-                                .getMessageId())
-                        .orElseThrow(NullPointerException::new))
-                .map(message -> convertMessageToDto(message, dto.getUserId()))
-                .distinct()
-                .sorted(Comparator.comparing(MessageDto::getDateTime).reversed())
-                .toList();
+        List<MessageDto> messageDtos = getDistinctAndSortedMessageListFoundByValue(
+                dto,
+                messageDataPage,
+                chatMessageDataMessages
+        );
         return new PageImpl<>(
                 messageDtos,
                 PageRequest.of(dto.getPageNumber(), dto.getPageSize()),
@@ -117,36 +101,60 @@ public class MessageServiceImpl implements MessageService {
         );
     }
 
-    @Override
-    public MessageSendingResponse replyToMessage(ReplyToMessageDto dto) {
-        List<MessageData> datas = dto
-                .getDataDtos()
-                .stream()
-                .map(dataDto -> mapper.messageDataDtoToEntity(
-                        UUID.randomUUID(),
-                        dataDto)
+    @NonNull
+    private List<MessageDto> getDistinctAndSortedMessageListFoundByValue(
+            FindMessageByValueDto dto,
+            Page<MessageData> messageDataPage,
+            List<ChatMessageDataMessage> chatMessageDataMessages
+    ) {
+        List<Message> messages = messageRepository.findAllByChatIdAndIdIn(
+                dto.getChatId(),
+                chatMessageDataMessages.stream()
+                        .map(ChatMessageDataMessage::getMessageId)
+                        .toList()
+        );
+        return messageDataPage.stream()
+                .map(messageData ->
+                        messages.stream()
+                                .filter(message -> message.getDatas().contains(messageData))
+                                .findFirst()
+                                .orElseThrow(NullPointerException::new)
                 )
+                .map(message -> convertMessageToDto(message, dto.getUserId()))
+                .distinct()
+                .sorted(Comparator.comparing(MessageDto::getDateTime).reversed())
                 .toList();
-        Message message = Message.builder()
-                .id(UUID.randomUUID())
-                .chatId(dto.getChatId())
-                .publisher(dto.getUserId())
-                .datas(datas)
-                .relatesTo(messageRepository.findById(dto.getMessageToReplyId())
-                        .orElseThrow(NullPointerException::new))
-                .dateTime(dto.getDateTime())
-                .edited(false)
-                .build();
-        return getMessageSendingResponse(datas, message);
     }
 
     @Override
-    public void editMessage(EditMessageDto dto) {
+    public MessageSendingResponse replyToMessage(@Valid ReplyToMessageDto dto) {
+        return getMessageSendingResponse(
+                mapper.sendMessageDtoToSendOrReplyToMessageDto(
+                        mapper.replyToMessageDtoToSendMessageDto(dto),
+                        messageRepository.findById(dto.getMessageToReplyId())
+                                .orElseThrow(NullPointerException::new)
+                )
+        );
+    }
+
+    @Override
+    public void editMessage(@Valid EditMessageDto dto) {
         List<ChatMessageDataMessage> chatMessageDataMessages =
                 chatMessageDataMessageRepository.findAllByChatIdAndMessageId(
                         dto.getChatId(),
                         dto.getMessageId()
                 );
+        removeMessageDataFromEditingMessage(dto, chatMessageDataMessages);
+        addMessageDataToEditingMessage(dto, chatMessageDataMessages);
+        chatMessageDataMessageRepository.saveAll(chatMessageDataMessages);
+        Message message = messageRepository.findByIdAndChatId(dto.getMessageId(), dto.getChatId())
+                .orElseThrow(NullPointerException::new);
+        message.setDatas(dto.getDatas());
+        message.setEdited(true);
+        messageRepository.save(message);
+    }
+
+    private void removeMessageDataFromEditingMessage(EditMessageDto dto, List<ChatMessageDataMessage> chatMessageDataMessages) {
         chatMessageDataMessages.forEach(chatMessageDataMessage -> {
             MessageData filteredDto = dto.getDatas().stream()
                     .filter(messageData -> messageData.getId()
@@ -164,26 +172,22 @@ public class MessageServiceImpl implements MessageService {
                 .toList()
                 .contains(chatMessageDataMessage.getMessageDataId())
         );
+    }
+
+    private void addMessageDataToEditingMessage(EditMessageDto dto, List<ChatMessageDataMessage> chatMessageDataMessages) {
         dto.getDatas().forEach(messageData -> {
             if (messageData.getId() == null) {
                 messageData.setId(UUID.randomUUID());
                 chatMessageDataMessages.add(
-                        ChatMessageDataMessage.builder()
-                                .id(UUID.randomUUID())
-                                .chatId(dto.getChatId())
-                                .messageId(dto.getMessageId())
-                                .messageDataId(messageData.getId())
-                                .build()
+                        createChatMessageDataMessage(
+                                dto.getChatId(),
+                                dto.getMessageId(),
+                                messageData.getId()
+                        )
                 );
             }
             messageDataRepository.save(messageData);
         });
-        chatMessageDataMessageRepository.saveAll(chatMessageDataMessages);
-        Message message = messageRepository.findByIdAndChatId(dto.getMessageId(), dto.getChatId())
-                .orElseThrow(NullPointerException::new);
-        message.setDatas(dto.getDatas());
-        message.setEdited(true);
-        messageRepository.save(message);
     }
 
     @Override
@@ -197,6 +201,7 @@ public class MessageServiceImpl implements MessageService {
                         .toList()
         );
         chatMessageDataMessageRepository.deleteAllByMessageIdAndChatId(dto.getMessageId(), dto.getChatId());
+        userChatCheckedMessageRepository.deleteAllByMessageIdAndChatId(dto.getMessageId(), dto.getChatId());
         messageRepository.delete(message);
     }
 
@@ -230,17 +235,40 @@ public class MessageServiceImpl implements MessageService {
         );
     }
 
-    private MessageSendingResponse getMessageSendingResponse(List<MessageData> datas, Message message) {
+    private MessageSendingResponse getMessageSendingResponse(SendOrReplyToMessageDto dto) {
+        List<MessageData> datas = dto.getDataDtos()
+                .stream()
+                .map(dataDto -> mapper.messageDataDtoToEntity(
+                        UUID.randomUUID(),
+                        dataDto)
+                )
+                .toList();
+        Message message = mapper.sendOrReplyToMessageDtoToEntity(dto, UUID.randomUUID(), datas, false);
         datas.forEach(messageData -> chatMessageDataMessageRepository.save(
-                ChatMessageDataMessage.builder()
-                        .id(UUID.randomUUID())
-                        .chatId(message.getChatId())
-                        .messageId(message.getId())
-                        .messageDataId(messageData.getId())
-                        .build()
+                createChatMessageDataMessage(
+                        message.getChatId(),
+                        message.getId(),
+                        messageData.getId()
+                )
         ));
         messageDataRepository.saveAll(datas);
         messageRepository.save(message);
+
+        createUserChatCheckedMessageForEveryUserInChat(message);
+
+        return new MessageSendingResponse(message.getId(), message.getDatas());
+    }
+
+    private ChatMessageDataMessage createChatMessageDataMessage(UUID chatId, UUID messageId, UUID messageDataId) {
+        return ChatMessageDataMessage.builder()
+                .id(UUID.randomUUID())
+                .chatId(chatId)
+                .messageId(messageId)
+                .messageDataId(messageDataId)
+                .build();
+    }
+
+    private void createUserChatCheckedMessageForEveryUserInChat(Message message) {
         List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats = userRoleMutedPinnedChatRepository.findAllByChatId(message.getChatId());
         userRoleMutedPinnedChats.forEach(userRoleMutedPinnedChat -> userChatCheckedMessageRepository.save(
                 UserChatCheckedMessage.builder()
@@ -251,6 +279,5 @@ public class MessageServiceImpl implements MessageService {
                         .checked(false)
                         .build()
         ));
-        return new MessageSendingResponse(message.getId(), message.getDatas());
     }
 }

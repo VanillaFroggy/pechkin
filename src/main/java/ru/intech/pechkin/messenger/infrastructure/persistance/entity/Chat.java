@@ -14,15 +14,18 @@ import java.util.UUID;
 public class Chat {
     @Id
     private UUID id;
+    private UUID departmentId;
     private ChatType chatType;
     private String title;
     private String icon;
+    private Boolean corporate;
 
     public static Chat createFavorites() {
         return Chat.builder()
                 .id(UUID.randomUUID())
                 .chatType(ChatType.FAVORITES)
                 .title("Favorites")
+                .corporate(false)
                 .build();
     }
 
@@ -30,16 +33,19 @@ public class Chat {
         return Chat.builder()
                 .id(UUID.randomUUID())
                 .chatType(ChatType.P2P)
+                .corporate(false)
                 .build();
     }
 
     @NonNull
-    public static Chat createGroup(String title, String icon) {
+    public static Chat createGroup(String title, String icon, Boolean corporate, UUID departmentId) {
         return Chat.builder()
                 .id(UUID.randomUUID())
+                .departmentId(departmentId)
                 .chatType(ChatType.GROUP)
                 .title(title)
                 .icon(icon)
+                .corporate(corporate)
                 .build();
     }
 }

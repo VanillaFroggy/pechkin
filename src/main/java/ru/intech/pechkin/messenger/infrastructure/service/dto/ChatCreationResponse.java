@@ -1,12 +1,12 @@
 package ru.intech.pechkin.messenger.infrastructure.service.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 import java.util.UUID;
 
 @Data
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ChatCreationResponse {
-    private UUID chatId;
+    private final UUID chatId;
 }

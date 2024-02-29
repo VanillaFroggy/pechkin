@@ -14,11 +14,11 @@ public interface MessageService {
 
     void setMessageChecked(SetMessageCheckedDto dto);
 
-    Page<MessageDto> findMessageByValue(FindMessageByValueDto dto);
+    Page<MessageDto> findMessageByValue(@Valid FindMessageByValueDto dto);
 
     MessageSendingResponse replyToMessage(@Valid ReplyToMessageDto dto);
 
-    void editMessage(EditMessageDto dto);
+    void editMessage(@Valid EditMessageDto dto);
 
     void deleteMessage(DeleteMessageDto dto);
 }

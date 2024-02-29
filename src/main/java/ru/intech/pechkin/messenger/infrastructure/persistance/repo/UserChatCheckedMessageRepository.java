@@ -19,4 +19,6 @@ public interface UserChatCheckedMessageRepository extends MongoRepository<UserCh
     );
 
     void deleteAllByChatId(UUID chatId);
+
+    void deleteAllByMessageIdAndChatId(UUID messageId, UUID chatId);
 }

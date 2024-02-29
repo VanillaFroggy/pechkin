@@ -1,10 +1,12 @@
 package ru.intech.pechkin.messenger.infrastructure.service.dto;
 
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import ru.intech.pechkin.messenger.infrastructure.persistance.entity.MessageType;
 
 @Data
+@RequiredArgsConstructor
 public class MessageDataDto {
-    private MessageType messageType;
-    private String value;
+    private final MessageType messageType;
+    private final String value;
 }

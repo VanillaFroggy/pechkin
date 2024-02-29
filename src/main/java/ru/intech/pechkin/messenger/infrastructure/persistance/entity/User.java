@@ -20,6 +20,9 @@ public class User implements UserDetails {
     @Id
     private UUID id;
 
+//    private UUID employeeId;
+
+
     @Pattern(regexp = "^\\w{4,32}$")
     private String username;
 

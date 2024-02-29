@@ -6,6 +6,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.intech.pechkin.auth.config.JwtService;
 import ru.intech.pechkin.auth.service.AuthenticationService;
 import ru.intech.pechkin.auth.service.dto.AuthenticateDto;
@@ -21,6 +22,7 @@ import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
 import java.util.UUID;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserRepository userRepository;
@@ -45,11 +47,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .username(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .icon(dto.getIcon())
-                .fio(dto.getFio())
-                .email(dto.getEmail())
-                .phoneNumber(dto.getPhoneNumber())
-                .department(dto.getDepartment())
-                .position(dto.getPosition())
                 .blocked(false)
                 .build();
         chatService.createFavoritesChat(user.getId());
