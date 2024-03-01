@@ -8,17 +8,15 @@ public interface MessageService {
 
     Page<MessageDto> getPageOfMessages(@Valid GetPageOfMessagesDto dto);
 
-    MessageSendingResponse sendMessage(@Valid SendMessageDto dto);
-
-    Page<MessageDto> updateMessageList(@Valid UpdateMessageListDto dto);
+    MessageDto sendMessage(@Valid SendMessageDto dto);
 
     void setMessageChecked(SetMessageCheckedDto dto);
 
     Page<MessageDto> findMessageByValue(@Valid FindMessageByValueDto dto);
 
-    MessageSendingResponse replyToMessage(@Valid ReplyToMessageDto dto);
+    MessageDto replyToMessage(@Valid ReplyToMessageDto dto);
 
-    void editMessage(@Valid EditMessageDto dto);
+    MessageDto editMessage(@Valid EditMessageDto dto);
 
     void deleteMessage(DeleteMessageDto dto);
 }

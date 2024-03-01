@@ -27,8 +27,19 @@ public interface MessengerServiceMapper {
 //    }
 
     @Mapping(target = "id", source = "message.id")
+    @Mapping(target = "chatId", source = "message.chatId")
+    @Mapping(target = "datas", source = "message.datas")
+    @Mapping(target = "dateTime", source = "message.dateTime")
+    @Mapping(target = "edited", source = "message.edited")
     @Mapping(target = "publisher", source = "publisherDto")
-    MessageDto messageToMessageDto(Message message, MessagePublisherDto publisherDto, Boolean checked);
+    @Mapping(target = "relatesTo", source = "relatesTo")
+    @Mapping(target = "checked", source = "checked")
+    MessageDto messageToMessageDto(
+            Message message,
+            MessagePublisherDto publisherDto,
+            Boolean checked,
+            MessageDto relatesTo
+    );
 
     SendMessageDto replyToMessageDtoToSendMessageDto(ReplyToMessageDto dto);
 

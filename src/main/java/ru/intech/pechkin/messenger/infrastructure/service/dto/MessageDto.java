@@ -2,7 +2,6 @@ package ru.intech.pechkin.messenger.infrastructure.service.dto;
 
 import lombok.Builder;
 import lombok.Data;
-import ru.intech.pechkin.messenger.infrastructure.persistance.entity.Message;
 import ru.intech.pechkin.messenger.infrastructure.persistance.entity.MessageData;
 
 import java.time.LocalDateTime;
@@ -16,7 +15,7 @@ public class MessageDto {
     private UUID chatId;
     private MessagePublisherDto publisher;
     private List<MessageData> datas;
-    private Message relatesTo;
+    private MessageDto relatesTo;
     private LocalDateTime dateTime;
     private Boolean checked;
     private Boolean edited;

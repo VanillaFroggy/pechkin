@@ -42,23 +42,11 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public MessageSendingResponse sendMessage(@Valid SendMessageDto dto) {
+    public MessageDto sendMessage(@Valid SendMessageDto dto) {
         return getMessageSendingResponse(
                 mapper.sendMessageDtoToSendOrReplyToMessageDto(
                         dto,
                         null
-                )
-        );
-    }
-
-    @Override
-    public Page<MessageDto> updateMessageList(@Valid UpdateMessageListDto dto) {
-        return getMessageDtoPage(
-                dto.getUserId(),
-                messageRepository.findAllByChatIdAndDateTimeAfterOrderByDateTimeDesc(
-                        dto.getChatId(),
-                        dto.getDateTime(),
-                        PageRequest.of(dto.getPageNumber(), dto.getPageSize())
                 )
         );
     }
@@ -120,14 +108,21 @@ public class MessageServiceImpl implements MessageService {
                                 .findFirst()
                                 .orElseThrow(NullPointerException::new)
                 )
-                .map(message -> convertMessageToDto(message, dto.getUserId()))
+                .map(message -> convertMessageToDto(
+                        message,
+                        userChatCheckedMessageRepository.findByUserIdAndChatIdAndMessageId(
+                                dto.getUserId(),
+                                message.getChatId(),
+                                message.getId()
+                        ).orElseThrow(NullPointerException::new).getChecked()
+                ))
                 .distinct()
                 .sorted(Comparator.comparing(MessageDto::getDateTime).reversed())
                 .toList();
     }
 
     @Override
-    public MessageSendingResponse replyToMessage(@Valid ReplyToMessageDto dto) {
+    public MessageDto replyToMessage(@Valid ReplyToMessageDto dto) {
         return getMessageSendingResponse(
                 mapper.sendMessageDtoToSendOrReplyToMessageDto(
                         mapper.replyToMessageDtoToSendMessageDto(dto),
@@ -138,7 +133,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void editMessage(@Valid EditMessageDto dto) {
+    public MessageDto editMessage(@Valid EditMessageDto dto) {
         List<ChatMessageDataMessage> chatMessageDataMessages =
                 chatMessageDataMessageRepository.findAllByChatIdAndMessageId(
                         dto.getChatId(),
@@ -152,6 +147,7 @@ public class MessageServiceImpl implements MessageService {
         message.setDatas(dto.getDatas());
         message.setEdited(true);
         messageRepository.save(message);
+        return convertMessageToDto(message, null);
     }
 
     private void removeMessageDataFromEditingMessage(EditMessageDto dto, List<ChatMessageDataMessage> chatMessageDataMessages) {
@@ -208,7 +204,14 @@ public class MessageServiceImpl implements MessageService {
     private PageImpl<MessageDto> getMessageDtoPage(UUID userId, Page<Message> messagePage) {
         return new PageImpl<>(
                 messagePage.stream()
-                        .map(message -> convertMessageToDto(message, userId))
+                        .map(message -> convertMessageToDto(
+                                message,
+                                userChatCheckedMessageRepository.findByUserIdAndChatIdAndMessageId(
+                                        userId,
+                                        message.getChatId(),
+                                        message.getId()
+                                ).orElseThrow(NullPointerException::new).getChecked()
+                        ))
                         .sorted(Comparator.comparing(MessageDto::getDateTime))
                         .toList(),
                 messagePage.getPageable(),
@@ -216,7 +219,7 @@ public class MessageServiceImpl implements MessageService {
         );
     }
 
-    private MessageDto convertMessageToDto(Message message, UUID userId) {
+    private MessageDto convertMessageToDto(Message message, Boolean checked) {
         MessagePublisherDto publisherDto = null;
         if (message.getPublisher() != null) {
             publisherDto = mapper.userToMessagePublisherDto(
@@ -224,18 +227,27 @@ public class MessageServiceImpl implements MessageService {
                             .orElseThrow(NullPointerException::new)
             );
         }
+        MessageDto relatesTo = null;
+        if (message.getRelatesTo() != null) {
+            relatesTo = mapper.messageToMessageDto(
+                    message.getRelatesTo(),
+                    mapper.userToMessagePublisherDto(
+                            userRepository.findById(message.getRelatesTo().getPublisher())
+                                    .orElseThrow(NullPointerException::new)
+                    ),
+                    true,
+                    null
+            );
+        }
         return mapper.messageToMessageDto(
                 message,
                 publisherDto,
-                userChatCheckedMessageRepository.findByUserIdAndChatIdAndMessageId(
-                        userId,
-                        message.getChatId(),
-                        message.getId()
-                ).orElseThrow(NullPointerException::new).getChecked()
+                checked,
+                relatesTo
         );
     }
 
-    private MessageSendingResponse getMessageSendingResponse(SendOrReplyToMessageDto dto) {
+    private MessageDto getMessageSendingResponse(SendOrReplyToMessageDto dto) {
         List<MessageData> datas = dto.getDataDtos()
                 .stream()
                 .map(dataDto -> mapper.messageDataDtoToEntity(
@@ -256,7 +268,7 @@ public class MessageServiceImpl implements MessageService {
 
         createUserChatCheckedMessageForEveryUserInChat(message);
 
-        return new MessageSendingResponse(message.getId(), message.getDatas());
+        return convertMessageToDto(message, false);
     }
 
     private ChatMessageDataMessage createChatMessageDataMessage(UUID chatId, UUID messageId, UUID messageDataId) {

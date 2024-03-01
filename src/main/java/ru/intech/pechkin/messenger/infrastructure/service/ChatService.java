@@ -9,17 +9,17 @@ import java.util.UUID;
 public interface ChatService {
     List<ChatDto> getAllChats(UUID userId);
 
-    ChatCreationResponse createFavoritesChat(UUID userId);
+    ChatDto createFavoritesChat(UUID userId);
 
-    ChatCreationResponse createP2PChat(@Valid CreateP2PChatDto dto);
+    ChatDto createP2PChat(@Valid CreateP2PChatDto dto);
 
-    ChatCreationResponse createGroupChat(CreateGroupChatDto dto);
+    ChatDto createGroupChat(CreateGroupChatDto dto);
 
-    void updateGroupChat(UpdateGroupChatDto dto);
+    ChatDto updateGroupChat(UpdateGroupChatDto dto);
 
     void updateChatMutedStatus(UpdateChatMutedOrPinnedStatusDto dto);
 
     void updateChatPinnedStatus(UpdateChatMutedOrPinnedStatusDto dto);
 
-    void deleteChat(UUID chatId);
+    List<UUID> deleteChat(UUID chatId);
 }

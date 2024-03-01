@@ -16,6 +16,7 @@ import ru.intech.pechkin.messenger.infrastructure.service.mapper.MessengerServic
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -31,8 +32,6 @@ public class ChatServiceImpl implements ChatService {
     private final MessageService messageService;
     private final MessengerServiceMapper mapper;
 
-    //    TODO: Разбить большие методы на множество малых + придумать, как можно посылать запрос в бд всего один раз,
-    //     а не для каждого элемента списка + придумать, как можно реализовать подключения через WebSocket
     @Override
     public List<ChatDto> getAllChats(UUID userId) {
 //        TODO: Сделать метод в этом классе-сервисе для дополнения списка чатов в случае наличия у юзера роли супервизора,
@@ -100,7 +99,8 @@ public class ChatServiceImpl implements ChatService {
                 userChatCheckedMessageRepository
                         .findByUserIdAndChatIdAndMessageId(userId, chatDto.getId(), message.getId())
                         .orElseThrow(NullPointerException::new)
-                        .getChecked()
+                        .getChecked(),
+                null
         ));
     }
 
@@ -170,12 +170,12 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public ChatCreationResponse createFavoritesChat(UUID userId) {
+    public ChatDto createFavoritesChat(UUID userId) {
         Chat chat = Chat.createFavorites();
         chatRepository.save(chat);
         createAndSaveNewUserRoleMutedPinnedChat(userId, chat.getId(), Role.ADMIN);
         sendSystemMessage(chat.getId(), "Chat is created");
-        return new ChatCreationResponse(chat.getId());
+        return mapper.chatToChatDto(chat);
     }
 
     //    TODO: написать функционал добавления записи P2PChatUser в бд при создании P2P чата
@@ -185,7 +185,7 @@ public class ChatServiceImpl implements ChatService {
     //     Можно сделать на фронте за счёт анализа JSON-а с чатами, если есть чат типа P2P с искомым человеком,
     //     то открываем чат, если нет, то открываем форму для создания P2P чата
     @Override
-    public ChatCreationResponse createP2PChat(@Valid CreateP2PChatDto dto) {
+    public ChatDto createP2PChat(@Valid CreateP2PChatDto dto) {
         if (dto.getUsers().size() != 2 ||
                 userRepository.findByIdIn(dto.getUsers())
                         .orElseThrow(NullPointerException::new)
@@ -197,7 +197,7 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = Chat.createP2P();
         chatRepository.save(chat);
         dto.getUsers().forEach(userId -> createAndSaveNewUserRoleMutedPinnedChat(userId, chat.getId(), Role.ADMIN));
-        messageService.sendMessage(
+        MessageDto messageDto = messageService.sendMessage(
                 SendMessageDto.builder()
                         .chatId(chat.getId())
                         .userId(dto.getMessageDto().getPublisher())
@@ -205,11 +205,16 @@ public class ChatServiceImpl implements ChatService {
                         .dateTime(dto.getMessageDto().getDateTime())
                         .build()
         );
-        return new ChatCreationResponse(chat.getId());
+        return getChatDto(
+                chat,
+                messageDto,
+                dto.getUsers().stream()
+                        .collect(Collectors.toMap(uuid -> uuid, value -> Role.ADMIN))
+        );
     }
 
     @Override
-    public ChatCreationResponse createGroupChat(CreateGroupChatDto dto) {
+    public ChatDto createGroupChat(CreateGroupChatDto dto) {
         if (dto.getUsers().isEmpty() ||
                 userRepository.findByIdIn(dto.getUsers().keySet().stream().toList())
                         .orElseThrow(NullPointerException::new).isEmpty()) {
@@ -221,8 +226,26 @@ public class ChatServiceImpl implements ChatService {
         dto.getUsers().forEach((userId, userRole) ->
                 createAndSaveNewUserRoleMutedPinnedChat(userId, chat.getId(), userRole));
         chatRepository.save(chat);
-        sendSystemMessage(chat.getId(), "Chat is created");
-        return new ChatCreationResponse(chat.getId());
+        return getChatDto(chat, sendSystemMessage(chat.getId(), "Chat is created"), dto.getUsers());
+    }
+
+    @NonNull
+    private ChatDto getChatDto(Chat chat, MessageDto lastMessage, Map<UUID, Role> usersWithRole) {
+        ChatDto chatDto = mapper.chatToChatDto(chat);
+        chatDto.setMessage(lastMessage);
+        List<User> users = userRepository.findAllById(usersWithRole.keySet());
+        chatDto.setUsersWithRole(
+                users.stream()
+                        .map(user -> mapper.userAndRoleToUserWithRoleDto(
+                                user,
+                                usersWithRole.get(user.getId())
+                        ))
+                        .toList()
+        );
+        chatDto.setUnreadMessagesCount(1L);
+        chatDto.setMuted(false);
+        chatDto.setPinned(false);
+        return chatDto;
     }
 
     private void createAndSaveNewUserRoleMutedPinnedChat(UUID userId, UUID chatId, Role userRole) {
@@ -231,8 +254,8 @@ public class ChatServiceImpl implements ChatService {
         );
     }
 
-    private void sendSystemMessage(UUID chatId, String value) {
-        messageService.sendMessage(
+    private MessageDto sendSystemMessage(UUID chatId, String value) {
+        return messageService.sendMessage(
                 SendMessageDto.builder()
                         .chatId(chatId)
                         .dataDtos(List.of(
@@ -247,7 +270,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public void updateGroupChat(UpdateGroupChatDto dto) {
+    public ChatDto updateGroupChat(UpdateGroupChatDto dto) {
         Chat chat = chatRepository.findById(dto.getChatId())
                 .orElseThrow(NullPointerException::new);
         List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats =
@@ -259,6 +282,8 @@ public class ChatServiceImpl implements ChatService {
         removeUsersWithRolesFromGroupChat(dto, userRoleMutedPinnedChats);
         addOrUpdateUsersWithRolesInGroupChat(dto, userRoleMutedPinnedChats);
         userRoleMutedPinnedChatRepository.saveAll(userRoleMutedPinnedChats);
+
+        return getChatDto(chat,null, dto.getUsers());
     }
 
     private void removeUsersWithRolesFromGroupChat(
@@ -327,9 +352,13 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public void deleteChat(UUID chatId) {
+    public List<UUID> deleteChat(UUID chatId) {
         chatRepository.findById(chatId).orElseThrow(NullPointerException::new);
         chatRepository.deleteById(chatId);
+        List<UUID> userIds = userRoleMutedPinnedChatRepository.findAllByChatId(chatId)
+                .stream()
+                .map(UserRoleMutedPinnedChat::getUserId)
+                .toList();
         userRoleMutedPinnedChatRepository.deleteAllByChatId(chatId);
         messageRepository.deleteAllByChatId(chatId);
         userChatCheckedMessageRepository.deleteAllByChatId(chatId);
@@ -352,5 +381,6 @@ public class ChatServiceImpl implements ChatService {
                             .toList()
             );
         } while (!page.isLast());
+        return userIds;
     }
 }

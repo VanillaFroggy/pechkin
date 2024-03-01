@@ -3,9 +3,10 @@ package ru.intech.pechkin.messenger.ui.web.rest.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.ChatCreationResponse;
+import ru.intech.pechkin.messenger.ui.web.rest.dto.ChatCreationResponse;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.ChatDto;
 import ru.intech.pechkin.messenger.ui.web.rest.dto.CreateGroupChatRequest;
 import ru.intech.pechkin.messenger.ui.web.rest.dto.CreateP2PChatRequest;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class ChatController {
     private final ChatService chatService;
     private final ChatRestMapper mapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @GetMapping("/getAllChats/{id}")
     public ResponseEntity<List<ChatDto>> getAllChats(@PathVariable("id") UUID id) {
@@ -30,28 +32,29 @@ public class ChatController {
 
     @PostMapping("/createFavoritesChat/{id}")
     public ResponseEntity<ChatCreationResponse> createFavoritesChat(@PathVariable("id") UUID id) {
-        return new ResponseEntity<>(chatService.createFavoritesChat(id), HttpStatus.CREATED);
+        ChatDto chatDto = chatService.createFavoritesChat(id);
+        sendChatOverWebSocket(chatDto);
+        return new ResponseEntity<>(new ChatCreationResponse(chatDto.getId()), HttpStatus.CREATED);
     }
 
     @PostMapping("/createP2PChat")
     public ResponseEntity<ChatCreationResponse> createP2PChat(@RequestBody CreateP2PChatRequest request) {
-        return new ResponseEntity<>(
-                chatService.createP2PChat(mapper.createP2PChatRequestToDto(request)),
-                HttpStatus.CREATED
-        );
+        ChatDto chatDto = chatService.createP2PChat(mapper.createP2PChatRequestToDto(request));
+        sendChatOverWebSocket(chatDto);
+        return new ResponseEntity<>(new ChatCreationResponse(chatDto.getId()), HttpStatus.CREATED);
     }
 
     @PostMapping("/createGroupChat")
     public ResponseEntity<ChatCreationResponse> createGroupChat(@RequestBody CreateGroupChatRequest request) {
-        return new ResponseEntity<>(
-                chatService.createGroupChat(mapper.createGroupChatRequestToDto(request)),
-                HttpStatus.CREATED
-        );
+        ChatDto chatDto = chatService.createGroupChat(mapper.createGroupChatRequestToDto(request));
+        sendChatOverWebSocket(chatDto);
+        return new ResponseEntity<>(new ChatCreationResponse(chatDto.getId()), HttpStatus.CREATED);
     }
 
     @PutMapping("/updateGroupChat")
     public ResponseEntity<Void> updateGroupChat(@RequestBody UpdateGroupChatRequest request) {
-        chatService.updateGroupChat(mapper.updateGroupChatRequestToDto(request));
+        ChatDto chatDto = chatService.updateGroupChat(mapper.updateGroupChatRequestToDto(request));
+        sendChatOverWebSocket(chatDto);
         return ResponseEntity.noContent().build();
     }
 
@@ -69,7 +72,18 @@ public class ChatController {
 
     @DeleteMapping("/deleteChat/{id}")
     public ResponseEntity<Void> deleteChat(@PathVariable("id") UUID id) {
-        chatService.deleteChat(id);
+        chatService.deleteChat(id).forEach(uuid ->
+                messagingTemplate.convertAndSend(
+                        "/topic/user/" + uuid,
+                        "Chat with ID " + id + " has been deleted"
+                )
+        );
         return ResponseEntity.noContent().build();
+    }
+
+    private void sendChatOverWebSocket(ChatDto chatDto) {
+        chatDto.getUsersWithRole().forEach(userWithRoleDto ->
+                messagingTemplate.convertAndSend("/topic/user/" + userWithRoleDto.getId(), chatDto)
+        );
     }
 }
