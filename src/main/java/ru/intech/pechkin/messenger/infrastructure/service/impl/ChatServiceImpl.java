@@ -62,7 +62,7 @@ public class ChatServiceImpl implements ChatService {
 
     @NonNull
     private List<ChatDto> getChatDtoListByUserId(UUID userId) {
-        List<Chat> chats = chatRepository.findAllByIdIn(
+        List<Chat> chats = chatRepository.findAllById(
                 userRoleMutedPinnedChatRepository.findAllByUserId(userId)
                         .stream()
                         .map(UserRoleMutedPinnedChat::getChatId)
@@ -187,8 +187,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public ChatDto createP2PChat(@Valid CreateP2PChatDto dto) {
         if (dto.getUsers().size() != 2 ||
-                userRepository.findByIdIn(dto.getUsers())
-                        .orElseThrow(NullPointerException::new)
+                userRepository.findAllById(dto.getUsers())
                         .size() != 2) {
             throw new IllegalArgumentException("В приватном чате должно быть лишь два пользователя");
         } else if (dto.getMessageDto() == null) {
@@ -216,8 +215,8 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public ChatDto createGroupChat(CreateGroupChatDto dto) {
         if (dto.getUsers().isEmpty() ||
-                userRepository.findByIdIn(dto.getUsers().keySet().stream().toList())
-                        .orElseThrow(NullPointerException::new).isEmpty()) {
+                userRepository.findAllById(dto.getUsers().keySet())
+                        .isEmpty()) {
             throw new IllegalArgumentException("В групповом чате должны быть пользователи");
         }
         Chat chat = Chat.createGroup(
@@ -367,7 +366,7 @@ public class ChatServiceImpl implements ChatService {
             page = chatMessageDataMessageRepository
                     .findAllByChatId(chatId, PageRequest.of(0, 100))
                     .orElseThrow(NullPointerException::new);
-            messageDataRepository.deleteAllByIdIn(
+            messageDataRepository.deleteAllById(
                     page.getContent()
                             .stream()
                             .map(ChatMessageDataMessage::getMessageDataId)

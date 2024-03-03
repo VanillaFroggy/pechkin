@@ -170,27 +170,30 @@ public class MessageServiceImpl implements MessageService {
         );
     }
 
-    private void addMessageDataToEditingMessage(EditMessageDto dto, List<ChatMessageDataMessage> chatMessageDataMessages) {
+    private void addMessageDataToEditingMessage(
+            EditMessageDto dto,
+            List<ChatMessageDataMessage> chatMessageDataMessages
+    ) {
         dto.getDatas().forEach(messageData -> {
             if (messageData.getId() == null) {
                 messageData.setId(UUID.randomUUID());
                 chatMessageDataMessages.add(
-                        createChatMessageDataMessage(
+                        ChatMessageDataMessage.create(
                                 dto.getChatId(),
                                 dto.getMessageId(),
                                 messageData.getId()
                         )
                 );
             }
-            messageDataRepository.save(messageData);
         });
+        messageDataRepository.saveAll(dto.getDatas());
     }
 
     @Override
     public void deleteMessage(DeleteMessageDto dto) {
         Message message = messageRepository.findByIdAndChatId(dto.getMessageId(), dto.getChatId())
                 .orElseThrow(NullPointerException::new);
-        messageDataRepository.deleteAllByIdIn(
+        messageDataRepository.deleteAllById(
                 message.getDatas()
                         .stream()
                         .map(MessageData::getId)
@@ -256,13 +259,17 @@ public class MessageServiceImpl implements MessageService {
                 )
                 .toList();
         Message message = mapper.sendOrReplyToMessageDtoToEntity(dto, UUID.randomUUID(), datas, false);
-        datas.forEach(messageData -> chatMessageDataMessageRepository.save(
-                createChatMessageDataMessage(
-                        message.getChatId(),
-                        message.getId(),
-                        messageData.getId()
-                )
-        ));
+        chatMessageDataMessageRepository.saveAll(
+                datas.stream()
+                        .map(messageData ->
+                                ChatMessageDataMessage.create(
+                                        message.getChatId(),
+                                        message.getId(),
+                                        messageData.getId()
+                                )
+                        )
+                        .toList()
+        );
         messageDataRepository.saveAll(datas);
         messageRepository.save(message);
 
@@ -271,25 +278,19 @@ public class MessageServiceImpl implements MessageService {
         return convertMessageToDto(message, false);
     }
 
-    private ChatMessageDataMessage createChatMessageDataMessage(UUID chatId, UUID messageId, UUID messageDataId) {
-        return ChatMessageDataMessage.builder()
-                .id(UUID.randomUUID())
-                .chatId(chatId)
-                .messageId(messageId)
-                .messageDataId(messageDataId)
-                .build();
-    }
-
     private void createUserChatCheckedMessageForEveryUserInChat(Message message) {
-        List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats = userRoleMutedPinnedChatRepository.findAllByChatId(message.getChatId());
-        userRoleMutedPinnedChats.forEach(userRoleMutedPinnedChat -> userChatCheckedMessageRepository.save(
-                UserChatCheckedMessage.builder()
-                        .id(UUID.randomUUID())
-                        .userId(userRoleMutedPinnedChat.getUserId())
-                        .chatId(message.getChatId())
-                        .messageId(message.getId())
-                        .checked(false)
-                        .build()
-        ));
+        List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats =
+                userRoleMutedPinnedChatRepository.findAllByChatId(message.getChatId());
+        userChatCheckedMessageRepository.saveAll(
+                userRoleMutedPinnedChats.stream()
+                        .map(userRoleMutedPinnedChat ->
+                                UserChatCheckedMessage.create(
+                                        userRoleMutedPinnedChat.getUserId(),
+                                        message.getChatId(),
+                                        message.getId()
+                                )
+                        )
+                        .toList()
+        );
     }
 }

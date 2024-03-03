@@ -16,4 +16,13 @@ public class ChatMessageDataMessage {
     UUID chatId;
     UUID messageId;
     UUID messageDataId;
+
+    public static ChatMessageDataMessage create(UUID chatId, UUID messageId, UUID messageDataId) {
+        return ChatMessageDataMessage.builder()
+                .id(UUID.randomUUID())
+                .chatId(chatId)
+                .messageId(messageId)
+                .messageDataId(messageDataId)
+                .build();
+    }
 }

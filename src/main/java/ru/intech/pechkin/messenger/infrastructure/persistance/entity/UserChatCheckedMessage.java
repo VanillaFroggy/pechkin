@@ -17,4 +17,14 @@ public class UserChatCheckedMessage {
     UUID chatId;
     UUID messageId;
     Boolean checked;
+
+    public static UserChatCheckedMessage create(UUID userId, UUID chatId, UUID messageId) {
+        return UserChatCheckedMessage.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .chatId(chatId)
+                .messageId(messageId)
+                .checked(false)
+                .build();
+    }
 }
