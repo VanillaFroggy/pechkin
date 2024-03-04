@@ -29,3 +29,4 @@ logging:
   file:
     name: logs/pechkin.log
     path: logs/
+registrationLink: ${REGISTRATION_LINK:https://messenger/register}

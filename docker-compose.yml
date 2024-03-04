@@ -29,10 +29,19 @@ services:
       - "27017:27017"
     environment:
       MONGO_INITDB_DATABASE: "messenger"
+    command: ["--replSet", "rs0"]
     volumes:
       - ./mongoVolume:/data/db
     networks:
       - app-network
+#  After mongo start input next commands to terminal
+#
+#  docker ps
+#  docker exec -it id_контейнера_с_mongo bash
+#  mongosh --port 27017
+#  rs.initiate()
+#  rs.status()
+#  exit
 
   minio:
     container_name: messenger-file-storage
