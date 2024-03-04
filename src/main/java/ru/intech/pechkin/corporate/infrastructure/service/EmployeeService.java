@@ -1,18 +1,24 @@
 package ru.intech.pechkin.corporate.infrastructure.service;
 
-import ru.intech.pechkin.corporate.infrastructure.persistance.entity.Employee;
+import jakarta.validation.Valid;
+import ru.intech.pechkin.corporate.infrastructure.service.dto.EmployeeDto;
+import ru.intech.pechkin.corporate.infrastructure.service.dto.AddEmployeeDto;
+import ru.intech.pechkin.corporate.infrastructure.service.dto.EmployeeRegistrationLinkResponse;
+import ru.intech.pechkin.corporate.infrastructure.service.dto.UpdateEmployeeDto;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface EmployeeService {
-    List<Employee> getEmployeeList();
+    List<EmployeeDto> getEmployeeList();
 
-    Employee getEmployeeById(UUID employeeId);
+    List<EmployeeDto> getEmployeeListByDepartment(String departmentTitle);
 
-//    void hireEmployee(HireEmployeeDto dto);
-//
-//    void updateEmployee(UpdateEmployeeDto dto);
+    EmployeeDto getEmployeeById(UUID employeeId);
+
+    EmployeeRegistrationLinkResponse addEmployee(@Valid AddEmployeeDto dto);
+
+    void updateEmployee(@Valid UpdateEmployeeDto dto);
 
     void fireEmployee(UUID employeeId);
 }

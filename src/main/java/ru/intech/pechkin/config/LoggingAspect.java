@@ -35,15 +35,20 @@ public class LoggingAspect {
     private void callAtUserService() {
     }
 
+    @Pointcut("execution(* ru.intech.pechkin.corporate.infrastructure.service.EmployeeService.*(..))")
+    private void callAtEmployeeService() {
+    }
+
     @Before("callAtAuthenticationService() || callAtChatService() " +
-            "|| callAtFileStorageService() || callAtMessageService() || callAtUserService()")
+            "|| callAtFileStorageService() || callAtMessageService() || callAtUserService()" +
+            "|| callAtEmployeeService()")
     public void beforeServiceMethodAdvice(JoinPoint jp) {
         log.info(jp + ", args=[" + getArgs(jp) + "]");
     }
 
     @AfterThrowing(pointcut = "callAtAuthenticationService() || callAtChatService() " +
             "|| callAtFileStorageService() || callAtMessageService() " +
-            "|| callAtUserService()", throwing = "exception")
+            "|| callAtUserService() || callAtEmployeeService()", throwing = "exception")
     public void afterThrowingServiceAdvice(JoinPoint jp, Throwable exception) {
         log.error(jp + ", args=[" + getArgs(jp) + "]");
         log.error(exception.toString());

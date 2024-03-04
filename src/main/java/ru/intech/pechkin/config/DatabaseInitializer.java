@@ -33,7 +33,6 @@ public class DatabaseInitializer implements ApplicationRunner {
                     .id(UUID.fromString("d78ab7a3-6725-43c8-8012-35d826caf988"))
                     .username("admin")
                     .password(passwordEncoder.encode("Nerds4ever<3"))
-                    .fio("Админ Админович")
                     .blocked(false)
                     .build();
             userRepository.save(user);

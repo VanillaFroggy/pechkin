@@ -15,6 +15,7 @@ import ru.intech.pechkin.auth.service.dto.RegisterDto;
 import ru.intech.pechkin.auth.service.exception.IllegalRegisterParameterException;
 import ru.intech.pechkin.auth.service.exception.NoSuchUsernameAndPasswordException;
 import ru.intech.pechkin.auth.service.mapper.AuthenticationServiceMapper;
+import ru.intech.pechkin.corporate.infrastructure.service.EmployeeService;
 import ru.intech.pechkin.messenger.infrastructure.persistance.entity.User;
 import ru.intech.pechkin.messenger.infrastructure.persistance.repo.UserRepository;
 import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
@@ -31,19 +32,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final ChatService chatService;
+    private final EmployeeService employeeService;
 
     @Override
     public void register(@Valid RegisterDto dto) {
-        if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
+        if (employeeService.getEmployeeById(dto.getEmployeeId()) == null) {
+            throw new IllegalRegisterParameterException("Такого работника не существует");
+        } else if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
             throw new IllegalRegisterParameterException("Пользователь с таким именем уже существует");
-        } else if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new IllegalRegisterParameterException("Этот email уже зарегестрирован");
-        } else if (userRepository.findByPhoneNumber(dto.getPhoneNumber()).isPresent()) {
-            throw new IllegalRegisterParameterException("Этот номер телефона уже зарегестрирован");
         }
 
         User user = User.builder()
                 .id(UUID.randomUUID())
+                .employeeId(dto.getEmployeeId())
                 .username(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .icon(dto.getIcon())

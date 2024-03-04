@@ -1,18 +1,12 @@
-package ru.intech.pechkin.corporate.infrastructure.persistance.entity;
+package ru.intech.pechkin.corporate.infrastructure.service.dto;
 
 import jakarta.validation.constraints.Pattern;
-import lombok.Builder;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.UUID;
 
 @Data
-@Builder
-@Document("employees")
-public class Employee {
-    @Id
+public class UpdateEmployeeDto {
     private UUID id;
 
     private String fio;

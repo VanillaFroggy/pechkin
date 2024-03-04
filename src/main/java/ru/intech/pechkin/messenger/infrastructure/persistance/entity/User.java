@@ -20,8 +20,7 @@ public class User implements UserDetails {
     @Id
     private UUID id;
 
-//    private UUID employeeId;
-
+    private UUID employeeId;
 
     @Pattern(regexp = "^\\w{4,32}$")
     private String username;
@@ -30,20 +29,6 @@ public class User implements UserDetails {
     private String password;
 
     private String icon;
-
-    private String fio;
-
-    @Pattern(regexp = "^(\\+7|8)[(]?\\d{3}[)]?[-\\s\\\\.]?\\d{3}[-\\s.]?\\d{4}$")
-    private String phoneNumber;
-
-    @Pattern(regexp = "^[\\w.%+-]+@[a-z\\d.-]+\\\\.[a-z]{2,6}$")
-    private String email;
-
-    @Pattern(regexp = "^\\w{4,32}$")
-    private String department;
-
-    @Pattern(regexp = "^\\w{4,32}$")
-    private String position;
 
     private Boolean blocked;
 

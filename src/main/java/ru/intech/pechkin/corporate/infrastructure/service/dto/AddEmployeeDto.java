@@ -1,20 +1,12 @@
-package ru.intech.pechkin.corporate.infrastructure.persistance.entity;
+package ru.intech.pechkin.corporate.infrastructure.service.dto;
 
 import jakarta.validation.constraints.Pattern;
-import lombok.Builder;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.UUID;
 
 @Data
-@Builder
-@Document("employees")
-public class Employee {
-    @Id
-    private UUID id;
-
+public class AddEmployeeDto {
     private String fio;
 
     @Pattern(regexp = "^(\\+7|8)[(]?\\d{3}[)]?[-\\s\\\\.]?\\d{3}[-\\s.]?\\d{4}$")
@@ -28,6 +20,4 @@ public class Employee {
     private String position;
 
     private Boolean superuser;
-
-    private Boolean fired;
 }
