@@ -1,6 +1,6 @@
 package ru.intech.pechkin.auth.config;
 
-import ru.intech.pechkin.messenger.infrastructure.persistance.repo.UserRepository;
+import ru.intech.pechkin.messenger.infrastructure.persistence.repo.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

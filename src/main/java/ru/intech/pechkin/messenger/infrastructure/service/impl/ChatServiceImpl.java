@@ -7,14 +7,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.intech.pechkin.messenger.infrastructure.persistance.entity.*;
-import ru.intech.pechkin.messenger.infrastructure.persistance.repo.*;
+import ru.intech.pechkin.messenger.infrastructure.persistence.entity.*;
+import ru.intech.pechkin.messenger.infrastructure.persistence.repo.*;
 import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
 import ru.intech.pechkin.messenger.infrastructure.service.MessageService;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
 import ru.intech.pechkin.messenger.infrastructure.service.mapper.MessengerServiceMapper;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -174,8 +173,11 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = Chat.createFavorites();
         chatRepository.save(chat);
         createAndSaveNewUserRoleMutedPinnedChat(userId, chat.getId(), Role.ADMIN);
-        sendSystemMessage(chat.getId(), "Chat is created");
-        return mapper.chatToChatDto(chat);
+        return getChatDto(
+                chat,
+                sendSystemMessage(chat.getId(), "Chat is created"),
+                new HashMap<>(Map.of(userId, Role.ADMIN))
+        );
     }
 
     //    TODO: написать функционал добавления записи P2PChatUser в бд при создании P2P чата
@@ -196,17 +198,15 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = Chat.createP2P();
         chatRepository.save(chat);
         dto.getUsers().forEach(userId -> createAndSaveNewUserRoleMutedPinnedChat(userId, chat.getId(), Role.ADMIN));
-        MessageDto messageDto = messageService.sendMessage(
-                SendMessageDto.builder()
-                        .chatId(chat.getId())
-                        .userId(dto.getMessageDto().getPublisher())
-                        .dataDtos(dto.getMessageDto().getDataDtos())
-                        .dateTime(dto.getMessageDto().getDateTime())
-                        .build()
-        );
         return getChatDto(
                 chat,
-                messageDto,
+                messageService.sendMessage(
+                        SendMessageDto.builder()
+                                .chatId(chat.getId())
+                                .userId(dto.getMessageDto().getPublisher())
+                                .dataDtos(dto.getMessageDto().getDataDtos())
+                                .build()
+                ),
                 dto.getUsers().stream()
                         .collect(Collectors.toMap(uuid -> uuid, value -> Role.ADMIN))
         );
@@ -263,7 +263,6 @@ public class ChatServiceImpl implements ChatService {
                                         value
                                 )
                         ))
-                        .dateTime(LocalDateTime.now())
                         .build()
         );
     }

@@ -4,8 +4,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
-import ru.intech.pechkin.corporate.infrastructure.persistance.entity.Department;
-import ru.intech.pechkin.corporate.infrastructure.persistance.entity.Employee;
+import ru.intech.pechkin.corporate.infrastructure.persistence.entity.Department;
+import ru.intech.pechkin.corporate.infrastructure.persistence.entity.Employee;
 import ru.intech.pechkin.corporate.infrastructure.service.dto.*;
 
 import java.util.UUID;

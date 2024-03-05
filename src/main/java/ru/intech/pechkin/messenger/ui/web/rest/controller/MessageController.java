@@ -39,6 +39,14 @@ public class MessageController {
         );
     }
 
+    @GetMapping("/updateMessageList")
+    public ResponseEntity<Page<MessageDto>> updateMessageList(@RequestBody UpdateMessageListRequest request) {
+        return new ResponseEntity<>(
+                messageService.updateMessageList(mapper.updateMessageListRequestToDto(request)),
+                HttpStatus.OK
+        );
+    }
+
     @PutMapping("/setMessageChecked")
     public ResponseEntity<Void> setMessageChecked(@RequestBody SetMessageCheckedRequest request) {
         messageService.setMessageChecked(mapper.setMessageCheckedRequestToDto(request));

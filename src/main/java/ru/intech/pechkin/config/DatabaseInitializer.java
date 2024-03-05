@@ -10,8 +10,8 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import ru.intech.pechkin.messenger.infrastructure.persistance.entity.User;
-import ru.intech.pechkin.messenger.infrastructure.persistance.repo.UserRepository;
+import ru.intech.pechkin.messenger.infrastructure.persistence.entity.User;
+import ru.intech.pechkin.messenger.infrastructure.persistence.repo.UserRepository;
 
 import java.util.UUID;
 

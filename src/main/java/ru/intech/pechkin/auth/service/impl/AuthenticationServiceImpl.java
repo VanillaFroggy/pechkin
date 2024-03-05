@@ -16,8 +16,8 @@ import ru.intech.pechkin.auth.service.exception.IllegalRegisterParameterExceptio
 import ru.intech.pechkin.auth.service.exception.NoSuchUsernameAndPasswordException;
 import ru.intech.pechkin.auth.service.mapper.AuthenticationServiceMapper;
 import ru.intech.pechkin.corporate.infrastructure.service.EmployeeService;
-import ru.intech.pechkin.messenger.infrastructure.persistance.entity.User;
-import ru.intech.pechkin.messenger.infrastructure.persistance.repo.UserRepository;
+import ru.intech.pechkin.messenger.infrastructure.persistence.entity.User;
+import ru.intech.pechkin.messenger.infrastructure.persistence.repo.UserRepository;
 import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
 
 import java.util.UUID;

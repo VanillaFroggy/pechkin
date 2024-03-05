@@ -8,12 +8,14 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.intech.pechkin.messenger.infrastructure.persistance.entity.*;
-import ru.intech.pechkin.messenger.infrastructure.persistance.repo.*;
+import ru.intech.pechkin.messenger.infrastructure.persistence.entity.*;
+import ru.intech.pechkin.messenger.infrastructure.persistence.repo.*;
 import ru.intech.pechkin.messenger.infrastructure.service.MessageService;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
 import ru.intech.pechkin.messenger.infrastructure.service.mapper.MessengerServiceMapper;
 
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -34,11 +36,11 @@ public class MessageServiceImpl implements MessageService {
     public Page<MessageDto> getPageOfMessages(@Valid GetPageOfMessagesDto dto) {
         return getMessageDtoPage(
                 dto.getUserId(),
+                dto.getChatId(),
                 messageRepository.findAllByChatIdOrderByDateTimeDesc(
                         dto.getChatId(),
                         PageRequest.of(dto.getPageNumber(), dto.getPageSize())
-                )
-        );
+                ));
     }
 
     @Override
@@ -47,6 +49,19 @@ public class MessageServiceImpl implements MessageService {
                 mapper.sendMessageDtoToSendOrReplyToMessageDto(
                         dto,
                         null
+                )
+        );
+    }
+
+    @Override
+    public Page<MessageDto> updateMessageList(@Valid UpdateMessageListDto dto) {
+        return getMessageDtoPage(
+                dto.getUserId(),
+                dto.getChatId(),
+                messageRepository.findAllByChatIdAndDateTimeAfterOrderByDateTime(
+                        dto.getChatId(),
+                        dto.getDateTime(),
+                        PageRequest.of(dto.getPageNumber(), dto.getPageSize())
                 )
         );
     }
@@ -101,6 +116,23 @@ public class MessageServiceImpl implements MessageService {
                         .map(ChatMessageDataMessage::getMessageId)
                         .toList()
         );
+        List<UserChatCheckedMessage> userChatCheckedMessages =
+                userChatCheckedMessageRepository.findAllByUserIdAndChatIdAndMessageIdIn(
+                        dto.getUserId(),
+                        dto.getChatId(),
+                        messages.stream()
+                                .map(Message::getId)
+                                .toList()
+                ).orElseThrow(NullPointerException::new);
+        return getMessageDtoListForSearchingByMessageValue(messageDataPage, messages, userChatCheckedMessages);
+    }
+
+    @NonNull
+    private List<MessageDto> getMessageDtoListForSearchingByMessageValue(
+            Page<MessageData> messageDataPage,
+            List<Message> messages,
+            List<UserChatCheckedMessage> userChatCheckedMessages
+    ) {
         return messageDataPage.stream()
                 .map(messageData ->
                         messages.stream()
@@ -110,11 +142,12 @@ public class MessageServiceImpl implements MessageService {
                 )
                 .map(message -> convertMessageToDto(
                         message,
-                        userChatCheckedMessageRepository.findByUserIdAndChatIdAndMessageId(
-                                dto.getUserId(),
-                                message.getChatId(),
-                                message.getId()
-                        ).orElseThrow(NullPointerException::new).getChecked()
+                        userChatCheckedMessages.stream()
+                                .filter(userChatCheckedMessage ->
+                                        userChatCheckedMessage.getMessageId().equals(message.getId()))
+                                .findFirst()
+                                .orElseThrow(NullPointerException::new)
+                                .getChecked()
                 ))
                 .distinct()
                 .sorted(Comparator.comparing(MessageDto::getDateTime).reversed())
@@ -204,16 +237,25 @@ public class MessageServiceImpl implements MessageService {
         messageRepository.delete(message);
     }
 
-    private PageImpl<MessageDto> getMessageDtoPage(UUID userId, Page<Message> messagePage) {
+    private PageImpl<MessageDto> getMessageDtoPage(UUID userId, UUID chatId, Page<Message> messagePage) {
+        List<UserChatCheckedMessage> userChatCheckedMessages =
+                userChatCheckedMessageRepository.findAllByUserIdAndChatIdAndMessageIdIn(
+                        userId,
+                        chatId,
+                        messagePage.get()
+                                .map(Message::getId)
+                                .toList()
+                ).orElseThrow(NullPointerException::new);
         return new PageImpl<>(
                 messagePage.stream()
                         .map(message -> convertMessageToDto(
                                 message,
-                                userChatCheckedMessageRepository.findByUserIdAndChatIdAndMessageId(
-                                        userId,
-                                        message.getChatId(),
-                                        message.getId()
-                                ).orElseThrow(NullPointerException::new).getChecked()
+                                userChatCheckedMessages.stream()
+                                        .filter(userChatCheckedMessage ->
+                                                userChatCheckedMessage.getMessageId().equals(message.getId()))
+                                        .findFirst()
+                                        .orElseThrow(NullPointerException::new)
+                                        .getChecked()
                         ))
                         .sorted(Comparator.comparing(MessageDto::getDateTime))
                         .toList(),
@@ -258,7 +300,13 @@ public class MessageServiceImpl implements MessageService {
                         dataDto)
                 )
                 .toList();
-        Message message = mapper.sendOrReplyToMessageDtoToEntity(dto, UUID.randomUUID(), datas, false);
+        Message message = mapper.sendOrReplyToMessageDtoToEntity(
+                dto,
+                UUID.randomUUID(),
+                datas,
+                ZonedDateTime.now(ZoneOffset.UTC),
+                false
+        );
         chatMessageDataMessageRepository.saveAll(
                 datas.stream()
                         .map(messageData ->

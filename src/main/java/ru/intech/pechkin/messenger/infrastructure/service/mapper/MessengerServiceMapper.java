@@ -1,9 +1,10 @@
 package ru.intech.pechkin.messenger.infrastructure.service.mapper;
 
 import org.mapstruct.*;
-import ru.intech.pechkin.messenger.infrastructure.persistance.entity.*;
+import ru.intech.pechkin.messenger.infrastructure.persistence.entity.*;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,14 +45,15 @@ public interface MessengerServiceMapper {
     SendMessageDto replyToMessageDtoToSendMessageDto(ReplyToMessageDto dto);
 
     @Mapping(target = "chatId", source = "dto.chatId")
-    @Mapping(target = "dateTime", source = "dto.dateTime")
     SendOrReplyToMessageDto sendMessageDtoToSendOrReplyToMessageDto(SendMessageDto dto, Message messageToReply);
 
+    @Mapping(target = "id", source = "messageId")
     @Mapping(target = "relatesTo", source = "dto.messageToReply")
     Message sendOrReplyToMessageDtoToEntity(
             SendOrReplyToMessageDto dto,
             UUID messageId,
             List<MessageData> datas,
+            ZonedDateTime dateTime,
             Boolean edited
     );
 

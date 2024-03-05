@@ -5,7 +5,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants.ComponentModel;
 import org.mapstruct.ReportingPolicy;
 import ru.intech.pechkin.auth.service.dto.AuthenticationDto;
-import ru.intech.pechkin.messenger.infrastructure.persistance.entity.User;
+import ru.intech.pechkin.messenger.infrastructure.persistence.entity.User;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = ComponentModel.SPRING)
 public interface AuthenticationServiceMapper {

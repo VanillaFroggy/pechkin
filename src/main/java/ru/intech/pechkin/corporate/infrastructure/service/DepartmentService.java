@@ -1,6 +1,6 @@
 package ru.intech.pechkin.corporate.infrastructure.service;
 
-import ru.intech.pechkin.corporate.infrastructure.persistance.entity.Department;
+import ru.intech.pechkin.corporate.infrastructure.persistence.entity.Department;
 
 import java.util.List;
 import java.util.UUID;

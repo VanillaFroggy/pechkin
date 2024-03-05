@@ -1,7 +1,7 @@
 package ru.intech.pechkin.messenger.ui.web.rest.dto;
 
 import lombok.Data;
-import ru.intech.pechkin.messenger.infrastructure.persistance.entity.Role;
+import ru.intech.pechkin.messenger.infrastructure.persistence.entity.Role;
 
 import java.util.Map;
 import java.util.UUID;

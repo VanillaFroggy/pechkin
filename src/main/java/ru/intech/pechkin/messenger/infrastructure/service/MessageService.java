@@ -5,10 +5,11 @@ import org.springframework.data.domain.Page;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
 
 public interface MessageService {
-
     Page<MessageDto> getPageOfMessages(@Valid GetPageOfMessagesDto dto);
 
     MessageDto sendMessage(@Valid SendMessageDto dto);
+
+    Page<MessageDto> updateMessageList(@Valid UpdateMessageListDto dto);
 
     void setMessageChecked(SetMessageCheckedDto dto);
 
