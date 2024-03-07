@@ -192,7 +192,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                         .getId(),
                 chatId
         );
-        sendMessageToCorporateChat(chatId, optionalUser.get().getId() + " left the group");
+        sendMessageToCorporateChat(chatId, "@" + optionalUser.get().getUsername() + " left the group");
     }
 
     private void addEmployeeToCorporateChat(UpdateEmployeeDto dto, Optional<User> optionalUser) {
@@ -215,7 +215,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
         userRoleMutedPinnedChat.setUserRole(dto.getSuperuser() ? Role.ADMIN : Role.USER);
         userRoleMutedPinnedChatRepository.save(userRoleMutedPinnedChat);
-        sendMessageToCorporateChat(chatId, optionalUser.get().getId() + " joined the group");
+        sendMessageToCorporateChat(chatId, "@" + optionalUser.get().getUsername() + " joined the group");
     }
 
     private void sendMessageToCorporateChat(UUID chatId, String message) {

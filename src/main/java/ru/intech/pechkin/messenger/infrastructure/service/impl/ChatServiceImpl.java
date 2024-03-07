@@ -277,16 +277,36 @@ public class ChatServiceImpl implements ChatService {
         }
         chatRepository.save(chat);
 
-        removeUsersWithRolesFromGroupChat(dto, userRoleMutedPinnedChats);
-        addOrUpdateUsersWithRolesInGroupChat(dto, userRoleMutedPinnedChats);
+        List<User> users = getUsersForUpdatingGroupChat(dto, userRoleMutedPinnedChats);
+        removeUsersWithRolesFromGroupChat(dto, userRoleMutedPinnedChats, users);
+        addOrUpdateUsersWithRolesInGroupChat(dto, userRoleMutedPinnedChats, users);
         userRoleMutedPinnedChatRepository.saveAll(userRoleMutedPinnedChats);
 
         return getChatDto(chat, null, dto.getUsers());
     }
 
-    private void removeUsersWithRolesFromGroupChat(
+    private List<User> getUsersForUpdatingGroupChat(
             UpdateGroupChatDto dto,
             List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats
+    ) {
+        List<UUID> userIds = new ArrayList<>(
+                dto.getUsers()
+                        .keySet()
+                        .stream()
+                        .toList()
+        );
+        userIds.addAll(
+                userRoleMutedPinnedChats.stream()
+                        .map(UserRoleMutedPinnedChat::getUserId)
+                        .toList()
+        );
+        return userRepository.findAllById(userIds);
+    }
+
+    private void removeUsersWithRolesFromGroupChat(
+            UpdateGroupChatDto dto,
+            List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats,
+            List<User> users
     ) {
         userRoleMutedPinnedChats.forEach(userRoleMutedPinnedChat -> {
             Map.Entry<UUID, Role> filteredDto = dto.getUsers()
@@ -297,7 +317,15 @@ public class ChatServiceImpl implements ChatService {
                     .orElse(null);
             if (filteredDto == null) {
                 userRoleMutedPinnedChatRepository.deleteByUserId(userRoleMutedPinnedChat.getUserId());
-                sendSystemMessage(dto.getChatId(), userRoleMutedPinnedChat.getUserId() + " left the group");
+                sendSystemMessage(
+                        dto.getChatId(),
+                        "@" + users.stream()
+                                .filter(user -> user.getId().equals(userRoleMutedPinnedChat.getUserId()))
+                                .findFirst()
+                                .orElseThrow(NullPointerException::new)
+                                .getUsername()
+                                + " left the group"
+                );
             }
         });
         userRoleMutedPinnedChats.removeIf(userRoleMutedPinnedChat -> !dto.getUsers().containsKey(userRoleMutedPinnedChat.getUserId()));
@@ -305,7 +333,8 @@ public class ChatServiceImpl implements ChatService {
 
     private void addOrUpdateUsersWithRolesInGroupChat(
             UpdateGroupChatDto dto,
-            List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats
+            List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats,
+            List<User> users
     ) {
         dto.getUsers().forEach((userId, userRole) -> {
             UserRoleMutedPinnedChat filteredUserRoleMutedPinnedChat = userRoleMutedPinnedChats.stream()
@@ -316,7 +345,15 @@ public class ChatServiceImpl implements ChatService {
                 userRoleMutedPinnedChats.add(
                         UserRoleMutedPinnedChat.create(userId, dto.getChatId(), userRole)
                 );
-                sendSystemMessage(dto.getChatId(), userId + " joined the group");
+                sendSystemMessage(
+                        dto.getChatId(),
+                        "@" + users.stream()
+                                .filter(user -> user.getId().equals(userId))
+                                .findFirst()
+                                .orElseThrow(NullPointerException::new)
+                                .getUsername()
+                                + " joined the group"
+                );
             } else {
                 userRoleMutedPinnedChats.set(
                         userRoleMutedPinnedChats.indexOf(filteredUserRoleMutedPinnedChat),
