@@ -163,6 +163,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (dto.getDepartment() != null && optionalUser.isPresent()) {
             addEmployeeToCorporateChat(dto, optionalUser);
         }
+
         if (dto.getFired()) {
             fireEmployee(dto.getId());
         } else if (employee.getFired()) {
@@ -176,9 +177,9 @@ public class EmployeeServiceImpl implements EmployeeService {
         Optional<Employee> employeeByPhoneNumber = employeeRepository.findByPhoneNumber(phoneNumber);
 
         if (employeeByEmail.isPresent() && !employeeByEmail.get().getId().equals(employeeId)) {
-            throw new IllegalRegisterParameterException("Этот email уже зарегестрирован");
+            throw new IllegalRegisterParameterException("This email has already been registered");
         } else if (employeeByPhoneNumber.isPresent() && !employeeByPhoneNumber.get().getId().equals(employeeId)) {
-            throw new IllegalRegisterParameterException("Этот номер телефона уже зарегестрирован");
+            throw new IllegalRegisterParameterException("This phone number is already registered");
         }
     }
 

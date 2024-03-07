@@ -12,7 +12,7 @@ import ru.intech.pechkin.auth.service.exception.NoSuchUsernameAndPasswordExcepti
 public class AuthenticationExceptionHandler {
     @ExceptionHandler({NoSuchUsernameAndPasswordException.class, AuthenticationException.class})
     public ResponseEntity<String> handleNoSuchUsernameAndPasswordOrAuthenticationException() {
-        return new ResponseEntity<>("Неверный логин или пароль", HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>("Wrong login or password", HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(IllegalRegisterParameterException.class)

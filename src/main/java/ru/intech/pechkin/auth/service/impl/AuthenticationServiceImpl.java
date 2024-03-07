@@ -41,9 +41,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public AuthenticationDto register(@Valid RegisterDto dto) {
         EmployeeDto employeeDto = employeeService.getEmployeeById(dto.getEmployeeId());
         if (userRepository.findByEmployeeId(dto.getEmployeeId()).isPresent()) {
-            throw new IllegalRegisterParameterException("Этот работник уже зарегестрирован");
+            throw new IllegalRegisterParameterException("This employee is already registered");
         } else if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
-            throw new IllegalRegisterParameterException("Пользователь с таким именем уже существует");
+            throw new IllegalRegisterParameterException("User with this username already exists");
         }
         User user = User.builder()
                 .id(UUID.randomUUID())

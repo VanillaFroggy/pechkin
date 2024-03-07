@@ -17,7 +17,7 @@ public class MessengerExceptionHandler {
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<String> handleNullPointerException() {
         return new ResponseEntity<>(
-                "Не удалось найти запрашиваемую запись",
+                "Could not find the requested record",
                 HttpStatus.NOT_FOUND
         );
     }

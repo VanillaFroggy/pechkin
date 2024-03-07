@@ -68,7 +68,7 @@ public class ChatServiceImpl implements ChatService {
                         .toList()
         );
         if (chats.isEmpty()) {
-            throw new NoSuchElementException("Чаты для данного пользователя пока отстутствуют");
+            throw new NoSuchElementException("There is no chats for you");
         }
         return chats.stream()
                 .map(mapper::chatToChatDto)
@@ -185,9 +185,9 @@ public class ChatServiceImpl implements ChatService {
         if (dto.getUsers().size() != 2 ||
                 userRepository.findAllById(dto.getUsers())
                         .size() != 2) {
-            throw new IllegalArgumentException("В приватном чате должно быть лишь два пользователя");
+            throw new IllegalArgumentException("There must only be two users in a P2P chat");
         } else if (dto.getMessageDto() == null) {
-            throw new IllegalArgumentException("При создании в приватном чате должно быть первое сообщение");
+            throw new IllegalArgumentException("To create P2P chat you need to send first message");
         }
         Chat chat = Chat.createP2P();
         chatRepository.save(chat);
@@ -211,7 +211,7 @@ public class ChatServiceImpl implements ChatService {
         if (!dto.getCorporate()
                 && (dto.getUsers().isEmpty()
                 || userRepository.findAllById(dto.getUsers().keySet()).isEmpty())) {
-            throw new IllegalArgumentException("В групповом чате должны быть пользователи");
+            throw new IllegalArgumentException("There must be users in the group chat");
         }
         Chat chat = Chat.createGroup(
                 dto.getTitle(), dto.getIcon(), dto.getCorporate(), dto.getDepartmentId()
