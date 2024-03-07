@@ -18,4 +18,6 @@ public interface UserRoleMutedPinnedChatRepository extends MongoRepository<UserR
     void deleteAllByChatId(UUID chatId);
 
     void deleteByUserId(UUID userId);
+
+    void deleteByUserIdAndChatId(UUID userId, UUID chatId);
 }

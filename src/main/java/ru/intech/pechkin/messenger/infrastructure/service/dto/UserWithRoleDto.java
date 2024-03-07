@@ -10,13 +10,9 @@ import java.util.UUID;
 @Builder
 public class UserWithRoleDto {
     private UUID id;
+    private UUID employeeId;
     private String username;
     private String icon;
     private Role role;
-    private String fio;
-    private String phoneNumber;
-    private String email;
-    private String department;
-    private String position;
     private Boolean blocked;
 }

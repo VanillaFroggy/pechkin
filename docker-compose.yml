@@ -15,6 +15,7 @@ services:
       MAX_FILE_SIZE: "1GB"
       MAX_REQUEST_SIZE: "1GB"
       FILE-SIZE-THRESHOLD: "2MB"
+      REGISTRATION_LINK: https://messenger/register
     depends_on:
       - mongo
       - minio

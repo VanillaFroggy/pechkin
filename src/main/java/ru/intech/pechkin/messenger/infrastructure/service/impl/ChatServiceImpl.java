@@ -214,16 +214,18 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ChatDto createGroupChat(CreateGroupChatDto dto) {
-        if (dto.getUsers().isEmpty() ||
-                userRepository.findAllById(dto.getUsers().keySet())
-                        .isEmpty()) {
+        if (!dto.getCorporate()
+                && (dto.getUsers().isEmpty()
+                || userRepository.findAllById(dto.getUsers().keySet()).isEmpty())) {
             throw new IllegalArgumentException("В групповом чате должны быть пользователи");
         }
         Chat chat = Chat.createGroup(
                 dto.getTitle(), dto.getIcon(), dto.getCorporate(), dto.getDepartmentId()
         );
-        dto.getUsers().forEach((userId, userRole) ->
-                createAndSaveNewUserRoleMutedPinnedChat(userId, chat.getId(), userRole));
+        if (dto.getUsers() != null) {
+            dto.getUsers().forEach((userId, userRole) ->
+                    createAndSaveNewUserRoleMutedPinnedChat(userId, chat.getId(), userRole));
+        }
         chatRepository.save(chat);
         return getChatDto(chat, sendSystemMessage(chat.getId(), "Chat is created"), dto.getUsers());
     }
@@ -273,15 +275,17 @@ public class ChatServiceImpl implements ChatService {
                 .orElseThrow(NullPointerException::new);
         List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats =
                 userRoleMutedPinnedChatRepository.findAllByChatId(dto.getChatId());
-        chat.setTitle(dto.getTitle());
-        chat.setIcon(dto.getIcon());
+        if (dto.getTitle() != null && dto.getIcon() != null) {
+            chat.setTitle(dto.getTitle());
+            chat.setIcon(dto.getIcon());
+        }
         chatRepository.save(chat);
 
         removeUsersWithRolesFromGroupChat(dto, userRoleMutedPinnedChats);
         addOrUpdateUsersWithRolesInGroupChat(dto, userRoleMutedPinnedChats);
         userRoleMutedPinnedChatRepository.saveAll(userRoleMutedPinnedChats);
 
-        return getChatDto(chat,null, dto.getUsers());
+        return getChatDto(chat, null, dto.getUsers());
     }
 
     private void removeUsersWithRolesFromGroupChat(

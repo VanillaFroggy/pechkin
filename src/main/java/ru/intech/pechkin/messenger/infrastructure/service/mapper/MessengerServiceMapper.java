@@ -1,6 +1,7 @@
 package ru.intech.pechkin.messenger.infrastructure.service.mapper;
 
 import org.mapstruct.*;
+import ru.intech.pechkin.corporate.infrastructure.service.dto.EmployeeDto;
 import ru.intech.pechkin.messenger.infrastructure.persistence.entity.*;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
 
@@ -15,17 +16,6 @@ public interface MessengerServiceMapper {
     ChatDto chatToChatDto(Chat chat);
 
     MessageData messageDataDtoToEntity(UUID id, MessageDataDto dto);
-
-//    @Named("resolvePaymentType")
-//    default int resolvePaymentType(Message message) {
-//        return message == null ? CASH.getPaymentsCode() : message.getPaymentsCode();
-//    }
-//    @Mapping(target = "publisher", source = "message", qualifiedByName = "resolvePaymentType")
-//    @Mapping(target = "publisher", source = "message", expression = "java(userToDto())")
-//
-//    default UserDto userToDto(User user) {
-//        return null;
-//    }
 
     @Mapping(target = "id", source = "message.id")
     @Mapping(target = "chatId", source = "message.chatId")
@@ -59,6 +49,6 @@ public interface MessengerServiceMapper {
 
     MessagePublisherDto userToMessagePublisherDto(User user);
 
-    UserDto userToUserDto(User user);
-
+    @Mapping(target = "id", source = "user.id")
+    UserDto userAndEployeeDtoToUserDto(User user, EmployeeDto employeeDto);
 }

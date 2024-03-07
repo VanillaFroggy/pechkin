@@ -16,6 +16,8 @@ import ru.intech.pechkin.auth.service.exception.IllegalRegisterParameterExceptio
 import ru.intech.pechkin.auth.service.exception.NoSuchUsernameAndPasswordException;
 import ru.intech.pechkin.auth.service.mapper.AuthenticationServiceMapper;
 import ru.intech.pechkin.corporate.infrastructure.service.EmployeeService;
+import ru.intech.pechkin.corporate.infrastructure.service.dto.EmployeeDto;
+import ru.intech.pechkin.corporate.infrastructure.service.mapper.CorporateServiceMapper;
 import ru.intech.pechkin.messenger.infrastructure.persistence.entity.User;
 import ru.intech.pechkin.messenger.infrastructure.persistence.repo.UserRepository;
 import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
@@ -26,22 +28,23 @@ import java.util.UUID;
 @Transactional
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
-    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationServiceMapper mapper;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
     private final ChatService chatService;
     private final EmployeeService employeeService;
+    private final CorporateServiceMapper corporateServiceMapper;
+    private final AuthenticationServiceMapper authenticationServiceMapper;
 
     @Override
-    public void register(@Valid RegisterDto dto) {
-        if (employeeService.getEmployeeById(dto.getEmployeeId()) == null) {
-            throw new IllegalRegisterParameterException("Такого работника не существует");
+    public AuthenticationDto register(@Valid RegisterDto dto) {
+        EmployeeDto employeeDto = employeeService.getEmployeeById(dto.getEmployeeId());
+        if (userRepository.findByEmployeeId(dto.getEmployeeId()).isPresent()) {
+            throw new IllegalRegisterParameterException("Этот работник уже зарегестрирован");
         } else if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
             throw new IllegalRegisterParameterException("Пользователь с таким именем уже существует");
         }
-
         User user = User.builder()
                 .id(UUID.randomUUID())
                 .employeeId(dto.getEmployeeId())
@@ -52,6 +55,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
         chatService.createFavoritesChat(user.getId());
         userRepository.save(user);
+        if (employeeDto.getDepartment() != null) {
+            employeeService.updateEmployee(
+                    corporateServiceMapper.employeeDtoToUpdateEmployeeDto(employeeDto)
+            );
+        }
+        return authenticationServiceMapper.userAndEmployeeDtoToAuthenticationDto(
+                jwtService.generateToken(user),
+                user,
+                employeeDto
+        );
     }
 
     @Override
@@ -64,6 +77,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         );
         User user = userRepository.findByUsername(dto.getUsername())
                 .orElseThrow(NoSuchUsernameAndPasswordException::new);
-        return mapper.entityToDto(jwtService.generateToken(user), user);
+        return authenticationServiceMapper.userAndEmployeeDtoToAuthenticationDto(
+                jwtService.generateToken(user),
+                user,
+                employeeService.getEmployeeById(user.getEmployeeId())
+        );
     }
 }

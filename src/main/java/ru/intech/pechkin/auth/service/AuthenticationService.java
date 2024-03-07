@@ -6,7 +6,7 @@ import ru.intech.pechkin.auth.service.dto.AuthenticationDto;
 import ru.intech.pechkin.auth.service.dto.RegisterDto;
 
 public interface AuthenticationService {
-    void register(@Valid RegisterDto dto);
+    AuthenticationDto register(@Valid RegisterDto dto);
 
     AuthenticationDto authenticate(@Valid AuthenticateDto dto);
 }

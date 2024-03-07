@@ -9,6 +9,7 @@ import ru.intech.pechkin.messenger.infrastructure.service.dto.UserDto;
 import ru.intech.pechkin.messenger.ui.web.rest.dto.UpdateUserIconRequest;
 import ru.intech.pechkin.messenger.ui.web.rest.mapper.UserRestMapper;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -27,9 +28,17 @@ public class UserController {
     }
 
     @GetMapping("/getUserByUsername/{username}")
-    public ResponseEntity<UserDto> getUserById(@PathVariable("username") String username) {
+    public ResponseEntity<UserDto> getUserByUsername(@PathVariable("username") String username) {
         return new ResponseEntity<>(
                 userService.getUserByUsername(username),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/getUsersByUsernameLike/{username}")
+    public ResponseEntity<List<UserDto>> getUsersByUsernameLike(@PathVariable("username") String username) {
+        return new ResponseEntity<>(
+                userService.getUserListByUsernameLike(username),
                 HttpStatus.OK
         );
     }

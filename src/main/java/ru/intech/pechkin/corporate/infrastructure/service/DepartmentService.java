@@ -1,18 +1,26 @@
 package ru.intech.pechkin.corporate.infrastructure.service;
 
-import ru.intech.pechkin.corporate.infrastructure.persistence.entity.Department;
+import jakarta.validation.Valid;
+import ru.intech.pechkin.corporate.infrastructure.service.dto.CreateDepartmentDto;
+import ru.intech.pechkin.corporate.infrastructure.service.dto.DepartmentCreationDto;
+import ru.intech.pechkin.corporate.infrastructure.service.dto.DepartmentDto;
+import ru.intech.pechkin.corporate.infrastructure.service.dto.UpdateDepartmentDto;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface DepartmentService {
-    List<Department> getAllDepartments();
+    List<DepartmentDto> getAllDepartments();
 
-    Department getDepartmentById(UUID departmentId);
+    DepartmentDto getDepartmentById(UUID departmentId);
 
-//    void createDepartment(CreateDepartmentDto dto);
-//
-//    void updateDepartment(UpdateDepartmentDto dto);
+    DepartmentDto getDepartmentByTitle(String title);
+
+    List<DepartmentDto> getDepartmentsByTitleLike(String title);
+
+    DepartmentCreationDto createDepartment(@Valid CreateDepartmentDto dto);
+
+    void updateDepartment(@Valid UpdateDepartmentDto dto);
 
     void deleteDepartment(UUID departmentId);
 }
