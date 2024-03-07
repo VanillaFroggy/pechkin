@@ -20,6 +20,7 @@ import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.CreateGroupChatDto;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @Service
@@ -34,10 +35,12 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public List<DepartmentDto> getAllDepartments() {
-        return departmentRepository.findAll()
+        List<DepartmentDto> departmentDtos = departmentRepository.findAll()
                 .stream()
                 .map(mapper::departmentToDto)
                 .toList();
+        checkListEmptiness(departmentDtos);
+        return departmentDtos;
     }
 
     @Override
@@ -58,14 +61,23 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public List<DepartmentDto> getDepartmentsByTitleLike(String title) {
-        return departmentRepository.findByTitleLikeIgnoreCase(title)
+        List<DepartmentDto> departmentDtos = departmentRepository.findByTitleLikeIgnoreCase(title)
                 .stream()
                 .map(mapper::departmentToDto)
                 .toList();
+        checkListEmptiness(departmentDtos);
+        return departmentDtos;
+    }
+
+    private void checkListEmptiness(List<DepartmentDto> departmentDtos) {
+        if (departmentDtos.isEmpty()) {
+            throw new NoSuchElementException("There is no departments");
+        }
     }
 
     @Override
     public DepartmentCreationDto createDepartment(@Valid CreateDepartmentDto dto) {
+        checkParentBeforeCreationOrChangingDepartment(dto.getParent());
         Department department = mapper.createDepartmentDtoToEntity(UUID.randomUUID(), dto);
         departmentRepository.save(department);
         chatService.createGroupChat(
@@ -82,11 +94,19 @@ public class DepartmentServiceImpl implements DepartmentService {
     public void updateDepartment(@Valid UpdateDepartmentDto dto) {
         departmentRepository.findById(dto.getId())
                         .orElseThrow(NullPointerException::new);
+        checkParentBeforeCreationOrChangingDepartment(dto.getParent());
         Chat chat = chatRepository.findByDepartmentId(dto.getId())
                 .orElseThrow(NullPointerException::new);
         chat.setTitle(dto.getTitle());
         chatRepository.save(chat);
         departmentRepository.save(mapper.updateDepartmentDtoToEntity(dto));
+    }
+
+    private void checkParentBeforeCreationOrChangingDepartment(UUID parent) {
+        if (parent != null) {
+            departmentRepository.findById(parent)
+                    .orElseThrow(NullPointerException::new);
+        }
     }
 
     @Override

@@ -50,9 +50,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public List<EmployeeDto> getAllEmployees() {
         List<Employee> employees = employeeRepository.findAll();
-        if (employees.isEmpty()) {
-            throw new NoSuchElementException("There is no employees yet");
-        }
+        checkListEmptiness(employees);
         return getEmployeeDtos(employees);
     }
 
@@ -70,8 +68,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public List<EmployeeDto> getEmployeesByDepartment(String departmentTitle) {
         DepartmentDto departmentDto = departmentService.getDepartmentByTitle(departmentTitle);
-        return employeeRepository.findAllByDepartment(departmentDto.getId())
-                .stream()
+        List<Employee> employees = employeeRepository.findAllByDepartment(departmentDto.getId());
+        checkListEmptiness(employees);
+        return employees.stream()
                 .map(employee -> mapper.employeeToDto(
                         employee,
                         departmentDto
@@ -82,15 +81,13 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public List<EmployeeDto> getEmployeesByDepartmentLike(String departmentTitle) {
         List<DepartmentDto> departmentDtos = departmentService.getDepartmentsByTitleLike(departmentTitle);
-        if (departmentDtos.isEmpty()) {
-            throw new NullPointerException();
-        }
-        return employeeRepository.findAllByDepartmentIn(
-                        departmentDtos.stream()
-                                .map(DepartmentDto::getId)
-                                .toList()
-                )
-                .stream()
+        List<Employee> employees = employeeRepository.findAllByDepartmentIn(
+                departmentDtos.stream()
+                        .map(DepartmentDto::getId)
+                        .toList()
+        );
+        checkListEmptiness(employees);
+        return employees.stream()
                 .map(employee -> mapper.employeeToDto(
                         employee,
                         departmentDtos.stream()
@@ -105,19 +102,21 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public List<EmployeeDto> getEmployeesByFioLike(String fio) {
         List<Employee> employees = employeeRepository.findByFioLikeIgnoreCase(fio);
-        if (employees.isEmpty()) {
-            throw new NullPointerException();
-        }
+        checkListEmptiness(employees);
         return getEmployeeDtos(employees);
     }
 
     @Override
     public List<EmployeeDto> getEmployeesByPositionLike(String position) {
         List<Employee> employees = employeeRepository.findByPositionLikeIgnoreCase(position);
-        if (employees.isEmpty()) {
-            throw new NullPointerException();
-        }
+        checkListEmptiness(employees);
         return getEmployeeDtos(employees);
+    }
+
+    private void checkListEmptiness(List<?> list) {
+        if (list.isEmpty()) {
+            throw new NoSuchElementException("List is empty");
+        }
     }
 
     @NonNull
@@ -156,7 +155,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findById(dto.getId())
                 .orElseThrow(NullPointerException::new);
         Optional<User> optionalUser = userRepository.findByEmployeeId(dto.getId());
-        if (!dto.getDepartment().equals(employee.getDepartment())
+        if (dto.getDepartment() != null && !dto.getDepartment().equals(employee.getDepartment())
                 && employee.getDepartment() != null
                 && optionalUser.isPresent()) {
             removeEmployeeFromCorporateChat(dto, optionalUser);
@@ -166,6 +165,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
         if (dto.getFired()) {
             fireEmployee(dto.getId());
+        } else if (employee.getFired()) {
+            updateUserBlockedStatus(employee.getId(), false);
         }
         employeeRepository.save(mapper.updateEmployeeDtoToEntity(dto));
     }
@@ -174,9 +175,9 @@ public class EmployeeServiceImpl implements EmployeeService {
         Optional<Employee> employeeByEmail = employeeRepository.findByEmail(email);
         Optional<Employee> employeeByPhoneNumber = employeeRepository.findByPhoneNumber(phoneNumber);
 
-        if (employeeByEmail.isPresent() && employeeByEmail.get().getId() != employeeId) {
+        if (employeeByEmail.isPresent() && !employeeByEmail.get().getId().equals(employeeId)) {
             throw new IllegalRegisterParameterException("Этот email уже зарегестрирован");
-        } else if (employeeByPhoneNumber.isPresent() && employeeByPhoneNumber.get().getId() != employeeId) {
+        } else if (employeeByPhoneNumber.isPresent() && !employeeByPhoneNumber.get().getId().equals(employeeId)) {
             throw new IllegalRegisterParameterException("Этот номер телефона уже зарегестрирован");
         }
     }
@@ -237,10 +238,14 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .orElseThrow(NullPointerException::new);
         employee.setDepartment(null);
         employee.setFired(true);
+        updateUserBlockedStatus(employeeId, true);
+        employeeRepository.save(employee);
+    }
+
+    private void updateUserBlockedStatus(UUID employeeId, boolean blocked) {
         User user = userRepository.findByEmployeeId(employeeId)
                 .orElseThrow(NullPointerException::new);
-        user.setBlocked(true);
+        user.setBlocked(blocked);
         userRepository.save(user);
-        employeeRepository.save(employee);
     }
 }

@@ -13,7 +13,7 @@ import java.util.UUID;
 public interface UserRepository extends MongoRepository<User, UUID> {
     Optional<User> findByUsername(String username);
 
-    @Query(value = "{ 'username' : { $regex: ?1, $options: 'i' } }", count = true)
+    @Query(value = "{ 'username' : { $regex: ?0, $options: 'i' } }", count = true)
     List<User> findAllByUsernameLikeIgnoreCase(String username);
 
     Optional<User> findByEmployeeId(UUID employeeId);

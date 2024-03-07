@@ -36,7 +36,7 @@ public class DepartmentController {
         return new ResponseEntity<>(departmentService.getDepartmentByTitle(departmentTitle), HttpStatus.OK);
     }
 
-    @GetMapping("/getDepartmentByTitleLike/{title}")
+    @GetMapping("/getDepartmentsByTitleLike/{title}")
     public ResponseEntity<List<DepartmentDto>> getDepartmentByTitleLike(@PathVariable("title") String departmentTitle) {
         return new ResponseEntity<>(departmentService.getDepartmentsByTitleLike(departmentTitle), HttpStatus.OK);
     }

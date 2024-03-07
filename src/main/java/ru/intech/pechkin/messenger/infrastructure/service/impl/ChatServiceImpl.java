@@ -228,15 +228,17 @@ public class ChatServiceImpl implements ChatService {
     private ChatDto getChatDto(Chat chat, MessageDto lastMessage, Map<UUID, Role> usersWithRole) {
         ChatDto chatDto = mapper.chatToChatDto(chat);
         chatDto.setMessage(lastMessage);
-        List<User> users = userRepository.findAllById(usersWithRole.keySet());
-        chatDto.setUsersWithRole(
-                users.stream()
-                        .map(user -> mapper.userAndRoleToUserWithRoleDto(
-                                user,
-                                usersWithRole.get(user.getId())
-                        ))
-                        .toList()
-        );
+        if (usersWithRole != null) {
+            List<User> users = userRepository.findAllById(usersWithRole.keySet());
+            chatDto.setUsersWithRole(
+                    users.stream()
+                            .map(user -> mapper.userAndRoleToUserWithRoleDto(
+                                    user,
+                                    usersWithRole.get(user.getId())
+                            ))
+                            .toList()
+            );
+        }
         chatDto.setUnreadMessagesCount(1L);
         chatDto.setMuted(false);
         chatDto.setPinned(false);

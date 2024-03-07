@@ -13,4 +13,5 @@ public class UpdateEmployeeRequest {
     private UUID department;
     private String position;
     private Boolean superuser;
+    private Boolean fired;
 }

@@ -13,6 +13,6 @@ import java.util.UUID;
 public interface DepartmentRepository extends MongoRepository<Department, UUID> {
     Optional<Department> findByTitle(String title);
 
-    @Query(value = "{ 'title' : { $regex: ?1, $options: 'i' } }", count = true)
+    @Query(value = "{ 'title' : { $regex: ?0, $options: 'i' } }", count = true)
     List<Department> findByTitleLikeIgnoreCase(String  title);
 }
