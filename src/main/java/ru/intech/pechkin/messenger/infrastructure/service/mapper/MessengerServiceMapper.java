@@ -3,7 +3,10 @@ package ru.intech.pechkin.messenger.infrastructure.service.mapper;
 import org.mapstruct.*;
 import ru.intech.pechkin.corporate.infrastructure.service.dto.EmployeeDto;
 import ru.intech.pechkin.messenger.infrastructure.persistence.entity.*;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.chat.ChatDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.message.*;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.user.UserDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.user.UserWithRoleDto;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -38,6 +41,7 @@ public interface MessengerServiceMapper {
     SendOrReplyToMessageDto sendMessageDtoToSendOrReplyToMessageDto(SendMessageDto dto, Message messageToReply);
 
     @Mapping(target = "id", source = "messageId")
+    @Mapping(target = "publisher", source = "dto.userId")
     @Mapping(target = "relatesTo", source = "dto.messageToReply")
     Message sendOrReplyToMessageDtoToEntity(
             SendOrReplyToMessageDto dto,

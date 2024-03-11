@@ -2,6 +2,9 @@ package ru.intech.pechkin.corporate.infrastructure.service.impl;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.intech.pechkin.corporate.infrastructure.persistence.entity.Department;
@@ -9,15 +12,12 @@ import ru.intech.pechkin.corporate.infrastructure.persistence.entity.Employee;
 import ru.intech.pechkin.corporate.infrastructure.persistence.repo.DepartmentRepository;
 import ru.intech.pechkin.corporate.infrastructure.persistence.repo.EmployeeRepository;
 import ru.intech.pechkin.corporate.infrastructure.service.DepartmentService;
-import ru.intech.pechkin.corporate.infrastructure.service.dto.CreateDepartmentDto;
-import ru.intech.pechkin.corporate.infrastructure.service.dto.DepartmentCreationDto;
-import ru.intech.pechkin.corporate.infrastructure.service.dto.DepartmentDto;
-import ru.intech.pechkin.corporate.infrastructure.service.dto.UpdateDepartmentDto;
+import ru.intech.pechkin.corporate.infrastructure.service.dto.*;
 import ru.intech.pechkin.corporate.infrastructure.service.mapper.CorporateServiceMapper;
 import ru.intech.pechkin.messenger.infrastructure.persistence.entity.Chat;
 import ru.intech.pechkin.messenger.infrastructure.persistence.repo.ChatRepository;
 import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.CreateGroupChatDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.chat.CreateGroupChatDto;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -40,6 +40,18 @@ public class DepartmentServiceImpl implements DepartmentService {
                 .map(mapper::departmentToDto)
                 .toList();
         checkListEmptiness(departmentDtos);
+        return departmentDtos;
+    }
+
+    @Override
+    public Page<DepartmentDto> getPageOfDepartments(GetPageOfDepartmentsDto dto) {
+        Page<DepartmentDto> departmentDtos = new PageImpl<>(
+                departmentRepository.findAll(PageRequest.of(dto.getPageNumber(), dto.getPageSize()))
+                        .stream()
+                        .map(mapper::departmentToDto)
+                        .toList()
+        );
+        checkListEmptiness(departmentDtos.getContent());
         return departmentDtos;
     }
 

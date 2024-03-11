@@ -11,11 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.intech.pechkin.messenger.infrastructure.persistence.entity.*;
 import ru.intech.pechkin.messenger.infrastructure.persistence.repo.*;
 import ru.intech.pechkin.messenger.infrastructure.service.MessageService;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.message.*;
 import ru.intech.pechkin.messenger.infrastructure.service.mapper.MessengerServiceMapper;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -54,16 +55,57 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public Page<MessageDto> updateMessageList(@Valid UpdateMessageListDto dto) {
+    public Page<MessageDto> getPageOfMessagesAfterLastCheckedMessage(@Valid GetPageOfMessagesAfterLastCheckedMessageDto dto) {
         return getMessageDtoPage(
                 dto.getUserId(),
                 dto.getChatId(),
                 messageRepository.findAllByChatIdAndDateTimeAfterOrderByDateTime(
                         dto.getChatId(),
+                        getLastCheckedMessageDateTime(dto.getUserId(), dto.getChatId()),
+                        PageRequest.of(dto.getPageNumber(), dto.getPageSize())
+                )
+        );
+    }
+
+    @Override
+    public Page<MessageDto> getPageOfMessagesBeforeDateTime(GetPageOfMessagesBeforeDateTimeDto dto) {
+        return getMessageDtoPage(
+                dto.getUserId(),
+                dto.getChatId(),
+                messageRepository.findAllByChatIdAndDateTimeBeforeOrderByDateTime(
+                        dto.getChatId(),
                         dto.getDateTime(),
                         PageRequest.of(dto.getPageNumber(), dto.getPageSize())
                 )
         );
+    }
+
+    private ZonedDateTime getLastCheckedMessageDateTime(UUID userId, UUID chatId) {
+        int count = 0;
+        Page<UserChatCheckedMessage> page;
+        List<Message> messages = new ArrayList<>();
+        do {
+            page = userChatCheckedMessageRepository.findAllByUserIdAndChatIdAndChecked(
+                    userId,
+                    chatId,
+                    true,
+                    PageRequest.of(count, 2_000)
+            );
+            messages.add(
+                    messageRepository.findFirstByChatIdAndIdInOrderByDateTimeDesc(
+                            chatId,
+                            page.getContent()
+                                    .stream()
+                                    .map(UserChatCheckedMessage::getMessageId)
+                                    .toList()
+                    )
+            );
+            count++;
+        } while (!page.isLast());
+        return messages.stream()
+                .max(Comparator.comparing(Message::getDateTime))
+                .map(Message::getDateTime)
+                .orElseThrow(NullPointerException::new);
     }
 
     @Override
@@ -80,7 +122,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public Page<MessageDto> findMessageByValue(@Valid FindMessageByValueDto dto) {
+    public Page<MessageDto> findMessagesByValue(@Valid FindMessagesByValueDto dto) {
         List<ChatMessageDataMessage> chatMessageDataMessages = chatMessageDataMessageRepository.findAllByChatId(
                 dto.getChatId(),
                 PageRequest.of(dto.getPageNumber(), dto.getPageSize())
@@ -106,7 +148,7 @@ public class MessageServiceImpl implements MessageService {
 
     @NonNull
     private List<MessageDto> getDistinctAndSortedMessageListFoundByValue(
-            FindMessageByValueDto dto,
+            FindMessagesByValueDto dto,
             Page<MessageData> messageDataPage,
             List<ChatMessageDataMessage> chatMessageDataMessages
     ) {
@@ -235,6 +277,20 @@ public class MessageServiceImpl implements MessageService {
         chatMessageDataMessageRepository.deleteAllByMessageIdAndChatId(dto.getMessageId(), dto.getChatId());
         userChatCheckedMessageRepository.deleteAllByMessageIdAndChatId(dto.getMessageId(), dto.getChatId());
         messageRepository.delete(message);
+    }
+
+    @Override
+    public void deleteAllMessagesById(DeleteAllMessagesByIdDto dto) {
+        List<Message> messages = messageRepository.findAllByChatIdAndIdIn(dto.getChatId(), dto.getMessageIds());
+        messageDataRepository.deleteAllById(
+                messages.parallelStream()
+                        .flatMap(message -> message.getDatas().parallelStream())
+                        .map(MessageData::getId)
+                        .toList()
+        );
+        chatMessageDataMessageRepository.deleteAllByMessageIdInAndChatId(dto.getMessageIds(), dto.getChatId());
+        userChatCheckedMessageRepository.deleteAllByMessageIdInAndChatId(dto.getMessageIds(), dto.getChatId());
+        messageRepository.deleteAllById(dto.getMessageIds());
     }
 
     private PageImpl<MessageDto> getMessageDtoPage(UUID userId, UUID chatId, Page<Message> messagePage) {

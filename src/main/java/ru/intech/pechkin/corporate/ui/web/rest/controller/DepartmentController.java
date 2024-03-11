@@ -1,6 +1,7 @@
 package ru.intech.pechkin.corporate.ui.web.rest.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -8,6 +9,7 @@ import ru.intech.pechkin.corporate.infrastructure.service.DepartmentService;
 import ru.intech.pechkin.corporate.infrastructure.service.dto.DepartmentCreationDto;
 import ru.intech.pechkin.corporate.infrastructure.service.dto.DepartmentDto;
 import ru.intech.pechkin.corporate.ui.web.rest.dto.CreateDepartmentRequest;
+import ru.intech.pechkin.corporate.ui.web.rest.dto.GetPageOfDepartmentsRequest;
 import ru.intech.pechkin.corporate.ui.web.rest.dto.UpdateDepartmentRequest;
 import ru.intech.pechkin.corporate.ui.web.rest.mapper.CorporateRestMapper;
 
@@ -24,6 +26,14 @@ public class DepartmentController {
     @GetMapping("/getAllDepartments")
     public ResponseEntity<List<DepartmentDto>> getAllDepartments() {
         return new ResponseEntity<>(departmentService.getAllDepartments(), HttpStatus.OK);
+    }
+
+    @GetMapping("/getPageOfDepartments")
+    public ResponseEntity<Page<DepartmentDto>> getPageOfDepartments(@RequestBody GetPageOfDepartmentsRequest request) {
+        return new ResponseEntity<>(
+                departmentService.getPageOfDepartments(mapper.getPageOfDepartmentsRequestToDto(request)),
+                HttpStatus.OK
+        );
     }
 
     @GetMapping("/getDepartmentById/{id}")

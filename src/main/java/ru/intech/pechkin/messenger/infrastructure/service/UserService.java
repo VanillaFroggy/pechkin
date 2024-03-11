@@ -1,7 +1,7 @@
 package ru.intech.pechkin.messenger.infrastructure.service;
 
-import ru.intech.pechkin.messenger.infrastructure.service.dto.UpdateUserIconDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.UserDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.user.UpdateUserIconDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.user.UserDto;
 
 import java.util.List;
 import java.util.UUID;

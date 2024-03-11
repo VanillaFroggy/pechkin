@@ -1,0 +1,15 @@
+package ru.intech.pechkin.messenger.ui.web.rest.dto.chat;
+
+import lombok.Data;
+import ru.intech.pechkin.messenger.infrastructure.persistence.entity.Role;
+
+import java.util.Map;
+import java.util.UUID;
+
+@Data
+public class UpdateGroupChatRequest {
+    private UUID chatId;
+    private String title;
+    private String icon;
+    private Map<UUID, Role> users;
+}

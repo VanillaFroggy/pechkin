@@ -7,8 +7,8 @@ import ru.intech.pechkin.corporate.infrastructure.service.EmployeeService;
 import ru.intech.pechkin.messenger.infrastructure.persistence.entity.User;
 import ru.intech.pechkin.messenger.infrastructure.persistence.repo.UserRepository;
 import ru.intech.pechkin.messenger.infrastructure.service.UserService;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.UpdateUserIconDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.UserDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.user.UpdateUserIconDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.user.UserDto;
 import ru.intech.pechkin.messenger.infrastructure.service.mapper.MessengerServiceMapper;
 
 import java.util.List;

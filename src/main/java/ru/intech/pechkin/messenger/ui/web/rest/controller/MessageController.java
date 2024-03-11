@@ -7,8 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import ru.intech.pechkin.messenger.infrastructure.service.MessageService;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.MessageDto;
-import ru.intech.pechkin.messenger.ui.web.rest.dto.*;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.message.MessageDto;
+import ru.intech.pechkin.messenger.ui.web.rest.dto.message.*;
 import ru.intech.pechkin.messenger.ui.web.rest.mapper.MessageRestMapper;
 
 import java.util.UUID;
@@ -39,10 +39,26 @@ public class MessageController {
         );
     }
 
-    @GetMapping("/updateMessageList")
-    public ResponseEntity<Page<MessageDto>> updateMessageList(@RequestBody UpdateMessageListRequest request) {
+    @GetMapping("/getPageOfMessagesAfterLastCheckedMessage")
+    public ResponseEntity<Page<MessageDto>> getPageOfMessagesAfterLastCheckedMessage(
+            @RequestBody GetPageOfMessagesAfterLastCheckedMessageRequest request
+    ) {
         return new ResponseEntity<>(
-                messageService.updateMessageList(mapper.updateMessageListRequestToDto(request)),
+                messageService.getPageOfMessagesAfterLastCheckedMessage(
+                        mapper.getPageOfMessagesAfterLastCheckedMessageRequestToDto(request)
+                ),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/getPageOfMessagesBeforeDateTime")
+    public ResponseEntity<Page<MessageDto>> getPageOfMessagesBeforeDateTime(
+            @RequestBody GetPageOfMessagesBeforeDateTimeRequest request
+    ) {
+        return new ResponseEntity<>(
+                messageService.getPageOfMessagesBeforeDateTime(
+                        mapper.getPageOfMessagesBeforeDateTimeRequestToDto(request)
+                ),
                 HttpStatus.OK
         );
     }
@@ -50,13 +66,18 @@ public class MessageController {
     @PutMapping("/setMessageChecked")
     public ResponseEntity<Void> setMessageChecked(@RequestBody SetMessageCheckedRequest request) {
         messageService.setMessageChecked(mapper.setMessageCheckedRequestToDto(request));
+        messagingTemplate.convertAndSend(
+                "/topic/user/" + request.getPublisherId(),
+                "In chat with ID " + request.getChatId() +
+                        " your message with ID " + request.getMessageId() + " has been checked"
+        );
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/findMessageByValue")
-    public ResponseEntity<Page<MessageDto>> findMessageByValue(@RequestBody FindMessageByValueRequest request) {
+    public ResponseEntity<Page<MessageDto>> findMessageByValue(@RequestBody FindMessagesByValueRequest request) {
         return new ResponseEntity<>(
-                messageService.findMessageByValue(mapper.findMessageByValueRequestToDto(request)),
+                messageService.findMessagesByValue(mapper.findMessagesByValueRequestToDto(request)),
                 HttpStatus.OK
         );
     }
@@ -79,11 +100,23 @@ public class MessageController {
     }
 
     @DeleteMapping("/deleteMessage")
-    public ResponseEntity<Void> deleteChat(@RequestBody DeleteMessageRequest request) {
+    public ResponseEntity<Void> deleteMessage(@RequestBody DeleteMessageRequest request) {
         messageService.deleteMessage(mapper.deleteMessageRequestToDto(request));
         messagingTemplate.convertAndSend(
                 "/topic/chat/" + request.getChatId(),
                 "Message with ID " + request.getMessageId() + " has been deleted"
+        );
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/deleteAllMessagesById")
+    public ResponseEntity<Void> deleteAllMessagesById(@RequestBody DeleteAllMessagesByIdRequest request) {
+        messageService.deleteAllMessagesById(mapper.deleteAllMessagesByIdRequestToDto(request));
+        request.getMessageIds().forEach(uuid ->
+                messagingTemplate.convertAndSend(
+                        "/topic/chat/" + request.getChatId(),
+                        "Message with ID " + uuid + " has been deleted"
+                )
         );
         return ResponseEntity.noContent().build();
     }

@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 import ru.intech.pechkin.messenger.infrastructure.persistence.entity.ChatMessageDataMessage;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,4 +20,6 @@ public interface ChatMessageDataMessageRepository extends MongoRepository<ChatMe
     void deleteAllByChatIdAndIdIn(UUID chatId, List<UUID> ids);
 
     void deleteAllByMessageIdAndChatId(UUID messageId, UUID chatId);
+
+    void deleteAllByMessageIdInAndChatId(Collection<UUID> messageIds, UUID chatId);
 }

@@ -3,8 +3,8 @@ package ru.intech.pechkin.messenger.ui.web.rest.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
-import ru.intech.pechkin.messenger.ui.web.rest.dto.*;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.message.*;
+import ru.intech.pechkin.messenger.ui.web.rest.dto.message.*;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface MessageRestMapper {
@@ -12,15 +12,23 @@ public interface MessageRestMapper {
 
     SendMessageDto sendMessageRequestToDto(SendMessageRequest request);
 
-    UpdateMessageListDto updateMessageListRequestToDto(UpdateMessageListRequest request);
+    GetPageOfMessagesAfterLastCheckedMessageDto getPageOfMessagesAfterLastCheckedMessageRequestToDto(
+            GetPageOfMessagesAfterLastCheckedMessageRequest request
+    );
+
+    GetPageOfMessagesBeforeDateTimeDto getPageOfMessagesBeforeDateTimeRequestToDto(
+            GetPageOfMessagesBeforeDateTimeRequest request
+    );
 
     SetMessageCheckedDto setMessageCheckedRequestToDto(SetMessageCheckedRequest request);
 
-    FindMessageByValueDto findMessageByValueRequestToDto(FindMessageByValueRequest request);
+    FindMessagesByValueDto findMessagesByValueRequestToDto(FindMessagesByValueRequest request);
 
     ReplyToMessageDto replyToMessageRequestToDto(ReplyToMessageRequest request);
 
     EditMessageDto editMessageRequestToDto(EditMessageRequest request);
 
     DeleteMessageDto deleteMessageRequestToDto(DeleteMessageRequest request);
+
+    DeleteAllMessagesByIdDto deleteAllMessagesByIdRequestToDto(DeleteAllMessagesByIdRequest request);
 }

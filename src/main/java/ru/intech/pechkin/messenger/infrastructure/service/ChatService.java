@@ -1,13 +1,16 @@
 package ru.intech.pechkin.messenger.infrastructure.service;
 
 import jakarta.validation.Valid;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.*;
+import org.springframework.data.domain.Page;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.chat.*;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface ChatService {
-    List<ChatDto> getAllChats(UUID userId);
+    Page<ChatDto> getPageOfChats(@Valid GetPageOfChatsDto dto);
+
+    ChatDto getChatByIdAndUserId(GetChatByIdAndUserIdDto dto);
 
     ChatDto createFavoritesChat(UUID userId);
 

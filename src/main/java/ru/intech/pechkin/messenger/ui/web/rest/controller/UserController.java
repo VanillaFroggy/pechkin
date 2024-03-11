@@ -5,8 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.intech.pechkin.messenger.infrastructure.service.UserService;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.UserDto;
-import ru.intech.pechkin.messenger.ui.web.rest.dto.UpdateUserIconRequest;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.user.UserDto;
+import ru.intech.pechkin.messenger.ui.web.rest.dto.user.UpdateUserIconRequest;
 import ru.intech.pechkin.messenger.ui.web.rest.mapper.UserRestMapper;
 
 import java.util.List;

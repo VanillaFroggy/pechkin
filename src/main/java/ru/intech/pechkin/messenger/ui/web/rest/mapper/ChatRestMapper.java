@@ -3,17 +3,15 @@ package ru.intech.pechkin.messenger.ui.web.rest.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants.ComponentModel;
 import org.mapstruct.ReportingPolicy;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.CreateGroupChatDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.CreateP2PChatDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.UpdateChatMutedOrPinnedStatusDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.UpdateGroupChatDto;
-import ru.intech.pechkin.messenger.ui.web.rest.dto.CreateGroupChatRequest;
-import ru.intech.pechkin.messenger.ui.web.rest.dto.CreateP2PChatRequest;
-import ru.intech.pechkin.messenger.ui.web.rest.dto.UpdateChatMutedOrPinnedStatusRequest;
-import ru.intech.pechkin.messenger.ui.web.rest.dto.UpdateGroupChatRequest;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.chat.*;
+import ru.intech.pechkin.messenger.ui.web.rest.dto.chat.*;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = ComponentModel.SPRING)
 public interface ChatRestMapper {
+  GetPageOfChatsDto getPageOfChatsRequestToDto(GetPageOfChatsRequest request);
+
+  GetChatByIdAndUserIdDto getChatByIdAndUserIdRequestToDto(GetChatByIdAndUserIdRequest request);
+
   CreateP2PChatDto createP2PChatRequestToDto(CreateP2PChatRequest request);
 
   CreateGroupChatDto createGroupChatRequestToDto(CreateGroupChatRequest request);

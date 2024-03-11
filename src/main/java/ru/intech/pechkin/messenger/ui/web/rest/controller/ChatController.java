@@ -1,20 +1,16 @@
 package ru.intech.pechkin.messenger.ui.web.rest.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
-import ru.intech.pechkin.messenger.ui.web.rest.dto.ChatCreationResponse;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.ChatDto;
-import ru.intech.pechkin.messenger.ui.web.rest.dto.CreateGroupChatRequest;
-import ru.intech.pechkin.messenger.ui.web.rest.dto.CreateP2PChatRequest;
-import ru.intech.pechkin.messenger.ui.web.rest.dto.UpdateChatMutedOrPinnedStatusRequest;
-import ru.intech.pechkin.messenger.ui.web.rest.dto.UpdateGroupChatRequest;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.chat.ChatDto;
+import ru.intech.pechkin.messenger.ui.web.rest.dto.chat.*;
 import ru.intech.pechkin.messenger.ui.web.rest.mapper.ChatRestMapper;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -25,9 +21,20 @@ public class ChatController {
     private final ChatRestMapper mapper;
     private final SimpMessagingTemplate messagingTemplate;
 
-    @GetMapping("/getAllChats/{id}")
-    public ResponseEntity<List<ChatDto>> getAllChats(@PathVariable("id") UUID id) {
-        return new ResponseEntity<>(chatService.getAllChats(id), HttpStatus.OK);
+    @GetMapping("/getPageOfChats")
+    public ResponseEntity<Page<ChatDto>> getPageOfChats(@RequestBody GetPageOfChatsRequest request) {
+        return new ResponseEntity<>(
+                chatService.getPageOfChats(mapper.getPageOfChatsRequestToDto(request)),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/getChatByIdAndUserId")
+    public ResponseEntity<ChatDto> getChatByIdAndUserId(@RequestBody GetChatByIdAndUserIdRequest request) {
+        return new ResponseEntity<>(
+                chatService.getChatByIdAndUserId(mapper.getChatByIdAndUserIdRequestToDto(request)),
+                HttpStatus.OK
+        );
     }
 
     @PostMapping("/createFavoritesChat/{id}")

@@ -23,8 +23,8 @@ import ru.intech.pechkin.messenger.infrastructure.persistence.repo.ChatRepositor
 import ru.intech.pechkin.messenger.infrastructure.persistence.repo.UserRepository;
 import ru.intech.pechkin.messenger.infrastructure.persistence.repo.UserRoleMutedPinnedChatRepository;
 import ru.intech.pechkin.messenger.infrastructure.service.MessageService;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.MessageDataDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.SendMessageDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.message.MessageDataDto;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.message.SendMessageDto;
 
 import java.util.List;
 import java.util.NoSuchElementException;

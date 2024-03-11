@@ -1,16 +1,16 @@
 package ru.intech.pechkin.corporate.infrastructure.service;
 
 import jakarta.validation.Valid;
-import ru.intech.pechkin.corporate.infrastructure.service.dto.CreateDepartmentDto;
-import ru.intech.pechkin.corporate.infrastructure.service.dto.DepartmentCreationDto;
-import ru.intech.pechkin.corporate.infrastructure.service.dto.DepartmentDto;
-import ru.intech.pechkin.corporate.infrastructure.service.dto.UpdateDepartmentDto;
+import org.springframework.data.domain.Page;
+import ru.intech.pechkin.corporate.infrastructure.service.dto.*;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface DepartmentService {
     List<DepartmentDto> getAllDepartments();
+
+    Page<DepartmentDto> getPageOfDepartments(@Valid GetPageOfDepartmentsDto dto);
 
     DepartmentDto getDepartmentById(UUID departmentId);
 
