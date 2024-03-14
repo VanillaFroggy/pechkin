@@ -182,15 +182,19 @@ public class MessageServiceImpl implements MessageService {
                                 .findFirst()
                                 .orElseThrow(NullPointerException::new)
                 )
-                .map(message -> convertMessageToDto(
+                .map(message -> mapper.wrapMessageToMessageDto(
                         message,
+                        userRepository.findAllById(
+                                messages.stream()
+                                        .map(Message::getPublisher)
+                                        .toList()
+                        ),
                         userChatCheckedMessages.stream()
                                 .filter(userChatCheckedMessage ->
                                         userChatCheckedMessage.getMessageId().equals(message.getId()))
                                 .findFirst()
                                 .orElseThrow(NullPointerException::new)
-                                .getChecked()
-                ))
+                                .getChecked()))
                 .distinct()
                 .sorted(Comparator.comparing(MessageDto::getDateTime).reversed())
                 .toList();
@@ -222,7 +226,14 @@ public class MessageServiceImpl implements MessageService {
         message.setDatas(dto.getDatas());
         message.setEdited(true);
         messageRepository.save(message);
-        return convertMessageToDto(message, null);
+        return mapper.wrapMessageToMessageDto(
+                message,
+                List.of(
+                        userRepository.findById(message.getPublisher())
+                                .orElseThrow(NullPointerException::new)
+                ),
+                null
+        );
     }
 
     private void removeMessageDataFromEditingMessage(EditMessageDto dto, List<ChatMessageDataMessage> chatMessageDataMessages) {
@@ -302,49 +313,29 @@ public class MessageServiceImpl implements MessageService {
                                 .map(Message::getId)
                                 .toList()
                 ).orElseThrow(NullPointerException::new);
+        List<User> users = userRepository.findAllById(
+                messagePage.stream()
+                        .map(Message::getPublisher)
+                        .toList()
+        );
         return new PageImpl<>(
                 messagePage.stream()
-                        .map(message -> convertMessageToDto(
-                                message,
-                                userChatCheckedMessages.stream()
-                                        .filter(userChatCheckedMessage ->
-                                                userChatCheckedMessage.getMessageId().equals(message.getId()))
-                                        .findFirst()
-                                        .orElseThrow(NullPointerException::new)
-                                        .getChecked()
-                        ))
+                        .map(message ->
+                                mapper.wrapMessageToMessageDto(
+                                        message,
+                                        users,
+                                        userChatCheckedMessages.stream()
+                                                .filter(userChatCheckedMessage ->
+                                                        userChatCheckedMessage.getMessageId().equals(message.getId()))
+                                                .findFirst()
+                                                .orElseThrow(NullPointerException::new)
+                                                .getChecked()
+                                )
+                        )
                         .sorted(Comparator.comparing(MessageDto::getDateTime))
                         .toList(),
                 messagePage.getPageable(),
                 messagePage.getTotalElements()
-        );
-    }
-
-    private MessageDto convertMessageToDto(Message message, Boolean checked) {
-        MessagePublisherDto publisherDto = null;
-        if (message.getPublisher() != null) {
-            publisherDto = mapper.userToMessagePublisherDto(
-                    userRepository.findById(message.getPublisher())
-                            .orElseThrow(NullPointerException::new)
-            );
-        }
-        MessageDto relatesTo = null;
-        if (message.getRelatesTo() != null) {
-            relatesTo = mapper.messageToMessageDto(
-                    message.getRelatesTo(),
-                    mapper.userToMessagePublisherDto(
-                            userRepository.findById(message.getRelatesTo().getPublisher())
-                                    .orElseThrow(NullPointerException::new)
-                    ),
-                    true,
-                    null
-            );
-        }
-        return mapper.messageToMessageDto(
-                message,
-                publisherDto,
-                checked,
-                relatesTo
         );
     }
 
@@ -379,14 +370,20 @@ public class MessageServiceImpl implements MessageService {
 
         createUserChatCheckedMessageForEveryUserInChat(message);
 
-        return convertMessageToDto(message, false);
+        return mapper.wrapMessageToMessageDto(
+                message,
+                List.of(
+                        userRepository.findById(message.getPublisher())
+                                .orElseThrow(NullPointerException::new)
+                ),
+                false
+        );
     }
 
     private void createUserChatCheckedMessageForEveryUserInChat(Message message) {
-        List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats =
-                userRoleMutedPinnedChatRepository.findAllByChatId(message.getChatId());
         userChatCheckedMessageRepository.saveAll(
-                userRoleMutedPinnedChats.stream()
+                userRoleMutedPinnedChatRepository.findAllByChatId(message.getChatId())
+                        .parallelStream()
                         .map(userRoleMutedPinnedChat ->
                                 UserChatCheckedMessage.create(
                                         userRoleMutedPinnedChat.getUserId(),

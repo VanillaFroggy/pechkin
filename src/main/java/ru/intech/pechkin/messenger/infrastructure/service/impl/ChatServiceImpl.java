@@ -15,7 +15,6 @@ import ru.intech.pechkin.messenger.infrastructure.service.MessageService;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.chat.*;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.message.MessageDataDto;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.message.MessageDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.message.MessagePublisherDto;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.message.SendMessageDto;
 import ru.intech.pechkin.messenger.infrastructure.service.mapper.MessengerServiceMapper;
 
@@ -141,18 +140,9 @@ public class ChatServiceImpl implements ChatService {
                 messageData.setValue(messageData.getValue().substring(0, 50));
             }
         });
-        MessagePublisherDto publisherDto = null;
-        if (message.getPublisher() != null) {
-            publisherDto = mapper.userToMessagePublisherDto(
-                    users.stream()
-                            .filter(user -> user.getId().equals(message.getPublisher()))
-                            .findFirst()
-                            .orElseThrow(NullPointerException::new)
-            );
-        }
-        chatDto.setMessage(mapper.messageToMessageDto(
+        chatDto.setMessage(mapper.wrapMessageToMessageDto(
                 message,
-                publisherDto,
+                users,
                 userChatCheckedMessages.stream()
                         .filter(userChatCheckedMessage ->
                                 userChatCheckedMessage.getChatId().equals(chatDto.getId())
@@ -160,12 +150,15 @@ public class ChatServiceImpl implements ChatService {
                         )
                         .findFirst()
                         .orElseThrow(NullPointerException::new)
-                        .getChecked(),
-                null
+                        .getChecked()
         ));
     }
 
-    private void setUsersWithRolesInChatDto(ChatDto chatDto, List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats, List<User> users) {
+    private void setUsersWithRolesInChatDto(
+            ChatDto chatDto,
+            List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats,
+            List<User> users
+    ) {
         chatDto.setUsersWithRole(userRoleMutedPinnedChats.stream()
                 .map(userRoleMutedPinnedChat -> users.stream()
                         .filter(user -> user.getId().equals(userRoleMutedPinnedChat.getUserId()))

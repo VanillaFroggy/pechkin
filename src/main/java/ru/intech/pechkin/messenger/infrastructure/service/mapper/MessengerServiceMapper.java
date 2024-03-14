@@ -1,6 +1,9 @@
 package ru.intech.pechkin.messenger.infrastructure.service.mapper;
 
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
 import ru.intech.pechkin.corporate.infrastructure.service.dto.EmployeeDto;
 import ru.intech.pechkin.messenger.infrastructure.persistence.entity.*;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.chat.ChatDto;
@@ -34,6 +37,47 @@ public interface MessengerServiceMapper {
             Boolean checked,
             MessageDto relatesTo
     );
+
+    default MessageDto wrapMessageToMessageDto(
+            Message message,
+            List<User> users,
+            Boolean checked
+    ) {
+        MessagePublisherDto publisherDto = null;
+        if (message.getPublisher() != null) {
+            publisherDto = userToMessagePublisherDto(
+                    users.stream()
+                            .filter(user -> user.getId().equals(message.getPublisher()))
+                            .findFirst()
+                            .orElseThrow(NullPointerException::new)
+            );
+        }
+        MessageDto relatesTo = null;
+        if (message.getRelatesTo() != null) {
+            relatesTo = messageToMessageDto(
+                    message.getRelatesTo(),
+                    userToMessagePublisherDto(
+                            users.stream()
+                                    .filter(user -> user.getId()
+                                            .equals(
+                                                    message.getRelatesTo()
+                                                            .getPublisher()
+                                            )
+                                    )
+                                    .findFirst()
+                                    .orElseThrow(NullPointerException::new)
+                    ),
+                    true,
+                    null
+            );
+        }
+        return messageToMessageDto(
+                message,
+                publisherDto,
+                checked,
+                relatesTo
+        );
+    }
 
     SendMessageDto replyToMessageDtoToSendMessageDto(ReplyToMessageDto dto);
 
