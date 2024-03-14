@@ -370,12 +370,17 @@ public class MessageServiceImpl implements MessageService {
 
         createUserChatCheckedMessageForEveryUserInChat(message);
 
+        List<User> users = null;
+        if (message.getPublisher() != null) {
+            users = List.of(
+                    userRepository.findById(message.getPublisher())
+                            .orElseThrow(NullPointerException::new)
+            );
+        }
+
         return mapper.wrapMessageToMessageDto(
                 message,
-                List.of(
-                        userRepository.findById(message.getPublisher())
-                                .orElseThrow(NullPointerException::new)
-                ),
+                users,
                 false
         );
     }

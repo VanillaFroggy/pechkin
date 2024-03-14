@@ -12,6 +12,8 @@ public interface ChatService {
 
     ChatDto getChatByIdAndUserId(GetChatByIdAndUserIdDto dto);
 
+    ChatDto getP2PChatByUsers(GetP2PChatByUsersDto dto);
+
     ChatDto createFavoritesChat(UUID userId);
 
     ChatDto createP2PChat(@Valid CreateP2PChatDto dto);

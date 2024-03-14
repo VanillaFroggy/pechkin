@@ -1,13 +1,11 @@
 package ru.intech.pechkin.messenger.infrastructure.service.dto.chat;
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 import java.util.UUID;
 
 @Data
-@RequiredArgsConstructor
-public class GetChatByIdAndUserIdDto {
-    private final UUID chatId;
+public class GetP2PChatByUsersDto {
     private final UUID userId;
+    private final UUID searchedUserId;
 }

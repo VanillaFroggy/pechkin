@@ -8,6 +8,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.chat.ChatDto;
+import ru.intech.pechkin.messenger.ui.web.rest.dto.chat.GetP2PChatByUsersRequest;
 import ru.intech.pechkin.messenger.ui.web.rest.dto.chat.*;
 import ru.intech.pechkin.messenger.ui.web.rest.mapper.ChatRestMapper;
 
@@ -33,6 +34,14 @@ public class ChatController {
     public ResponseEntity<ChatDto> getChatByIdAndUserId(@RequestBody GetChatByIdAndUserIdRequest request) {
         return new ResponseEntity<>(
                 chatService.getChatByIdAndUserId(mapper.getChatByIdAndUserIdRequestToDto(request)),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/getP2PChatByUsers")
+    public ResponseEntity<ChatDto> getP2PChatByUsers(@RequestBody GetP2PChatByUsersRequest request) {
+        return new ResponseEntity<>(
+                chatService.getP2PChatByUsers(mapper.getP2PChatByUsersRequestToDto(request)),
                 HttpStatus.OK
         );
     }

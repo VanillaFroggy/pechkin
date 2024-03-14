@@ -93,6 +93,20 @@ public class ChatServiceImpl implements ChatService {
         return chatDto;
     }
 
+    @Override
+    public ChatDto getP2PChatByUsers(GetP2PChatByUsersDto dto) {
+        List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats =
+                checkIfUsersHaveP2PChat(List.of(dto.getUserId(), dto.getSearchedUserId()));
+        if (userRoleMutedPinnedChats.size() == 2) {
+            return getChatByIdAndUserId(new GetChatByIdAndUserIdDto(
+                    userRoleMutedPinnedChats.get(0).getChatId(),
+                    dto.getUserId()
+            ));
+        } else {
+            throw new IllegalArgumentException("P2P chat with this user does not exist");
+        }
+    }
+
     private void processChatDto(ChatDto chatDto, Page<Message> lastMessages, List<UserChatCheckedMessage> userChatCheckedMessages, UUID dto) {
         List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats =
                 userRoleMutedPinnedChatRepository.findAllByChatId(chatDto.getId());
@@ -229,7 +243,6 @@ public class ChatServiceImpl implements ChatService {
         return chatDtos.stream()
                 .sorted(
                         Comparator.comparing(ChatDto::getPinned)
-                                .thenComparing(ChatDto::getCorporate)
                                 .thenComparing(chatDto -> chatDto.getMessage().getDateTime())
                                 .reversed()
                 )
@@ -238,13 +251,16 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ChatDto createFavoritesChat(UUID userId) {
+        if (!userRoleMutedPinnedChatRepository.findByUserIdInAndChatType(List.of(userId), ChatType.FAVORITES).isEmpty()) {
+            throw new IllegalArgumentException("Favorites chat for this user already exists");
+        }
         Chat chat = Chat.createFavorites();
         chatRepository.save(chat);
         createAndSaveNewUserRoleMutedPinnedChat(userId, chat.getId(), Role.ADMIN);
         return getChatDto(
                 chat,
                 sendSystemMessage(chat.getId(), "Chat is created"),
-                new HashMap<>(Map.of(userId, Role.ADMIN))
+                Map.of(userId, Role.ADMIN)
         );
     }
 
@@ -256,6 +272,9 @@ public class ChatServiceImpl implements ChatService {
             throw new IllegalArgumentException("There must only be two users in a P2P chat");
         } else if (dto.getMessageDto() == null) {
             throw new IllegalArgumentException("To create P2P chat you need to send first message");
+        }
+        if (checkIfUsersHaveP2PChat(dto.getUsers()).size() == 2) {
+            throw new IllegalArgumentException("P2P chat with this user already exists");
         }
         Chat chat = Chat.createP2P();
         chatRepository.save(chat);
@@ -272,6 +291,19 @@ public class ChatServiceImpl implements ChatService {
                 dto.getUsers().stream()
                         .collect(Collectors.toMap(uuid -> uuid, value -> Role.ADMIN))
         );
+    }
+
+    private List<UserRoleMutedPinnedChat> checkIfUsersHaveP2PChat(List<UUID> userIds) {
+        List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats =
+                userRoleMutedPinnedChatRepository.findByUserIdInAndChatType(userIds, ChatType.P2P);
+        return userRoleMutedPinnedChats.parallelStream()
+                .filter(chat -> userRoleMutedPinnedChats.parallelStream()
+                        .anyMatch(otherChat ->
+                                chat.getChatId().equals(otherChat.getChatId())
+                                        && !chat.getUserId().equals(otherChat.getUserId())
+                        )
+                )
+                .toList();
     }
 
     @Override

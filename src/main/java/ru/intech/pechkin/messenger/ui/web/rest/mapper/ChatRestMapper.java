@@ -12,6 +12,8 @@ public interface ChatRestMapper {
 
   GetChatByIdAndUserIdDto getChatByIdAndUserIdRequestToDto(GetChatByIdAndUserIdRequest request);
 
+  GetP2PChatByUsersDto getP2PChatByUsersRequestToDto(GetP2PChatByUsersRequest request);
+
   CreateP2PChatDto createP2PChatRequestToDto(CreateP2PChatRequest request);
 
   CreateGroupChatDto createGroupChatRequestToDto(CreateGroupChatRequest request);

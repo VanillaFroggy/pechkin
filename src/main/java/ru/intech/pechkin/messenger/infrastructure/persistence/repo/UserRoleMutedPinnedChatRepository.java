@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface UserRoleMutedPinnedChatRepository extends MongoRepository<UserRoleMutedPinnedChat, UUID> {
+public interface UserRoleMutedPinnedChatRepository
+        extends MongoRepository<UserRoleMutedPinnedChat, UUID>, UserRoleMutedPinnedChatRepositoryCustom {
     List<UserRoleMutedPinnedChat> findAllByUserId(UUID userId);
 
     List<UserRoleMutedPinnedChat> findAllByChatId(UUID chatId);
