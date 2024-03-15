@@ -1,9 +1,9 @@
 package ru.intech.pechkin.messenger.infrastructure.service;
 
-import ru.intech.pechkin.messenger.infrastructure.service.dto.user.UpdateUserIconDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.user.UserDto;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.user.*;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface UserService {
@@ -11,7 +11,17 @@ public interface UserService {
 
     UserDto getUserByUsername(String username);
 
-    List<UserDto> getUserListByUsernameLike(String username);
+    Page<UserDto> getPageOfUsersByUsernameLike(@Valid GetPageOfUsersByFieldLikeDto dto);
+
+    Page<UserDto> getPageOfUsersByDepartment(@Valid GetPageOfUsersByDepartmentDto dto);
+
+    Page<UserDto> getPageOfUsersByDepartmentLike(@Valid GetPageOfUsersByFieldLikeDto dto);
+
+    Page<UserDto> getPageOfUsersByFioLike(@Valid GetPageOfUsersByFieldLikeDto dto);
+
+    Page<UserDto> getPageOfUsersByPositionLike(@Valid GetPageOfUsersByFieldLikeDto dto);
+
+    void updateUsername(@Valid UpdateUsernameDto dto);
 
     void updateUserIcon(UpdateUserIconDto dto);
 

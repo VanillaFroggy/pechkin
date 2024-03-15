@@ -1,15 +1,18 @@
 package ru.intech.pechkin.messenger.ui.web.rest.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.intech.pechkin.messenger.infrastructure.service.UserService;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.user.UserDto;
+import ru.intech.pechkin.messenger.ui.web.rest.dto.user.GetPageOfUsersByDepartmentRequest;
+import ru.intech.pechkin.messenger.ui.web.rest.dto.user.GetPageOfUsersByFieldLikeRequest;
 import ru.intech.pechkin.messenger.ui.web.rest.dto.user.UpdateUserIconRequest;
+import ru.intech.pechkin.messenger.ui.web.rest.dto.user.UpdateUsernameRequest;
 import ru.intech.pechkin.messenger.ui.web.rest.mapper.UserRestMapper;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -35,12 +38,66 @@ public class UserController {
         );
     }
 
-    @GetMapping("/getUsersByUsernameLike/{username}")
-    public ResponseEntity<List<UserDto>> getUsersByUsernameLike(@PathVariable("username") String username) {
+    @GetMapping("/getPageOfUsersByUsernameLike")
+    public ResponseEntity<Page<UserDto>> getPageOfUsersByUsernameLike(@RequestBody GetPageOfUsersByFieldLikeRequest request) {
         return new ResponseEntity<>(
-                userService.getUserListByUsernameLike(username),
+                userService.getPageOfUsersByUsernameLike(mapper.getPageOfUsersByUsernameLikeRequestToDto(request)),
                 HttpStatus.OK
         );
+    }
+
+    @GetMapping("/getPageOfUsersByDepartment")
+    public ResponseEntity<Page<UserDto>> getPageOfUsersByDepartment(
+            @RequestBody GetPageOfUsersByDepartmentRequest request
+    ) {
+        return new ResponseEntity<>(
+                userService.getPageOfUsersByDepartment(
+                        mapper.getPageOfUsersByDepartmentRequestToDto(request)
+                ),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/getPageOfUsersByDepartmentLike")
+    public ResponseEntity<Page<UserDto>> getPageOfUsersByDepartmentLike(
+            @RequestBody GetPageOfUsersByFieldLikeRequest request
+    ) {
+        return new ResponseEntity<>(
+                userService.getPageOfUsersByDepartmentLike(
+                        mapper.getPageOfUsersByFieldLikeRequestToDto(request)
+                ),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/getPageOfUsersByFioLike")
+    public ResponseEntity<Page<UserDto>> getPageOfUsersByFioLike(
+            @RequestBody GetPageOfUsersByFieldLikeRequest request
+    ) {
+        return new ResponseEntity<>(
+                userService.getPageOfUsersByFioLike(
+                        mapper.getPageOfUsersByFieldLikeRequestToDto(request)
+                ),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/getPageOfUsersByPositionLike")
+    public ResponseEntity<Page<UserDto>> getPageOfUsersByPositionLike(
+            @RequestBody GetPageOfUsersByFieldLikeRequest request
+    ) {
+        return new ResponseEntity<>(
+                userService.getPageOfUsersByPositionLike(
+                        mapper.getPageOfUsersByFieldLikeRequestToDto(request)
+                ),
+                HttpStatus.OK
+        );
+    }
+
+    @PutMapping("/updateUsername")
+    public ResponseEntity<Void> updateUsername(@RequestBody UpdateUsernameRequest request) {
+        userService.updateUsername(mapper.updateUsernameRequestToDto(request));
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/updateUserIcon")

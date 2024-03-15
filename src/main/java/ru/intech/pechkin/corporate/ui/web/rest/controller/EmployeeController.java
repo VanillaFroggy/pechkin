@@ -1,17 +1,16 @@
 package ru.intech.pechkin.corporate.ui.web.rest.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.intech.pechkin.corporate.infrastructure.service.EmployeeService;
 import ru.intech.pechkin.corporate.infrastructure.service.dto.EmployeeDto;
 import ru.intech.pechkin.corporate.infrastructure.service.dto.EmployeeRegistrationResponse;
-import ru.intech.pechkin.corporate.ui.web.rest.dto.AddEmployeeRequest;
-import ru.intech.pechkin.corporate.ui.web.rest.dto.UpdateEmployeeRequest;
+import ru.intech.pechkin.corporate.ui.web.rest.dto.*;
 import ru.intech.pechkin.corporate.ui.web.rest.mapper.CorporateRestMapper;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -21,9 +20,12 @@ public class EmployeeController {
     private final EmployeeService employeeService;
     private final CorporateRestMapper mapper;
 
-    @GetMapping("/getAllEmployees")
-    public ResponseEntity<List<EmployeeDto>> getEmployeeList() {
-        return new ResponseEntity<>(employeeService.getAllEmployees(), HttpStatus.OK);
+    @GetMapping("/getPageOfEmployees")
+    public ResponseEntity<Page<EmployeeDto>> getPageOfEmployees(@RequestBody GetPageOfEmployeesRequest request) {
+        return new ResponseEntity<>(
+                employeeService.getPageOfEmployees(mapper.getPageOfEmployeesRequestToDto(request)),
+                HttpStatus.OK
+        );
     }
 
     @GetMapping("/getEmployeeById/{id}")
@@ -31,24 +33,52 @@ public class EmployeeController {
         return new ResponseEntity<>(employeeService.getEmployeeById(employeeId), HttpStatus.OK);
     }
 
-    @GetMapping("/getEmployeesByDepartment/{title}")
-    public ResponseEntity<List<EmployeeDto>> getEmployeesByDepartment(@PathVariable("title") String departmentTitle) {
-        return new ResponseEntity<>(employeeService.getEmployeesByDepartment(departmentTitle), HttpStatus.OK);
+    @GetMapping("/getPageOfEmployeesByDepartment")
+    public ResponseEntity<Page<EmployeeDto>> getPageOfEmployeesByDepartment(
+            @RequestBody GetPageOfEmployeesByDepartmentRequest request
+    ) {
+        return new ResponseEntity<>(
+                employeeService.getPageOfEmployeesByDepartment(
+                        mapper.getPageOfEmployeesByDepartmentRequestToDto(request)
+                ),
+                HttpStatus.OK
+        );
     }
 
-    @GetMapping("/getEmployeesByDepartmentLike/{title}")
-    public ResponseEntity<List<EmployeeDto>> getEmployeesByDepartmentLike(@PathVariable("title") String departmentTitle) {
-        return new ResponseEntity<>(employeeService.getEmployeesByDepartmentLike(departmentTitle), HttpStatus.OK);
+    @GetMapping("/getPageOfEmployeesByDepartmentLike")
+    public ResponseEntity<Page<EmployeeDto>> getPageOfEmployeesByDepartmentLike(
+            @RequestBody GetPageOfEmployeesByFieldLikeRequest request
+    ) {
+        return new ResponseEntity<>(
+                employeeService.getPageOfEmployeesByDepartmentLike(
+                        mapper.getPageOfEmployeesByFieldLikeRequestToDto(request)
+                ),
+                HttpStatus.OK
+        );
     }
 
-    @GetMapping("/getEmployeesByFioLike/{fio}")
-    public ResponseEntity<List<EmployeeDto>> getEmployeesByFioLike(@PathVariable("fio") String fio) {
-        return new ResponseEntity<>(employeeService.getEmployeesByFioLike(fio), HttpStatus.OK);
+    @GetMapping("/getPageOfEmployeesByFioLike")
+    public ResponseEntity<Page<EmployeeDto>> getPageOfEmployeesByFioLike(
+            @RequestBody GetPageOfEmployeesByFieldLikeRequest request
+    ) {
+        return new ResponseEntity<>(
+                employeeService.getPageOfEmployeesByFioLike(
+                        mapper.getPageOfEmployeesByFieldLikeRequestToDto(request)
+                ),
+                HttpStatus.OK
+        );
     }
 
-    @GetMapping("/getEmployeesByPositionLike/{position}")
-    public ResponseEntity<List<EmployeeDto>> getEmployeesByPositionLike(@PathVariable("position") String position) {
-        return new ResponseEntity<>(employeeService.getEmployeesByPositionLike(position), HttpStatus.OK);
+    @GetMapping("/getPageOfEmployeesByPositionLike")
+    public ResponseEntity<Page<EmployeeDto>> getPageOfEmployeesByPositionLike(
+            @RequestBody GetPageOfEmployeesByFieldLikeRequest request
+    ) {
+        return new ResponseEntity<>(
+                employeeService.getPageOfEmployeesByPositionLike(
+                        mapper.getPageOfEmployeesByFieldLikeRequestToDto(request)
+                ),
+                HttpStatus.OK
+        );
     }
 
     @PostMapping("/addEmployee")

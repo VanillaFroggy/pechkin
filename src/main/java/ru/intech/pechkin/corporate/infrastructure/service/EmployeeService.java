@@ -1,26 +1,23 @@
 package ru.intech.pechkin.corporate.infrastructure.service;
 
 import jakarta.validation.Valid;
-import ru.intech.pechkin.corporate.infrastructure.service.dto.AddEmployeeDto;
-import ru.intech.pechkin.corporate.infrastructure.service.dto.EmployeeDto;
-import ru.intech.pechkin.corporate.infrastructure.service.dto.EmployeeRegistrationResponse;
-import ru.intech.pechkin.corporate.infrastructure.service.dto.UpdateEmployeeDto;
+import org.springframework.data.domain.Page;
+import ru.intech.pechkin.corporate.infrastructure.service.dto.*;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface EmployeeService {
-    List<EmployeeDto> getAllEmployees();
+    Page<EmployeeDto> getPageOfEmployees(GetPageOfEmployeesDto dto);
 
     EmployeeDto getEmployeeById(UUID employeeId);
 
-    List<EmployeeDto> getEmployeesByDepartment(String departmentTitle);
+    Page<EmployeeDto> getPageOfEmployeesByDepartment(@Valid GetPageOfEmployeesByDepartmentDto dto);
 
-    List<EmployeeDto> getEmployeesByDepartmentLike(String departmentTitle);
+    Page<EmployeeDto> getPageOfEmployeesByDepartmentLike(@Valid GetPageOfEmployeesByFieldLikeDto dto);
 
-    List<EmployeeDto> getEmployeesByFioLike(String fio);
+    Page<EmployeeDto> getPageOfEmployeesByFioLike(@Valid GetPageOfEmployeesByFieldLikeDto dto);
 
-    List<EmployeeDto> getEmployeesByPositionLike(String position);
+    Page<EmployeeDto> getPageOfEmployeesByPositionLike(@Valid GetPageOfEmployeesByFieldLikeDto dto);
 
     EmployeeRegistrationResponse addEmployee(@Valid AddEmployeeDto dto);
 

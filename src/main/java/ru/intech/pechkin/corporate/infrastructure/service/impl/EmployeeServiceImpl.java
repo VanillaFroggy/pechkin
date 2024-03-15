@@ -4,6 +4,9 @@ import jakarta.validation.Valid;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.intech.pechkin.auth.service.exception.IllegalRegisterParameterException;
@@ -26,10 +29,7 @@ import ru.intech.pechkin.messenger.infrastructure.service.MessageService;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.message.MessageDataDto;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.message.SendMessageDto;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Transactional
@@ -48,10 +48,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     private String registrationLink;
 
     @Override
-    public List<EmployeeDto> getAllEmployees() {
-        List<Employee> employees = employeeRepository.findAll();
-        checkListEmptiness(employees);
-        return getEmployeeDtos(employees);
+    public Page<EmployeeDto> getPageOfEmployees(GetPageOfEmployeesDto dto) {
+        Page<Employee> employees = employeeRepository.findAll(PageRequest.of(dto.getPageNumber(), dto.getPageSize()));
+        checkPageEmptiness(employees);
+        return getEmployeeDtosPage(employees);
     }
 
     @Override
@@ -66,79 +66,104 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public List<EmployeeDto> getEmployeesByDepartment(String departmentTitle) {
-        DepartmentDto departmentDto = departmentService.getDepartmentByTitle(departmentTitle);
-        List<Employee> employees = employeeRepository.findAllByDepartment(departmentDto.getId());
-        checkListEmptiness(employees);
-        return employees.stream()
-                .map(employee -> mapper.employeeToDto(
-                        employee,
-                        departmentDto
-                ))
-                .toList();
-    }
-
-    @Override
-    public List<EmployeeDto> getEmployeesByDepartmentLike(String departmentTitle) {
-        List<DepartmentDto> departmentDtos = departmentService.getDepartmentsByTitleLike(departmentTitle);
-        List<Employee> employees = employeeRepository.findAllByDepartmentIn(
-                departmentDtos.stream()
-                        .map(DepartmentDto::getId)
+    public Page<EmployeeDto> getPageOfEmployeesByDepartment(GetPageOfEmployeesByDepartmentDto dto) {
+        DepartmentDto departmentDto = departmentService.getDepartmentById(dto.getDepartmentId());
+        Page<Employee> employees = employeeRepository.findAllByDepartment(
+                departmentDto.getId(),
+                PageRequest.of(dto.getPageNumber(), dto.getPageSize())
+        );
+        checkPageEmptiness(employees);
+        return new PageImpl<>(
+                employees.stream()
+                        .map(employee -> mapper.employeeToDto(
+                                employee,
+                                departmentDto
+                        ))
+                        .sorted(
+                                Comparator.comparing((EmployeeDto employeeDto) ->
+                                                employeeDto.getDepartment().getTitle())
+                                        .thenComparing(EmployeeDto::getFio)
+                        )
                         .toList()
         );
-        checkListEmptiness(employees);
-        return employees.stream()
-                .map(employee -> mapper.employeeToDto(
-                        employee,
-                        departmentDtos.stream()
-                                .filter(departmentDto ->
-                                        departmentDto.getId().equals(employee.getDepartment()))
-                                .findFirst()
-                                .orElse(null)
-                ))
-                .toList();
     }
 
     @Override
-    public List<EmployeeDto> getEmployeesByFioLike(String fio) {
-        List<Employee> employees = employeeRepository.findByFioLikeIgnoreCase(fio);
-        checkListEmptiness(employees);
-        return getEmployeeDtos(employees);
+    public Page<EmployeeDto> getPageOfEmployeesByDepartmentLike(GetPageOfEmployeesByFieldLikeDto dto) {
+        List<DepartmentDto> departmentDtos = departmentService.getDepartmentsByTitleLike(dto.getValue());
+        Page<Employee> employees = employeeRepository.findAllByDepartmentIn(
+                departmentDtos.stream()
+                        .map(DepartmentDto::getId)
+                        .toList(),
+                PageRequest.of(dto.getPageNumber(), dto.getPageSize())
+        );
+        checkPageEmptiness(employees);
+        return new PageImpl<>(
+                employees.stream()
+                        .map(employee -> mapper.employeeToDto(
+                                employee,
+                                departmentDtos.stream()
+                                        .filter(departmentDto ->
+                                                departmentDto.getId().equals(employee.getDepartment()))
+                                        .findFirst()
+                                        .orElse(null)
+                        ))
+                        .toList()
+        );
     }
 
     @Override
-    public List<EmployeeDto> getEmployeesByPositionLike(String position) {
-        List<Employee> employees = employeeRepository.findByPositionLikeIgnoreCase(position);
-        checkListEmptiness(employees);
-        return getEmployeeDtos(employees);
+    public Page<EmployeeDto> getPageOfEmployeesByFioLike(GetPageOfEmployeesByFieldLikeDto dto) {
+        Page<Employee> employees = employeeRepository.findByFioLikeIgnoreCase(
+                dto.getValue(),
+                PageRequest.of(dto.getPageNumber(), dto.getPageSize())
+        );
+        checkPageEmptiness(employees);
+        return getEmployeeDtosPage(employees);
     }
 
-    private void checkListEmptiness(List<?> list) {
-        if (list.isEmpty()) {
+    @Override
+    public Page<EmployeeDto> getPageOfEmployeesByPositionLike(GetPageOfEmployeesByFieldLikeDto dto) {
+        Page<Employee> employees = employeeRepository.findByPositionLikeIgnoreCase(
+                dto.getValue(),
+                PageRequest.of(dto.getPageNumber(), dto.getPageSize())
+        );
+        checkPageEmptiness(employees);
+        return getEmployeeDtosPage(employees);
+    }
+
+    private void checkPageEmptiness(Page<?> page) {
+        if (page.isEmpty()) {
             throw new NoSuchElementException("List is empty");
         }
     }
 
-    @NonNull
-    private List<EmployeeDto> getEmployeeDtos(List<Employee> employees) {
+    private @NonNull Page<EmployeeDto> getEmployeeDtosPage(Page<Employee> employees) {
         List<Department> departments = departmentRepository.findAllById(
                 employees.stream()
                         .map(Employee::getDepartment)
                         .toList()
         );
-        return employees
-                .stream()
-                .map(employee -> mapper.employeeToDto(
-                        employee,
-                        mapper.departmentToDto(
-                                departments.stream()
-                                        .filter(department ->
-                                                department.getId().equals(employee.getDepartment()))
-                                        .findFirst()
-                                        .orElse(null)
+        return new PageImpl<>(
+                employees
+                        .stream()
+                        .map(employee -> mapper.employeeToDto(
+                                employee,
+                                mapper.departmentToDto(
+                                        departments.stream()
+                                                .filter(department ->
+                                                        department.getId().equals(employee.getDepartment()))
+                                                .findFirst()
+                                                .orElse(null)
+                                )
+                        ))
+                        .sorted(
+                                Comparator.comparing((EmployeeDto employeeDto) ->
+                                                employeeDto.getDepartment().getTitle())
+                                        .thenComparing(EmployeeDto::getFio)
                         )
-                ))
-                .toList();
+                        .toList()
+        );
     }
 
     @Override

@@ -105,7 +105,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public void updateDepartment(@Valid UpdateDepartmentDto dto) {
         departmentRepository.findById(dto.getId())
-                        .orElseThrow(NullPointerException::new);
+                .orElseThrow(NullPointerException::new);
         checkParentBeforeCreationOrChangingDepartment(dto.getParent());
         Chat chat = chatRepository.findByDepartmentId(dto.getId())
                 .orElseThrow(NullPointerException::new);
@@ -123,9 +123,20 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public void deleteDepartment(UUID departmentId) {
-        List<Employee> employees = employeeRepository.findAllByDepartment(departmentId);
-        employees.forEach(employee -> employee.setDepartment(null));
-        employeeRepository.saveAll(employees);
+        Page<Employee> employees;
+        int counter = 0;
+        do {
+            employees = employeeRepository.findAllByDepartment(
+                    departmentId,
+                    PageRequest.of(counter, 2_000)
+            );
+            employees.stream()
+                    .parallel()
+                    .forEach(employee -> employee.setDepartment(null));
+            employeeRepository.saveAll(employees);
+            counter++;
+        } while (!employees.isLast());
+
         chatService.deleteChat(
                 chatRepository.findByDepartmentId(departmentId)
                         .orElseThrow(NullPointerException::new)
