@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import ru.intech.pechkin.corporate.infrastructure.persistence.entity.Employee;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,7 +19,7 @@ public interface EmployeeRepository extends MongoRepository<Employee, UUID> {
 
     Page<Employee> findAllByDepartment(UUID department, Pageable pageable);
 
-    Page<Employee> findAllByDepartmentIn(List<UUID> departments, Pageable pageable);
+    Page<Employee> findAllByDepartmentIn(Collection<UUID> departments, Pageable pageable);
 
     @Query(value = "{ 'fio' : { $regex: ?0, $options: 'i' } }", count = true)
     Page<Employee> findByFioLikeIgnoreCase(String fio, Pageable pageable);

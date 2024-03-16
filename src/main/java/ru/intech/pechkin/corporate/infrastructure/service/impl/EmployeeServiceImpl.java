@@ -18,18 +18,15 @@ import ru.intech.pechkin.corporate.infrastructure.service.DepartmentService;
 import ru.intech.pechkin.corporate.infrastructure.service.EmployeeService;
 import ru.intech.pechkin.corporate.infrastructure.service.dto.*;
 import ru.intech.pechkin.corporate.infrastructure.service.mapper.CorporateServiceMapper;
-import ru.intech.pechkin.messenger.infrastructure.persistence.entity.MessageType;
 import ru.intech.pechkin.messenger.infrastructure.persistence.entity.Role;
 import ru.intech.pechkin.messenger.infrastructure.persistence.entity.User;
-import ru.intech.pechkin.messenger.infrastructure.persistence.entity.UserRoleMutedPinnedChat;
 import ru.intech.pechkin.messenger.infrastructure.persistence.repo.ChatRepository;
 import ru.intech.pechkin.messenger.infrastructure.persistence.repo.UserRepository;
-import ru.intech.pechkin.messenger.infrastructure.persistence.repo.UserRoleMutedPinnedChatRepository;
-import ru.intech.pechkin.messenger.infrastructure.service.MessageService;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.message.MessageDataDto;
-import ru.intech.pechkin.messenger.infrastructure.service.dto.message.SendMessageDto;
+import ru.intech.pechkin.messenger.infrastructure.service.ChatService;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.chat.UpdateUserInGroupChatDto;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -38,9 +35,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
-    private final UserRoleMutedPinnedChatRepository userRoleMutedPinnedChatRepository;
     private final ChatRepository chatRepository;
-    private final MessageService messageService;
+    private final ChatService chatService;
     private final DepartmentService departmentService;
     private final CorporateServiceMapper mapper;
 
@@ -90,11 +86,11 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Page<EmployeeDto> getPageOfEmployeesByDepartmentLike(GetPageOfEmployeesByFieldLikeDto dto) {
-        List<DepartmentDto> departmentDtos = departmentService.getDepartmentsByTitleLike(dto.getValue());
+        Map<UUID, DepartmentDto> departmentDtos = departmentService.getDepartmentsByTitleLike(dto.getValue())
+                .stream()
+                .collect(Collectors.toMap(DepartmentDto::getId, departmentDto -> departmentDto));
         Page<Employee> employees = employeeRepository.findAllByDepartmentIn(
-                departmentDtos.stream()
-                        .map(DepartmentDto::getId)
-                        .toList(),
+                departmentDtos.keySet(),
                 PageRequest.of(dto.getPageNumber(), dto.getPageSize())
         );
         checkPageEmptiness(employees);
@@ -102,11 +98,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 employees.stream()
                         .map(employee -> mapper.employeeToDto(
                                 employee,
-                                departmentDtos.stream()
-                                        .filter(departmentDto ->
-                                                departmentDto.getId().equals(employee.getDepartment()))
-                                        .findFirst()
-                                        .orElse(null)
+                                departmentDtos.getOrDefault(employee.getDepartment(), null)
                         ))
                         .toList()
         );
@@ -139,22 +131,20 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     private @NonNull Page<EmployeeDto> getEmployeeDtosPage(Page<Employee> employees) {
-        List<Department> departments = departmentRepository.findAllById(
-                employees.stream()
-                        .map(Employee::getDepartment)
-                        .toList()
-        );
+        Map<UUID, Department> departments = departmentRepository.findAllById(
+                        employees.stream()
+                                .map(Employee::getDepartment)
+                                .toList()
+                )
+                .stream()
+                .collect(Collectors.toMap(Department::getId, department -> department));
         return new PageImpl<>(
                 employees
                         .stream()
                         .map(employee -> mapper.employeeToDto(
                                 employee,
                                 mapper.departmentToDto(
-                                        departments.stream()
-                                                .filter(department ->
-                                                        department.getId().equals(employee.getDepartment()))
-                                                .findFirst()
-                                                .orElse(null)
+                                        departments.getOrDefault(employee.getDepartment(), null)
                                 )
                         ))
                         .sorted(
@@ -180,18 +170,32 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findById(dto.getId())
                 .orElseThrow(NullPointerException::new);
         Optional<User> optionalUser = userRepository.findByEmployeeId(dto.getId());
-        if (dto.getDepartment() != null && !dto.getDepartment().equals(employee.getDepartment())
+        if (!dto.getDepartment().equals(employee.getDepartment())
                 && employee.getDepartment() != null
                 && optionalUser.isPresent()) {
-            removeEmployeeFromCorporateChat(dto, optionalUser);
-        }
-        if (dto.getDepartment() != null && optionalUser.isPresent()) {
-            addEmployeeToCorporateChat(dto, optionalUser);
+            removeEmployeeFromCorporateChat(
+                    employee.getDepartment(),
+                    employee.getSuperuser(),
+                    optionalUser.get().getId()
+            );
+            addEmployeeToCorporateChat(dto.getDepartment(), dto.getSuperuser(), optionalUser.get().getId());
+        } else if (dto.getDepartment().equals(employee.getDepartment())
+                && !dto.getSuperuser().equals(employee.getSuperuser())
+                && optionalUser.isPresent()) {
+            updateEmployeeInCorporateChat(
+                    employee.getDepartment(),
+                    dto.getSuperuser(),
+                    optionalUser.get().getId()
+            );
+        } else if (!dto.getDepartment().equals(employee.getDepartment())
+                && employee.getDepartment() == null
+                && optionalUser.isPresent()) {
+            addEmployeeToCorporateChat(dto.getDepartment(), dto.getSuperuser(), optionalUser.get().getId());
         }
 
-        if (dto.getFired()) {
+        if (dto.getFired() && !employee.getFired()) {
             fireEmployee(dto.getId());
-        } else if (employee.getFired()) {
+        } else if (!dto.getFired() && employee.getFired()) {
             updateUserBlockedStatus(employee.getId(), false);
         }
         employeeRepository.save(mapper.updateEmployeeDtoToEntity(dto));
@@ -208,53 +212,51 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
     }
 
-    private void removeEmployeeFromCorporateChat(UpdateEmployeeDto dto, Optional<User> optionalUser) {
-        UUID chatId = chatRepository.findByDepartmentId(dto.getDepartment())
-                .orElseThrow(NullPointerException::new)
-                .getId();
-        sendMessageToCorporateChat(chatId, "@" + optionalUser.get().getUsername() + " left the group");
-        userRoleMutedPinnedChatRepository.deleteByUserIdAndChatId(
-                optionalUser
-                        .orElseThrow(NullPointerException::new)
-                        .getId(),
-                chatId
+    private void removeEmployeeFromCorporateChat(
+            UUID departmentId,
+            boolean superuser,
+            UUID userId
+    ) {
+        chatService.removeUserFromGroupChat(
+                new UpdateUserInGroupChatDto(
+                        chatRepository.findByDepartmentId(departmentId)
+                                .orElseThrow(NullPointerException::new)
+                                .getId(),
+                        userId,
+                        superuser ? Role.ADMIN : Role.USER
+                )
         );
     }
 
-    private void addEmployeeToCorporateChat(UpdateEmployeeDto dto, Optional<User> optionalUser) {
-        UUID chatId = chatRepository.findByDepartmentId(dto.getDepartment())
-                .orElseThrow(NullPointerException::new)
-                .getId();
-        UserRoleMutedPinnedChat userRoleMutedPinnedChat =
-                userRoleMutedPinnedChatRepository.findByUserIdAndChatId(
-                        optionalUser.orElseThrow(NullPointerException::new)
+    private void updateEmployeeInCorporateChat(
+            UUID departmentId,
+            boolean superuser,
+            UUID userId
+    ) {
+        chatService.updateUserInGroupChat(
+                new UpdateUserInGroupChatDto(
+                        chatRepository.findByDepartmentId(departmentId)
+                                .orElseThrow(NullPointerException::new)
                                 .getId(),
-                        chatId
-                );
-        if (userRoleMutedPinnedChat == null) {
-            userRoleMutedPinnedChat = UserRoleMutedPinnedChat.create(
-                    optionalUser.orElseThrow(NullPointerException::new)
-                            .getId(),
-                    chatId,
-                    null
-            );
-        }
-        userRoleMutedPinnedChat.setUserRole(dto.getSuperuser() ? Role.ADMIN : Role.USER);
-        userRoleMutedPinnedChatRepository.save(userRoleMutedPinnedChat);
-        sendMessageToCorporateChat(chatId, "@" + optionalUser.get().getUsername() + " joined the group");
+                        userId,
+                        superuser ? Role.ADMIN : Role.USER
+                )
+        );
     }
 
-    private void sendMessageToCorporateChat(UUID chatId, String message) {
-        messageService.sendMessage(
-                SendMessageDto.builder()
-                        .chatId(chatId)
-                        .dataDtos(List.of(
-                                new MessageDataDto(
-                                        MessageType.TEXT,
-                                        message
-                                )
-                        ))
-                        .build()
+    private void addEmployeeToCorporateChat(
+            UUID departmentId,
+            boolean superuser,
+            UUID userId
+    ) {
+        chatService.addUserToGroupChat(
+                new UpdateUserInGroupChatDto(
+                        chatRepository.findByDepartmentId(departmentId)
+                                .orElseThrow(NullPointerException::new)
+                                .getId(),
+                        userId,
+                        superuser ? Role.ADMIN : Role.USER
+                )
         );
     }
 
@@ -262,16 +264,21 @@ public class EmployeeServiceImpl implements EmployeeService {
     public void fireEmployee(UUID employeeId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(NullPointerException::new);
+        removeEmployeeFromCorporateChat(
+                employee.getDepartment(),
+                employee.getSuperuser(),
+                updateUserBlockedStatus(employeeId, true).getId()
+        );
         employee.setDepartment(null);
         employee.setFired(true);
-        updateUserBlockedStatus(employeeId, true);
         employeeRepository.save(employee);
     }
 
-    private void updateUserBlockedStatus(UUID employeeId, boolean blocked) {
+    private User updateUserBlockedStatus(UUID employeeId, boolean blocked) {
         User user = userRepository.findByEmployeeId(employeeId)
                 .orElseThrow(NullPointerException::new);
         user.setBlocked(blocked);
         userRepository.save(user);
+        return user;
     }
 }
