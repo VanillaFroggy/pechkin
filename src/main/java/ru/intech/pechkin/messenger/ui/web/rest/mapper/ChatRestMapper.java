@@ -8,17 +8,21 @@ import ru.intech.pechkin.messenger.ui.web.rest.dto.chat.*;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = ComponentModel.SPRING)
 public interface ChatRestMapper {
-  GetPageOfChatsDto getPageOfChatsRequestToDto(GetPageOfChatsRequest request);
+    GetPageOfChatsDto getPageOfChatsRequestToDto(GetPageOfChatsRequest request);
 
-  GetChatByIdAndUserIdDto getChatByIdAndUserIdRequestToDto(GetChatByIdAndUserIdRequest request);
+    GetChatByIdAndUserIdDto getChatByIdAndUserIdRequestToDto(GetChatByIdAndUserIdRequest request);
 
-  GetP2PChatByUsersDto getP2PChatByUsersRequestToDto(GetP2PChatByUsersRequest request);
+    GetP2PChatByUsersDto getP2PChatByUsersRequestToDto(GetP2PChatByUsersRequest request);
 
-  CreateP2PChatDto createP2PChatRequestToDto(CreateP2PChatRequest request);
+    CreateP2PChatDto createP2PChatRequestToDto(CreateP2PChatRequest request);
 
-  CreateGroupChatDto createGroupChatRequestToDto(CreateGroupChatRequest request);
+    CreateGroupChatDto createGroupChatRequestToDto(CreateGroupChatRequest request);
 
-  UpdateGroupChatDto updateGroupChatRequestToDto(UpdateGroupChatRequest request);
+    UpdateGroupChatDto updateGroupChatRequestToDto(UpdateGroupChatRequest request);
 
-  UpdateChatMutedOrPinnedStatusDto updateChatMutedOrPinnedStatusRequestToDto(UpdateChatMutedOrPinnedStatusRequest request);
+    UpdateGroupChatTitleOrIconDto updateGroupChatTitleOrIconRequestToDto(UpdateGroupChatTitleOrIconRequest request);
+
+    UpdateUserInGroupChatDto updateUserInGroupChatRequestToDto(UpdateUserInGroupChatRequest request);
+
+    UpdateChatMutedOrPinnedStatusDto updateChatMutedOrPinnedStatusRequestToDto(UpdateChatMutedOrPinnedStatusRequest request);
 }

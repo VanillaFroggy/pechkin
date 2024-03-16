@@ -22,6 +22,8 @@ public interface MessageRestMapper {
 
     SetMessageCheckedDto setMessageCheckedRequestToDto(SetMessageCheckedRequest request);
 
+    SetMessageListCheckedDto setMessageListCheckedRequestToDto(SetMessageListCheckedRequest request);
+
     FindMessagesByValueDto findMessagesByValueRequestToDto(FindMessagesByValueRequest request);
 
     ReplyToMessageDto replyToMessageRequestToDto(ReplyToMessageRequest request);

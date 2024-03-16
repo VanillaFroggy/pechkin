@@ -18,5 +18,6 @@ public class UserDto {
     private String email;
     private DepartmentDto department;
     private String position;
+    private Boolean superuser;
     private Boolean blocked;
 }

@@ -122,6 +122,19 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
+    public void setMessageListChecked(SetMessageListCheckedDto dto) {
+        List<UserChatCheckedMessage> userChatCheckedMessages =
+                userChatCheckedMessageRepository.findAllByUserIdInAndChatIdAndMessageIdInAndChecked(
+                        List.of(dto.getUserId(), dto.getPublisherId()),
+                        dto.getChatId(),
+                        dto.getMessageIds(),
+                        false
+                );
+        userChatCheckedMessages.forEach(userChatCheckedMessage -> userChatCheckedMessage.setChecked(true));
+        userChatCheckedMessageRepository.saveAll(userChatCheckedMessages);
+    }
+
+    @Override
     public Page<MessageDto> findMessagesByValue(@Valid FindMessagesByValueDto dto) {
         List<ChatMessageDataMessage> chatMessageDataMessages = chatMessageDataMessageRepository.findAllByChatId(
                 dto.getChatId(),

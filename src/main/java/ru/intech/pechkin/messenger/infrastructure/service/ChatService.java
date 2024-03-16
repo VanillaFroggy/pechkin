@@ -3,6 +3,7 @@ package ru.intech.pechkin.messenger.infrastructure.service;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.chat.*;
+import ru.intech.pechkin.messenger.infrastructure.service.dto.user.UserWithRoleDto;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +22,16 @@ public interface ChatService {
     ChatDto createGroupChat(CreateGroupChatDto dto);
 
     ChatDto updateGroupChat(UpdateGroupChatDto dto);
+
+    void updateGroupChatTitle(UpdateGroupChatTitleOrIconDto dto);
+
+    void updateGroupChatIcon(UpdateGroupChatTitleOrIconDto dto);
+
+    UserWithRoleDto addUserToGroupChat(UpdateUserInGroupChatDto dto);
+
+    UserWithRoleDto updateUserInGroupChat(UpdateUserInGroupChatDto dto);
+
+    UserWithRoleDto removeUserFromGroupChat(UpdateUserInGroupChatDto dto);
 
     void updateChatMutedStatus(UpdateChatMutedOrPinnedStatusDto dto);
 

@@ -66,10 +66,23 @@ public class MessageController {
     @PutMapping("/setMessageChecked")
     public ResponseEntity<Void> setMessageChecked(@RequestBody SetMessageCheckedRequest request) {
         messageService.setMessageChecked(mapper.setMessageCheckedRequestToDto(request));
-        messagingTemplate.convertAndSend(
-                "/topic/user/" + request.getPublisherId(),
+        sendMessageOverWebSocketByUserId(
+                request.getPublisherId(),
                 "In chat with ID " + request.getChatId() +
                         " your message with ID " + request.getMessageId() + " has been checked"
+        );
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/setMessageListChecked")
+    public ResponseEntity<Void> setMessageListChecked(@RequestBody SetMessageListCheckedRequest request) {
+        messageService.setMessageListChecked(mapper.setMessageListCheckedRequestToDto(request));
+        request.getMessageIds().forEach(messageId ->
+                sendMessageOverWebSocketByUserId(
+                        request.getPublisherId(),
+                        "In chat with ID " + request.getChatId() +
+                                " your message with ID " + messageId + " has been checked"
+                )
         );
         return ResponseEntity.noContent().build();
     }
@@ -123,5 +136,9 @@ public class MessageController {
 
     private void sendMessageOverWebSocketByChatId(UUID chatId, MessageDto response) {
         messagingTemplate.convertAndSend("/topic/chat/" + chatId, response);
+    }
+
+    private void sendMessageOverWebSocketByUserId(UUID userId, String message) {
+        messagingTemplate.convertAndSend("/topic/user/" + userId, message);
     }
 }

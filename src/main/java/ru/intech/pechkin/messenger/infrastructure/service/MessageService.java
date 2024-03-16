@@ -17,6 +17,8 @@ public interface MessageService {
 
     void setMessageChecked(SetMessageCheckedDto dto);
 
+    void setMessageListChecked(SetMessageListCheckedDto dto);
+
     Page<MessageDto> findMessagesByValue(@Valid FindMessagesByValueDto dto);
 
     MessageDto replyToMessage(@Valid ReplyToMessageDto dto);

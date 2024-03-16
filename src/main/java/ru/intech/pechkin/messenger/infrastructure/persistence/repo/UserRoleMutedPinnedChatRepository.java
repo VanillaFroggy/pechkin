@@ -18,7 +18,5 @@ public interface UserRoleMutedPinnedChatRepository
 
     void deleteAllByChatId(UUID chatId);
 
-    void deleteByUserId(UUID userId);
-
     void deleteByUserIdAndChatId(UUID userId, UUID chatId);
 }
