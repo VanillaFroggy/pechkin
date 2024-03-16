@@ -212,13 +212,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         UUID chatId = chatRepository.findByDepartmentId(dto.getDepartment())
                 .orElseThrow(NullPointerException::new)
                 .getId();
+        sendMessageToCorporateChat(chatId, "@" + optionalUser.get().getUsername() + " left the group");
         userRoleMutedPinnedChatRepository.deleteByUserIdAndChatId(
                 optionalUser
                         .orElseThrow(NullPointerException::new)
                         .getId(),
                 chatId
         );
-        sendMessageToCorporateChat(chatId, "@" + optionalUser.get().getUsername() + " left the group");
     }
 
     private void addEmployeeToCorporateChat(UpdateEmployeeDto dto, Optional<User> optionalUser) {
