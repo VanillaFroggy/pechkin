@@ -98,7 +98,9 @@ public class EmployeeServiceImpl implements EmployeeService {
                 employees.stream()
                         .map(employee -> mapper.employeeToDto(
                                 employee,
-                                departmentDtos.getOrDefault(employee.getDepartment(), null)
+                                departmentDtos.getOrDefault(
+                                        employee.getDepartment(),
+                                        new DepartmentDto(null, "-", null))
                         ))
                         .toList()
         );
@@ -144,7 +146,9 @@ public class EmployeeServiceImpl implements EmployeeService {
                         .map(employee -> mapper.employeeToDto(
                                 employee,
                                 mapper.departmentToDto(
-                                        departments.getOrDefault(employee.getDepartment(), null)
+                                        departments.getOrDefault(
+                                                employee.getDepartment(),
+                                                new Department(null, "-", null))
                                 )
                         ))
                         .sorted(
