@@ -66,7 +66,8 @@ public class ChatServiceImpl implements ChatService {
                 chatDto,
                 lastMessages,
                 userChatCheckedMessages,
-                dto.getUserId()
+                dto.getUserId(),
+                false
         ));
         return new PageImpl<>(
                 sortChatDtoListByPinnedAndDateTime(chatDtos),
@@ -95,7 +96,8 @@ public class ChatServiceImpl implements ChatService {
                                 ).orElseThrow(NullPointerException::new)
                                 .getChecked()
                 ),
-                dto.getUserId()
+                dto.getUserId(),
+                true
         );
         return chatDto;
     }
@@ -104,7 +106,8 @@ public class ChatServiceImpl implements ChatService {
             ChatDto chatDto,
             Page<Message> lastMessages,
             Map<UUID, Boolean> userChatCheckedMessages,
-            UUID userId
+            UUID userId,
+            boolean onlyOneChat
     ) {
         Map<UUID, UserRoleMutedPinnedChat> userRoleMutedPinnedChats =
                 userRoleMutedPinnedChatRepository.findAllByChatId(chatDto.getId())
@@ -118,7 +121,9 @@ public class ChatServiceImpl implements ChatService {
                 .collect(Collectors.toMap(User::getId, user -> user));
         setLastMessageInChatDto(chatDto, lastMessages.getContent(), users, userChatCheckedMessages);
 
-        setUsersWithRolesInChatDto(chatDto, userRoleMutedPinnedChats, users);
+        if (onlyOneChat) {
+            setUsersWithRolesInChatDto(chatDto, userRoleMutedPinnedChats, users);
+        }
 
         if (chatDto.getChatType().equals(ChatType.P2P)) {
             setTitleAndIconInP2PChatByInterlocutor(userId, chatDto, users);
