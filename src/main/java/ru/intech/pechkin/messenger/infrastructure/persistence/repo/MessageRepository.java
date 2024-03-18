@@ -28,9 +28,7 @@ public interface MessageRepository extends MongoRepository<Message, UUID>, Messa
 
     Optional<Message> findFirstByChatIdOrderByDateTimeDesc(UUID chatId);
 
-    List<Message> findAllByChatIdAndIdIn(UUID chatId, List<UUID> ids);
-
-    List<Message> findAllByChatIdAndPublisherNot(UUID chatId, UUID publisher);
+    List<Message> findAllByChatIdAndIdIn(UUID chatId, Collection<UUID> ids);
 
     Optional<Message> findByIdAndChatId(UUID id, UUID chatId);
 

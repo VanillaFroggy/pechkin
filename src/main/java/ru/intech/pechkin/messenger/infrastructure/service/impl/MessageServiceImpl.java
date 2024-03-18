@@ -16,10 +16,8 @@ import ru.intech.pechkin.messenger.infrastructure.service.mapper.MessengerServic
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -112,11 +110,12 @@ public class MessageServiceImpl implements MessageService {
     public void setMessageChecked(SetMessageCheckedDto dto) {
         List<UserChatCheckedMessage> userChatCheckedMessages =
                 userChatCheckedMessageRepository.findAllByUserIdInAndChatIdAndMessageIdAndChecked(
-                        List.of(dto.getUserId(), dto.getPublisherId()),
+                        getUsersIdSetToSetMessagesChecked(dto.getUserId(), dto.getPublisherId()),
                         dto.getChatId(),
                         dto.getMessageId(),
                         false
                 );
+        checkCheckedMessagesListEmptiness(userChatCheckedMessages);
         userChatCheckedMessages.forEach(userChatCheckedMessage -> userChatCheckedMessage.setChecked(true));
         userChatCheckedMessageRepository.saveAll(userChatCheckedMessages);
     }
@@ -125,37 +124,51 @@ public class MessageServiceImpl implements MessageService {
     public void setMessageListChecked(SetMessageListCheckedDto dto) {
         List<UserChatCheckedMessage> userChatCheckedMessages =
                 userChatCheckedMessageRepository.findAllByUserIdInAndChatIdAndMessageIdInAndChecked(
-                        List.of(dto.getUserId(), dto.getPublisherId()),
+                        getUsersIdSetToSetMessagesChecked(dto.getUserId(), dto.getPublisherId()),
                         dto.getChatId(),
                         dto.getMessageIds(),
                         false
                 );
+        checkCheckedMessagesListEmptiness(userChatCheckedMessages);
         userChatCheckedMessages.forEach(userChatCheckedMessage -> userChatCheckedMessage.setChecked(true));
         userChatCheckedMessageRepository.saveAll(userChatCheckedMessages);
     }
 
+    @NonNull
+    private static Set<UUID> getUsersIdSetToSetMessagesChecked(UUID userId, UUID publisher) {
+        return publisher == null
+                ? Set.of(userId)
+                : Set.of(userId, publisher);
+    }
+
+    private static void checkCheckedMessagesListEmptiness(List<UserChatCheckedMessage> userChatCheckedMessages) {
+        if (userChatCheckedMessages.isEmpty()) {
+            throw new IllegalArgumentException("Looks like you have no message to read");
+        }
+    }
+
     @Override
     public Page<MessageDto> findMessagesByValue(@Valid FindMessagesByValueDto dto) {
-        List<ChatMessageDataMessage> chatMessageDataMessages = chatMessageDataMessageRepository.findAllByChatId(
-                dto.getChatId(),
-                PageRequest.of(dto.getPageNumber(), dto.getPageSize())
-        ).orElseThrow(NullPointerException::new).getContent();
+        Map<UUID, UUID> chatMessageDataMessagesMap = chatMessageDataMessageRepository.findAllByChatId(
+                        dto.getChatId(),
+                        PageRequest.of(dto.getPageNumber(), dto.getPageSize())
+                ).orElseThrow(NullPointerException::new)
+                .get()
+                .collect(Collectors.toMap(ChatMessageDataMessage::getMessageDataId, ChatMessageDataMessage::getMessageId));
         Page<MessageData> messageDataPage = messageDataRepository.findAllByIdInAndValueLikeIgnoreCase(
-                chatMessageDataMessages.stream()
-                        .map(ChatMessageDataMessage::getMessageDataId)
-                        .toList(),
+                chatMessageDataMessagesMap.keySet(),
                 dto.getValue(),
                 PageRequest.of(dto.getPageNumber(), dto.getPageSize())
         ).orElseThrow(NullPointerException::new);
         List<MessageDto> messageDtos = getDistinctAndSortedMessageListFoundByValue(
                 dto,
                 messageDataPage,
-                chatMessageDataMessages
+                chatMessageDataMessagesMap
         );
         return new PageImpl<>(
                 messageDtos,
                 PageRequest.of(dto.getPageNumber(), dto.getPageSize()),
-                messageDtos.size()
+                chatMessageDataMessagesMap.size()
         );
     }
 
@@ -163,51 +176,49 @@ public class MessageServiceImpl implements MessageService {
     private List<MessageDto> getDistinctAndSortedMessageListFoundByValue(
             FindMessagesByValueDto dto,
             Page<MessageData> messageDataPage,
-            List<ChatMessageDataMessage> chatMessageDataMessages
+            Map<UUID, UUID> chatMessageDataMessagesMap
     ) {
-        List<Message> messages = messageRepository.findAllByChatIdAndIdIn(
-                dto.getChatId(),
-                chatMessageDataMessages.stream()
-                        .map(ChatMessageDataMessage::getMessageId)
-                        .toList()
-        );
+        Map<UUID, Message> messages = messageRepository.findAllByChatIdAndIdIn(
+                        dto.getChatId(),
+                        chatMessageDataMessagesMap.values()
+                ).stream()
+                .collect(Collectors.toMap(Message::getId, message -> message));
         List<UserChatCheckedMessage> userChatCheckedMessages =
                 userChatCheckedMessageRepository.findAllByUserIdAndChatIdAndMessageIdIn(
                         dto.getUserId(),
                         dto.getChatId(),
-                        messages.stream()
-                                .map(Message::getId)
-                                .toList()
+                        messages.keySet()
                 ).orElseThrow(NullPointerException::new);
-        return getMessageDtoListForSearchingByMessageValue(messageDataPage, messages, userChatCheckedMessages);
+        return getMessageDtoListForSearchingByMessageValue(
+                messageDataPage,
+                messages,
+                userChatCheckedMessages,
+                chatMessageDataMessagesMap
+        );
     }
 
     @NonNull
     private List<MessageDto> getMessageDtoListForSearchingByMessageValue(
             Page<MessageData> messageDataPage,
-            List<Message> messages,
-            List<UserChatCheckedMessage> userChatCheckedMessages
+            Map<UUID, Message> messages,
+            List<UserChatCheckedMessage> userChatCheckedMessages,
+            Map<UUID, UUID> chatMessageDataMessagesMap
     ) {
+        Map<UUID, User> users = userRepository.findAllById(getSetOfPublishersForMessages(messages.values()))
+                .stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+        Map<UUID, UserChatCheckedMessage> userChatCheckedMessageMap = userChatCheckedMessages.stream()
+                .collect(Collectors.toMap(
+                        UserChatCheckedMessage::getMessageId,
+                        userChatCheckedMessage -> userChatCheckedMessage
+                ));
         return messageDataPage.stream()
-                .map(messageData ->
-                        messages.stream()
-                                .filter(message -> message.getDatas().contains(messageData))
-                                .findFirst()
-                                .orElseThrow(NullPointerException::new)
-                )
+                .map(messageData -> messages.get(chatMessageDataMessagesMap.get(messageData.getId())))
                 .map(message -> mapper.wrapMessageToMessageDto(
                         message,
-                        userRepository.findAllById(
-                                messages.stream()
-                                        .map(Message::getPublisher)
-                                        .toList()
-                        ),
-                        userChatCheckedMessages.stream()
-                                .filter(userChatCheckedMessage ->
-                                        userChatCheckedMessage.getMessageId().equals(message.getId()))
-                                .findFirst()
-                                .orElseThrow(NullPointerException::new)
-                                .getChecked()))
+                        users,
+                        userChatCheckedMessageMap.get(message.getId()).getChecked()
+                ))
                 .distinct()
                 .sorted(Comparator.comparing(MessageDto::getDateTime).reversed())
                 .toList();
@@ -239,12 +250,11 @@ public class MessageServiceImpl implements MessageService {
         message.setDatas(dto.getDatas());
         message.setEdited(true);
         messageRepository.save(message);
+        User user = userRepository.findById(message.getPublisher())
+                .orElseThrow(NullPointerException::new);
         return mapper.wrapMessageToMessageDto(
                 message,
-                List.of(
-                        userRepository.findById(message.getPublisher())
-                                .orElseThrow(NullPointerException::new)
-                ),
+                Map.of(user.getId(), user),
                 null
         );
     }
@@ -318,31 +328,29 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private PageImpl<MessageDto> getMessageDtoPage(UUID userId, UUID chatId, Page<Message> messagePage) {
-        List<UserChatCheckedMessage> userChatCheckedMessages =
+        Map<UUID, UserChatCheckedMessage> userChatCheckedMessages =
                 userChatCheckedMessageRepository.findAllByUserIdAndChatIdAndMessageIdIn(
-                        userId,
-                        chatId,
-                        messagePage.get()
-                                .map(Message::getId)
-                                .toList()
-                ).orElseThrow(NullPointerException::new);
-        List<User> users = userRepository.findAllById(
-                messagePage.stream()
-                        .map(Message::getPublisher)
-                        .toList()
-        );
+                                userId,
+                                chatId,
+                                messagePage.get()
+                                        .map(Message::getId)
+                                        .toList()
+                        ).orElseThrow(NullPointerException::new)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                UserChatCheckedMessage::getMessageId,
+                                userChatCheckedMessage -> userChatCheckedMessage
+                        ));
+        Map<UUID, User> users = userRepository.findAllById(getSetOfPublishersForMessages(messagePage.getContent()))
+                .stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
         return new PageImpl<>(
                 messagePage.stream()
                         .map(message ->
                                 mapper.wrapMessageToMessageDto(
                                         message,
                                         users,
-                                        userChatCheckedMessages.stream()
-                                                .filter(userChatCheckedMessage ->
-                                                        userChatCheckedMessage.getMessageId().equals(message.getId()))
-                                                .findFirst()
-                                                .orElseThrow(NullPointerException::new)
-                                                .getChecked()
+                                        userChatCheckedMessages.get(message.getId()).getChecked()
                                 )
                         )
                         .sorted(Comparator.comparing(MessageDto::getDateTime))
@@ -350,6 +358,20 @@ public class MessageServiceImpl implements MessageService {
                 messagePage.getPageable(),
                 messagePage.getTotalElements()
         );
+    }
+
+    private static Set<UUID> getSetOfPublishersForMessages(Collection<Message> messages) {
+        Set<UUID> userIds = messages.stream()
+                .map(Message::getPublisher)
+                .collect(Collectors.toSet());
+        Set<UUID> relatesToUserIds = messages.stream()
+                .filter(message -> message.getRelatesTo() != null)
+                .map(message -> message.getRelatesTo().getPublisher())
+                .collect(Collectors.toSet());
+        if (!relatesToUserIds.isEmpty()) {
+            userIds.addAll(relatesToUserIds);
+        }
+        return userIds;
     }
 
     private MessageDto getMessageSendingResponse(SendOrReplyToMessageDto dto) {
@@ -383,12 +405,11 @@ public class MessageServiceImpl implements MessageService {
 
         createUserChatCheckedMessageForEveryUserInChat(message);
 
-        List<User> users = null;
+        Map<UUID, User> users = null;
         if (message.getPublisher() != null) {
-            users = List.of(
-                    userRepository.findById(message.getPublisher())
-                            .orElseThrow(NullPointerException::new)
-            );
+            User user = userRepository.findById(message.getPublisher())
+                    .orElseThrow(NullPointerException::new);
+            users = Map.of(user.getId(), user);
         }
 
         return mapper.wrapMessageToMessageDto(

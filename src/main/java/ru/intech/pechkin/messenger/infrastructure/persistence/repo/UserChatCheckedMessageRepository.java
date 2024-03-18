@@ -18,13 +18,13 @@ public interface UserChatCheckedMessageRepository extends MongoRepository<UserCh
     Optional<List<UserChatCheckedMessage>> findAllByUserIdAndChatIdAndMessageIdIn(
             UUID userId,
             UUID chatId,
-            List<UUID> messageIds
+            Collection<UUID> messageIds
     );
 
     List<UserChatCheckedMessage> findAllByUserIdAndChatIdInAndMessageIdIn(
             UUID userId,
-            List<UUID> chatIds,
-            List<UUID> messageIds
+            Collection<UUID> chatIds,
+            Collection<UUID> messageIds
     );
 
     Page<UserChatCheckedMessage> findAllByUserIdAndChatIdAndChecked(
@@ -35,14 +35,14 @@ public interface UserChatCheckedMessageRepository extends MongoRepository<UserCh
     );
 
     List<UserChatCheckedMessage> findAllByUserIdInAndChatIdAndMessageIdAndChecked(
-            List<UUID> userIds,
+            Collection<UUID> userIds,
             UUID chatId,
             UUID messageId,
             Boolean checked
     );
 
     List<UserChatCheckedMessage> findAllByUserIdInAndChatIdAndMessageIdInAndChecked(
-            List<UUID> userIds,
+            Collection<UUID> userIds,
             UUID chatId,
             Collection<UUID> messageIds,
             Boolean checked

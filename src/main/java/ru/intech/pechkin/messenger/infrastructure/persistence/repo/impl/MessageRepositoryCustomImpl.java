@@ -2,6 +2,7 @@ package ru.intech.pechkin.messenger.infrastructure.persistence.repo.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -13,6 +14,7 @@ import ru.intech.pechkin.messenger.infrastructure.persistence.repo.MessageReposi
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
@@ -58,11 +60,46 @@ public class MessageRepositoryCustomImpl implements MessageRepositoryCustom {
                         .build()
         );
 
+        return getPageOfMessages(pageable, aggregation);
+    }
+
+    @Override
+    public Page<Message> findAllByUserIdChatIdAndPublisherNotAndChecked(
+            UUID userId,
+            UUID chatId,
+            UUID publisher,
+            Boolean checked,
+            Pageable pageable
+    ) {
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.lookup(
+                        "userChatCheckedMessages",
+                        "_id",
+                        "messageId",
+                        "userChatCheckedMessages"
+                ),
+                Aggregation.unwind("userChatCheckedMessages", true),
+                Aggregation.match(Criteria.where("chatId").is(chatId)
+                        .and("publisher").ne(publisher)
+                        .and("userChatCheckedMessages.userId").is(userId)
+                        .and("userChatCheckedMessages.checked").is(checked)
+                )
+        ).withOptions(
+                Aggregation.newAggregationOptions()
+                        .allowDiskUse(true)
+                        .build()
+        );
+
+        return getPageOfMessages(pageable, aggregation);
+    }
+
+    @NotNull
+    private Page<Message> getPageOfMessages(Pageable pageable, Aggregation aggregation) {
         List<Message> messages = mongoTemplate.aggregate(
-                        aggregation,
-                        "messages",
-                        Message.class
-                ).getMappedResults();
+                aggregation,
+                "messages",
+                Message.class
+        ).getMappedResults();
 
         int startItem = pageable.getPageSize() * pageable.getPageNumber();
 

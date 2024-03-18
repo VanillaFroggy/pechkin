@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 spring:
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
@@ -8,6 +8,7 @@ spring:
       authentication-database: admin
       database: messenger
       port: 27017
+      host: ${SPRING_DATA_MONGODB_HOST:mongo}
   servlet:
     multipart:
       enabled: true

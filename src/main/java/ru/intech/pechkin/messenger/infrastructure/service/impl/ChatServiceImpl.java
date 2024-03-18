@@ -45,19 +45,23 @@ public class ChatServiceImpl implements ChatService {
                 userRoleMutedPinnedChatRepository.findAllByUserId(dto.getUserId()),
                 PageRequest.of(dto.getPageNumber(), dto.getPageSize())
         );
-        List<UUID> chatIds = lastMessages.stream()
+        Set<UUID> chatIds = lastMessages.stream()
                 .map(Message::getChatId)
-                .toList();
+                .collect(Collectors.toSet());
         List<ChatDto> chatDtos = getChatDtoListByChatIdIn(chatIds);
 
-        List<UserChatCheckedMessage> userChatCheckedMessages =
+        Map<UUID, Boolean> userChatCheckedMessages =
                 userChatCheckedMessageRepository.findAllByUserIdAndChatIdInAndMessageIdIn(
-                        dto.getUserId(),
-                        chatIds,
-                        lastMessages.stream()
-                                .map(Message::getId)
-                                .toList()
-                );
+                                dto.getUserId(),
+                                chatIds,
+                                lastMessages.stream()
+                                        .map(Message::getId)
+                                        .collect(Collectors.toSet())
+                        ).stream()
+                        .collect(Collectors.toMap(
+                                UserChatCheckedMessage::getChatId,
+                                UserChatCheckedMessage::getChecked)
+                        );
         chatDtos.parallelStream().forEach(chatDto -> processChatDto(
                 chatDto,
                 lastMessages,
@@ -82,41 +86,51 @@ public class ChatServiceImpl implements ChatService {
         processChatDto(
                 chatDto,
                 new PageImpl<>(List.of(lastMessage)),
-                List.of(
+                Map.of(
+                        chatDto.getId(),
                         userChatCheckedMessageRepository.findByUserIdAndChatIdAndMessageId(
-                                dto.getUserId(),
-                                lastMessage.getChatId(),
-                                lastMessage.getId()
-                        ).orElseThrow(NullPointerException::new)
+                                        dto.getUserId(),
+                                        lastMessage.getChatId(),
+                                        lastMessage.getId()
+                                ).orElseThrow(NullPointerException::new)
+                                .getChecked()
                 ),
                 dto.getUserId()
         );
         return chatDto;
     }
 
-    private void processChatDto(ChatDto chatDto, Page<Message> lastMessages, List<UserChatCheckedMessage> userChatCheckedMessages, UUID dto) {
-        List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats =
-                userRoleMutedPinnedChatRepository.findAllByChatId(chatDto.getId());
-        List<User> users = userRepository.findAllById(
-                userRoleMutedPinnedChats.stream()
-                        .map(UserRoleMutedPinnedChat::getUserId)
-                        .toList()
-        );
+    private void processChatDto(
+            ChatDto chatDto,
+            Page<Message> lastMessages,
+            Map<UUID, Boolean> userChatCheckedMessages,
+            UUID userId
+    ) {
+        Map<UUID, UserRoleMutedPinnedChat> userRoleMutedPinnedChats =
+                userRoleMutedPinnedChatRepository.findAllByChatId(chatDto.getId())
+                        .stream()
+                        .collect(Collectors.toMap(
+                                UserRoleMutedPinnedChat::getUserId,
+                                userRoleMutedPinnedChat -> userRoleMutedPinnedChat
+                        ));
+        Map<UUID, User> users = userRepository.findAllById(userRoleMutedPinnedChats.keySet())
+                .stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
         setLastMessageInChatDto(chatDto, lastMessages.getContent(), users, userChatCheckedMessages);
 
         setUsersWithRolesInChatDto(chatDto, userRoleMutedPinnedChats, users);
 
         if (chatDto.getChatType().equals(ChatType.P2P)) {
-            setTitleAndIconInP2PChatByInterlocutor(dto, chatDto, users);
+            setTitleAndIconInP2PChatByInterlocutor(userId, chatDto, users);
         }
 
-        setUnreadMessagesCountInChatDtoByUserId(dto, chatDto);
+        setUnreadMessagesCountInChatDtoByUserId(userId, chatDto);
 
-        setMutedStatusAndPinnedStatusInChatDtoByUserId(dto, chatDto, userRoleMutedPinnedChats);
+        setMutedStatusAndPinnedStatusInChatDtoByUserId(userId, chatDto, userRoleMutedPinnedChats);
     }
 
     @NonNull
-    private List<ChatDto> getChatDtoListByChatIdIn(List<UUID> chatIds) {
+    private List<ChatDto> getChatDtoListByChatIdIn(Set<UUID> chatIds) {
         List<Chat> chats = chatRepository.findAllById(chatIds);
         if (chats.isEmpty()) {
             throw new NoSuchElementException("There is no chats for you");
@@ -129,8 +143,8 @@ public class ChatServiceImpl implements ChatService {
     private void setLastMessageInChatDto(
             ChatDto chatDto,
             List<Message> lastMessages,
-            List<User> users,
-            List<UserChatCheckedMessage> userChatCheckedMessages
+            Map<UUID, User> users,
+            Map<UUID, Boolean> userChatCheckedMessages
     ) {
         Message message = lastMessages.stream()
                 .filter(lastMessage -> lastMessage.getChatId().equals(chatDto.getId()))
@@ -144,85 +158,57 @@ public class ChatServiceImpl implements ChatService {
         chatDto.setMessage(mapper.wrapMessageToMessageDto(
                 message,
                 users,
-                userChatCheckedMessages.stream()
-                        .filter(userChatCheckedMessage ->
-                                userChatCheckedMessage.getChatId().equals(chatDto.getId())
-                                        && userChatCheckedMessage.getMessageId().equals(message.getId())
-                        )
-                        .findFirst()
-                        .orElseThrow(NullPointerException::new)
-                        .getChecked()
+                userChatCheckedMessages.get(chatDto.getId())
         ));
     }
 
     private void setUsersWithRolesInChatDto(
             ChatDto chatDto,
-            List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats,
-            List<User> users
+            Map<UUID, UserRoleMutedPinnedChat> userRoleMutedPinnedChats,
+            Map<UUID, User> users
     ) {
-        chatDto.setUsersWithRole(userRoleMutedPinnedChats.stream()
-                .map(userRoleMutedPinnedChat -> users.stream()
-                        .filter(user -> user.getId().equals(userRoleMutedPinnedChat.getUserId()))
-                        .findFirst()
-                        .orElseThrow(NullPointerException::new)
-                )
-                .map(user -> mapper.userAndRoleToUserWithRoleDto(
-                        user,
-                        userRoleMutedPinnedChats.stream()
-                                .filter(userRoleMutedPinnedChat ->
-                                        userRoleMutedPinnedChat.getUserId().equals(user.getId()))
-                                .findFirst()
-                                .orElseThrow(NullPointerException::new)
-                                .getUserRole()))
-                .toList());
+        chatDto.setUsersWithRole(
+                userRoleMutedPinnedChats.entrySet().parallelStream()
+                        .map(userRoleMutedPinnedChat -> mapper.userAndRoleToUserWithRoleDto(
+                                users.get(userRoleMutedPinnedChat.getKey()),
+                                userRoleMutedPinnedChat.getValue().getUserRole())
+                        )
+                        .toList()
+        );
     }
 
     private void setTitleAndIconInP2PChatByInterlocutor(
             UUID userId,
             ChatDto chatDto,
-            List<User> users
+            Map<UUID, User> users
     ) {
-        User otherUser = users.parallelStream()
-                .filter(user -> !user.getId().equals(userId))
-                .findFirst()
-                .orElseThrow(NullPointerException::new);
-        chatDto.setTitle(otherUser.getUsername());
-        chatDto.setIcon(otherUser.getIcon());
+        users.forEach((key, value) -> {
+            if (!key.equals(userId)) {
+                chatDto.setTitle(value.getUsername());
+                chatDto.setIcon(value.getIcon());
+            }
+        });
     }
 
     private void setUnreadMessagesCountInChatDtoByUserId(UUID userId, ChatDto chatDto) {
-        int number = 0;
-        long count = 0;
-        Page<UserChatCheckedMessage> page;
-        do {
-            page = userChatCheckedMessageRepository.findAllByUserIdAndChatIdAndChecked(
-                    userId,
-                    chatDto.getId(),
-                    false,
-                    PageRequest.of(number, 2_000)
-            );
-            count += messageRepository.findAllByChatIdAndPublisherNot(chatDto.getId(), userId)
-                    .parallelStream()
-                    .count();
-            number++;
-        } while (!page.isLast());
-        chatDto.setUnreadMessagesCount(count);
+        chatDto.setUnreadMessagesCount(
+                messageRepository.findAllByUserIdChatIdAndPublisherNotAndChecked(
+                        userId,
+                        chatDto.getId(),
+                        userId,
+                        false,
+                        PageRequest.of(0, 100)
+                ).getTotalElements()
+        );
     }
 
     private void setMutedStatusAndPinnedStatusInChatDtoByUserId(
             UUID userId,
             ChatDto chatDto,
-            List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats
+            Map<UUID, UserRoleMutedPinnedChat> userRoleMutedPinnedChats
     ) {
-        UserRoleMutedPinnedChat userRoleMutedPinnedChat = userRoleMutedPinnedChats.parallelStream()
-                .filter(lambdaUserRoleMutedPinnedChat ->
-                        lambdaUserRoleMutedPinnedChat.getUserId().equals(userId)
-                                && lambdaUserRoleMutedPinnedChat.getChatId().equals(chatDto.getId())
-                )
-                .findFirst()
-                .orElseThrow(NullPointerException::new);
-        chatDto.setMuted(userRoleMutedPinnedChat.getMuted());
-        chatDto.setPinned(userRoleMutedPinnedChat.getPinned());
+        chatDto.setMuted(userRoleMutedPinnedChats.get(userId).getMuted());
+        chatDto.setPinned(userRoleMutedPinnedChats.get(userId).getPinned());
     }
 
     @NonNull
@@ -433,13 +419,14 @@ public class ChatServiceImpl implements ChatService {
             List<UserRoleMutedPinnedChat> userRoleMutedPinnedChats,
             Map<UUID, String> usersWithNames
     ) {
+        Map<UUID, UserRoleMutedPinnedChat> uuidUserRoleMutedPinnedChatMap =
+                userRoleMutedPinnedChats.parallelStream()
+                        .collect(Collectors.toMap(
+                                UserRoleMutedPinnedChat::getUserId,
+                                userRoleMutedPinnedChat -> userRoleMutedPinnedChat
+                        ));
         dto.getUsers().entrySet().parallelStream().forEach(entry -> {
-            Optional<UserRoleMutedPinnedChat> filteredOptionalRow =
-                    userRoleMutedPinnedChats.stream()
-                            .filter(userRoleMutedPinnedChat ->
-                                    entry.getKey().equals(userRoleMutedPinnedChat.getUserId()))
-                            .findFirst();
-            if (filteredOptionalRow.isEmpty()) {
+            if (!uuidUserRoleMutedPinnedChatMap.containsKey(entry.getKey())) {
                 userRoleMutedPinnedChats.add(
                         addUserWithRoleByUpdatingGroupChat(
                                 dto.getChatId(),
@@ -449,12 +436,13 @@ public class ChatServiceImpl implements ChatService {
                         )
                 );
             } else if (
-                    !filteredOptionalRow.get()
+                    !uuidUserRoleMutedPinnedChatMap.get(entry.getKey())
                             .getUserRole()
                             .equals(entry.getValue())
             ) {
-                userRoleMutedPinnedChats.get(userRoleMutedPinnedChats.indexOf(filteredOptionalRow.get()))
-                        .setUserRole(entry.getValue());
+                userRoleMutedPinnedChats.get(userRoleMutedPinnedChats.indexOf(
+                        uuidUserRoleMutedPinnedChatMap.get(entry.getKey()))
+                ).setUserRole(entry.getValue());
             }
         });
     }

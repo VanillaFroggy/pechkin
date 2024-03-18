@@ -13,6 +13,7 @@ import ru.intech.pechkin.messenger.infrastructure.service.dto.user.UserWithRoleD
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
@@ -40,33 +41,18 @@ public interface MessengerServiceMapper {
 
     default MessageDto wrapMessageToMessageDto(
             Message message,
-            List<User> users,
+            Map<UUID, User> users,
             Boolean checked
     ) {
         MessagePublisherDto publisherDto = null;
         if (message.getPublisher() != null) {
-            publisherDto = userToMessagePublisherDto(
-                    users.stream()
-                            .filter(user -> user.getId().equals(message.getPublisher()))
-                            .findFirst()
-                            .orElseThrow(NullPointerException::new)
-            );
+            publisherDto = userToMessagePublisherDto(users.get(message.getPublisher()));
         }
         MessageDto relatesTo = null;
         if (message.getRelatesTo() != null) {
             relatesTo = messageToMessageDto(
                     message.getRelatesTo(),
-                    userToMessagePublisherDto(
-                            users.stream()
-                                    .filter(user -> user.getId()
-                                            .equals(
-                                                    message.getRelatesTo()
-                                                            .getPublisher()
-                                            )
-                                    )
-                                    .findFirst()
-                                    .orElseThrow(NullPointerException::new)
-                    ),
+                    userToMessagePublisherDto(users.get(message.getRelatesTo().getPublisher())),
                     true,
                     null
             );

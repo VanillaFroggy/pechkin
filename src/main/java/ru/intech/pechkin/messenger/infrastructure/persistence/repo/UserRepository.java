@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import ru.intech.pechkin.messenger.infrastructure.persistence.entity.User;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,5 +20,5 @@ public interface UserRepository extends MongoRepository<User, UUID> {
 
     Optional<User> findByEmployeeId(UUID employeeId);
 
-    Page<User> findAllByEmployeeIdIn(List<UUID> employeeId, Pageable pageable);
+    Page<User> findAllByEmployeeIdIn(Collection<UUID> employeeId, Pageable pageable);
 }

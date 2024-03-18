@@ -1,7 +1,7 @@
 package ru.intech.pechkin.messenger.infrastructure.service.impl;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -18,7 +18,9 @@ import ru.intech.pechkin.messenger.infrastructure.service.dto.user.*;
 import ru.intech.pechkin.messenger.infrastructure.service.mapper.MessengerServiceMapper;
 
 import java.util.Comparator;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -61,7 +63,9 @@ public class UserServiceImpl implements UserService {
                                 user,
                                 employeeService.getEmployeeById(user.getEmployeeId())
                         ))
-                        .toList()
+                        .toList(),
+                users.getPageable(),
+                users.getTotalElements()
         );
     }
 
@@ -117,28 +121,25 @@ public class UserServiceImpl implements UserService {
         return getUserDtosPage(employeeDtos);
     }
 
-    @NotNull
+    @NonNull
     private PageImpl<UserDto> getUserDtosPage(Page<EmployeeDto> employeeDtos) {
-        Page<User> users = repository.findAllByEmployeeIdIn(
-                employeeDtos.stream()
-                        .map(EmployeeDto::getId)
-                        .toList(),
-                employeeDtos.getPageable()
-        );
+        Map<UUID, EmployeeDto> employeeDtoMap = employeeDtos.stream()
+                .collect(Collectors.toMap(EmployeeDto::getId, employeeDto -> employeeDto));
         return new PageImpl<>(
-                users.stream()
+                repository.findAllByEmployeeIdIn(employeeDtoMap.keySet(), employeeDtos.getPageable())
+                        .stream()
+                        .parallel()
                         .map(user -> mapper.userAndEployeeDtoToUserDto(
                                 user,
-                                employeeDtos.stream()
-                                        .filter(employeeDto -> employeeDto.getId().equals(user.getEmployeeId()))
-                                        .findFirst()
-                                        .orElseThrow(NullPointerException::new)
+                                employeeDtoMap.get(user.getEmployeeId())
                         ))
                         .sorted(
                                 Comparator.comparing((UserDto userDto) -> userDto.getDepartment().getTitle())
                                         .thenComparing(UserDto::getFio)
                         )
-                        .toList()
+                        .toList(),
+                employeeDtos.getPageable(),
+                employeeDtos.getTotalElements()
         );
     }
 
