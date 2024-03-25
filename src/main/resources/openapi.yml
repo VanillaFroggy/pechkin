@@ -18,7 +18,7 @@ paths:
             schema:
               $ref: '#/components/schemas/AuthenticateRequest'
       responses:
-        204:
+        200:
           description: Успешная аутентификация пользователя
           content:
             application/json:
@@ -31,21 +31,66 @@ paths:
     post:
       tags: [ auth ]
       operationId: register
+      security:
+        - noAuth: [ ]
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/RegisterRequest'
       responses:
-        204:
+        200:
           description: Успешная регистрация пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponse'
         409:
           $ref: '#/components/responses/Conflict'
-  /api/v1/messenger/getAllChats/{id}:
-    description: Получить все чаты пользователя по его id
+  /api/v1/messenger/getPageOfChats:
+    description: Получить страницу чатов пользователя по его id
     get:
       tags: [ chat ]
-      operationId: getAllChats
+      operationId: getPageOfChats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPageOfChatsRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/Page' # content: ChatDto
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getChatByIdAndUserId:
+    description: Получить чат по его id и id пользователя
+    get:
+      tags: [ chat ]
+      operationId: getChatByIdAndUserId
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetChatByIdAndUserIdRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/ChatDto'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getP2PChatByUsers:
+    description: Получить чат по его id и id пользователя
+    get:
+      tags: [ chat ]
+      operationId: getP2PChatByUsers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetP2PChatByUsersRequest'
       responses:
         200:
           $ref: '#/components/schemas/ChatDto'
@@ -110,6 +155,91 @@ paths:
           $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/updateGroupChatTitle:
+    description: Обновить название группового чата
+    put:
+      tags: [ chat ]
+      operationId: updateGroupChatTitle
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGroupChatTitleOrIconRequest'
+      responses:
+        204:
+          description: Групповой чат успешно обновлён
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/updateGroupChatIcon:
+    description: Обновить иконку группового чата
+    put:
+      tags: [ chat ]
+      operationId: updateGroupChatIcon
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGroupChatTitleOrIconRequest'
+      responses:
+        204:
+          description: Групповой чат успешно обновлён
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/addUserToGroupChat:
+    description: Добавить пользователя в групповой чат
+    put:
+      tags: [ chat ]
+      operationId: addUserToGroupChat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserInGroupChatRequest'
+      responses:
+        204:
+          description: Пользователь успешно добавлен в групповой чат
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/updateUserInGroupChat:
+    description: Обновить пользователя группового чата
+    put:
+      tags: [ chat ]
+      operationId: updateUserInGroupChat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserInGroupChatRequest'
+      responses:
+        204:
+          description: Пользователь группового чата успешно обновлён
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/removeUserFromGroupChat:
+    description: Убрать пользователя из группового чата
+    put:
+      tags: [ chat ]
+      operationId: removeUserFromGroupChat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserInGroupChatRequest'
+      responses:
+        204:
+          description: Пользователь успешно удалён из группового чата
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/messenger/updateChatMutedStatus:
     description: Замутить или размутить чат
     put:
@@ -168,7 +298,7 @@ paths:
               $ref: '#/components/schemas/GetPageOfMessagesRequest'
       responses:
         200:
-          $ref: '#/components/schemas/PageOfMessages'
+          $ref: '#/components/schemas/Page' # content: MessageDto
         500:
           $ref: '#/components/responses/InternalServerError'
   /api/v1/messenger/sendMessage:
@@ -183,22 +313,39 @@ paths:
               $ref: '#/components/schemas/SendMessageRequest'
       responses:
         201:
-          $ref: '#/components/schemas/MessageSendingResponse'
+          $ref: '#/components/schemas/MessageDto'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /api/v1/messenger/updateMessageList:
-    description: Обновить список сообщений чата
+  /api/v1/messenger/getPageOfMessagesAfterLastCheckedMessage:
+    description: Получить список сообщений чата после последнего прочитанного
     get:
       tags: [ message ]
-      operationId: updateMessages
+      operationId: getPageOfMessagesAfterLastCheckedMessage
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateMessageListRequest'
+              $ref: '#/components/schemas/GetPageOfMessagesAfterLastCheckedMessageRequest'
       responses:
         200:
-          $ref: '#/components/schemas/PageOfMessages'
+          $ref: '#/components/schemas/Page' # content: MessageDto
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getPageOfMessagesBeforeDateTime:
+    description: Получить список сообщений чата до определённого времени
+    get:
+      tags: [ message ]
+      operationId: getPageOfMessagesBeforeDateTime
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPageOfMessagesBeforeDateTimeRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/Page' # content: MessageDto
         404:
           $ref: '#/components/responses/NotFound'
         500:
@@ -220,6 +367,23 @@ paths:
           $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/setMessageListChecked:
+    description: Пометить список сообщений прочитанными
+    put:
+      tags: [ message ]
+      operationId: setMessageListChecked
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetMessageListCheckedRequest'
+      responses:
+        204:
+          description: Сообщения помечены, как "Прочитано"
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/messenger/findMessageByValue:
     description: Найти сообщение по его содержимому
     get:
@@ -232,7 +396,7 @@ paths:
               $ref: '#/components/schemas/FindMessageByValueRequest'
       responses:
         200:
-          $ref: '#/components/schemas/PageOfMessages'
+          $ref: '#/components/schemas/Page' # content: MessageDto
         404:
           $ref: '#/components/responses/NotFound'
         500:
@@ -249,7 +413,7 @@ paths:
               $ref: '#/components/schemas/ReplyToMessageRequest'
       responses:
         201:
-          $ref: '#/components/schemas/MessageSendingResponse'
+          $ref: '#/components/schemas/MessageDto'
         404:
           $ref: '#/components/responses/NotFound'
         500:
@@ -288,6 +452,23 @@ paths:
           $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/deleteAllMessagesById:
+    description: Удалить сообщение
+    delete:
+      tags: [ message ]
+      operationId: deleteAllMessagesById
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAllMessagesByIdRequest'
+      responses:
+        204:
+          description: Сообщения успешно удалены
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/messenger/getUserById/{id}:
     description: Найти пользователя по его идентификационному номеру
     get:
@@ -312,6 +493,108 @@ paths:
           $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getPageOfUsersByUsernameLike:
+    description: Найти пользователей по их никнейму
+    get:
+      tags: [ user ]
+      operationId: getPageOfUsersByUsernameLike
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPageOfUsersByFieldLikeRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/Page' # content: UserDto
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getPageOfUsersByDepartment:
+    description: Найти пользователей по одному департаменту
+    get:
+      tags: [ user ]
+      operationId: getPageOfUsersByDepartment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPageOfUsersByDepartmentRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/Page' # content: UserDto
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getPageOfUsersByDepartmentLike:
+    description: Найти пользователей по их департаменту
+    get:
+      tags: [ user ]
+      operationId: getPageOfUsersByDepartmentLike
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPageOfUsersByFieldLikeRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/Page' # content: UserDto
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getPageOfUsersByFioLike:
+    description: Найти пользователей по их ФИО
+    get:
+      tags: [ user ]
+      operationId: getPageOfUsersByFioLike
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPageOfUsersByFieldLikeRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/Page' # content: UserDto
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getPageOfUsersByPositionLike:
+    description: Найти пользователей по их позиции
+    get:
+      tags: [ user ]
+      operationId: getPageOfUsersByPositionLike
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPageOfUsersByFieldLikeRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/Page' # content: UserDto
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/updateUsername:
+    description: Установить другой никнейм для пользователя
+    put:
+      tags: [ user ]
+      operationId: updateUsername
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUsernameRequest'
+      responses:
+        204:
+          description: Никнейм пользователя успешно изменена
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/messenger/updateUserIcon:
     description: Установить другую аватарку для пользователя
     put:
@@ -321,7 +604,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateUerIconRequest'
+              $ref: '#/components/schemas/UpdateUserIconRequest'
       responses:
         204:
           description: Аватарка пользователя успешно изменена
@@ -417,6 +700,260 @@ paths:
           $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getAllDepartments:
+    description: Получить список всех департаментов
+    get:
+      tags: [ department ]
+      operationId: getAllDepartments
+      responses:
+        200:
+          $ref: '#/components/schemas/DepartmentDto' # List<DepartmentDto>
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getPageOfDepartments:
+    description: Получить страницу департаментов
+    get:
+      tags: [ department ]
+      operationId: getPageOfDepartments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPageOfDepartmentsRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/Page' # content: DepartmentDto
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getDepartmentById/{id}:
+    description: Найти департамент по его id
+    get:
+      tags: [ department ]
+      operationId: getDepartmentById
+      responses:
+        200:
+          $ref: '#/components/schemas/DepartmentDto'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getDepartmentByTitle/{title}:
+    description: Найти департамент по его названию
+    get:
+      tags: [ department ]
+      operationId: getDepartmentByTitle
+      responses:
+        200:
+          $ref: '#/components/schemas/DepartmentDto'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getDepartmentsByTitleLike/{title}:
+    description: Найти департаменты по их названиям
+    get:
+      tags: [ department ]
+      operationId: getDepartmentsByTitleLike
+      responses:
+        200:
+          $ref: '#/components/schemas/DepartmentDto' # List<DepartmentDto>
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/createDepartment:
+    description: Создать департамент
+    post:
+      tags: [ department ]
+      operationId: createDepartment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDepartmentRequest'
+      responses:
+        201:
+          $ref: '#/components/schemas/DepartmentCreationDto'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/updateDepartment:
+    description: Обновить департамент
+    put:
+      tags: [ department ]
+      operationId: updateDepartment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDepartmentRequest'
+      responses:
+        204:
+          description: Департамент успешно обновлён
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/deleteDepartment/{id}:
+    description: Удалить департамент по его id
+    delete:
+      tags: [ department ]
+      operationId: deleteDepartment
+      responses:
+        204:
+          description: Департамент успешно удалён
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getPageOfEmployees:
+    description: Получить страницу работников
+    get:
+      tags: [ employee ]
+      operationId: getPageOfEmployees
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPageOfEmployeesRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/Page' # content: Employee
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getEmployeeById/{id}:
+    description: Найти работника по его id
+    get:
+      tags: [ employee ]
+      operationId: getEmployeeById
+      responses:
+        200:
+          $ref: '#/components/schemas/EmployeeDto'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getPageOfEmployeesByDepartment:
+    description: Найти работников по одному департаменту
+    get:
+      tags: [ employee ]
+      operationId: getPageOfEmployeesByDepartment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPageOfEmployeesByDepartmentRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/Page' # content: EmployeeDto
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getPageOfEmployeesByDepartmentLike:
+    description: Найти работников по их департаменту
+    get:
+      tags: [ employee ]
+      operationId: getPageOfEmployeesByDepartmentLike
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPageOfEmployeesByFieldLikeRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/Page' # content: EmplyeeDto
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getPageOfEmployeesByFioLike:
+    description: Найти работников по их ФИО
+    get:
+      tags: [ employee ]
+      operationId: getPageOfEmployeesByFioLike
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPageOfEmployeesByFieldLikeRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/Page' # content: EmplyeeDto
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/getPageOfEmployeesByPositionLike:
+    description: Найти работников по их позиции
+    get:
+      tags: [ employee ]
+      operationId: getPageOfEmployeesByPositionLike
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPageOfEmployeesByFieldLikeRequest'
+      responses:
+        200:
+          $ref: '#/components/schemas/Page' # content: EmplyeeDto
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/addEmployee:
+    description: Зарегистрировать работника
+    post:
+      tags: [ employee ]
+      operationId: addEmployee
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddEmployeeRequest'
+      responses:
+        201:
+          $ref: '#/components/schemas/EmployeeRegistrationResponse'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/updateEmployee:
+    description: Обновить данные работника
+    put:
+      tags: [ employee ]
+      operationId: updateEmployee
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEmployeeRequest'
+      responses:
+        204:
+          description: Данные работника успешно обновлены
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/messenger/fireEmployee/{id}:
+    description: Уволить работника по его id
+    put:
+      tags: [ employee ]
+      operationId: fireEmployee
+      responses:
+        204:
+          description: Работник успешно уволен
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   securitySchemes:
@@ -470,6 +1007,10 @@ components:
           description: |
             Закреплён ли чат для пользователя
           type: boolean
+        corporate:
+          description: |
+            Является ли чат корпоративным
+          type: boolean
     ChatType:
       description: |
         Информация по типу чата
@@ -493,6 +1034,10 @@ components:
           description: |
             Идентификационный номер
           type: string
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
         publisher:
           description: |
             Краткая информация о пользователе, что послал сообщение
@@ -511,7 +1056,7 @@ components:
           $ref: '#/components/schemas/MessageDto'
         dateTime:
           description: |
-            Время отправки сообщения
+            Время отправки сообщения по UTC
           type: string
           format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
           example: "2000-10-31T01:30:00.000"
@@ -583,6 +1128,10 @@ components:
           description: |
             Идентификационный номер
           type: string
+        employeeId:
+          description: |
+            Идентификационный номер работника
+          type: string
         username:
           description: |
             Никнейм пользователя
@@ -605,19 +1154,29 @@ components:
           type: string
           format: email
         department:
-          description: |
-            Отдел работника
-          type: string
+          $ref: "#/components/schemas/DepartmentDto"
         position:
           description: |
             Позиция работника
           type: string
+        superuser:
+          description: |
+            Является ли пользователь начальником отдела
+          type: boolean
+        blocked:
+          description: |
+            Заблокирован ли пользователь
+          type: boolean
     UserWithRoleDto:
       description: Информация о пользователе и его роли в чате
       properties:
         id:
           description: |
             Идентификационный номер
+          type: string
+        employeeId:
+          description: |
+            Идентификационный номер работника
           type: string
         username:
           description: |
@@ -631,6 +1190,45 @@ components:
           description: |
             Ссылка на иконку на FTP-сервере
           type: string
+        blocked:
+          description: |
+            Заблокирован ли пользователь
+          type: boolean
+    Role:
+      description: |
+        Информация по роли пользователя
+
+        * *ADMIN*    - Администратор
+
+        * *USER*   - Пользователь
+
+      type: string
+      enum:
+        - "ADMIN"
+        - "USER"
+      example: "USER"
+    DepartmentDto:
+      description: Информация о департаменте работника
+      properties:
+        id:
+          description: |
+            Идентификационный номер
+          type: string
+        title:
+          description: |
+            Название департамента
+          type: string
+        parent:
+          description: |
+            Идентификационный номер родительского департамента
+          type: string
+    EmployeeDto:
+      description: Информация о работнике
+      properties:
+        id:
+          description: |
+            Идентификационный номер
+          type: string
         fio:
           description: |
             ФИО пользователя
@@ -645,26 +1243,20 @@ components:
           type: string
           format: email
         department:
-          description: |
-            Отдел работника
-          type: string
+          $ref: "#/components/schemas/DepartmentDto"
         position:
           description: |
             Позиция работника
           type: string
-    Role:
-      description: |
-        Информация по роли пользователя
+        superuser:
+          description: |
+            Является ли работник начальником отдела
+          type: boolean
+        fired:
+          description: |
+            Уволен ли работник
+          type: boolean
 
-        * *ADMIN*    - Администратор
-
-        * *USER*   - Пользователь
-
-      type: string
-      enum:
-        - "ADMIN"
-        - "USER"
-      example: "USER"
 
     #    requests
     AuthenticateRequest:
@@ -690,6 +1282,7 @@ components:
     RegisterRequest:
       description: Запрос на регистрацию
       required:
+        - employeeId
         - username
         - password
         - fio
@@ -698,6 +1291,11 @@ components:
         - department
         - position
       properties:
+        employeeId:
+          description: |
+            id работника, который регистрируется
+          type: string
+          format: id
         username:
           description: |
             Никнейм пользователя
@@ -716,38 +1314,50 @@ components:
           description: |
             Ссылка на иконку на FTP-сервере
           type: string
-        fio:
+    GetPageOfChatsRequest:
+      description: Запрос на получение страницы чатов
+      properties:
+        chatId:
           description: |
-            ФИО пользователя
+            Идентификационный номер чата
           type: string
-          format: fio
-          example: "Dostoevsky Fyodor Mikhailovich"
-        phoneNumber:
+        userId:
           description: |
-            Номер телефона
+            Идентификационный номер пользователя
           type: string
-          format: phoneNumber
-          pattern: "^(\\+7|8)[(]?\\d{3}[)]?[-\\s\\.]?\\d{3}[-\\s.]?\\d{4}$"
-          example: "88005553535"
-        email:
+        pageNumber:
           description: |
-            Электронная почта
-          type: string
-          format: email
-          pattern: "^[\\w.%+-]+@[a-z\\d.-]+\\.[a-z]{2,6}$"
-          example: "dostoevsky.fm@gmail.com"
-        department:
+            Номер страницы
+          minimum: 0
+          type: integer
+        pageSize:
           description: |
-            Отдел работника
-          type: string
-          pattern: "^\\w{4,32}$"
-          example: "seo"
-        position:
+            Количество элементов на странице
+          minimum: 1
+          maximum: 25
+          type: integer
+    GetChatByIdAndUserIdRequest:
+      description: Запрос на получение чата по его id
+      properties:
+        chatId:
           description: |
-            Позиция работника
+            Идентификационный номер чата
           type: string
-          pattern: "^\\w{4,32}$"
-          example: "copywriter"
+        userId:
+          description: |
+            Идентификационный номер пользователя
+          type: string
+    GetP2PChatByUsersRequest:
+      description: Запрос на получение P2P чата с пользователем по id этого пользователя
+      properties:
+        userId:
+          description: |
+            Идентификационный номер ищущего пользователя
+          type: string
+        searchedUserId:
+          description: |
+            Идентификационный номер искомого юзера
+          type: string
     CreateP2PChatRequest:
       description: Запрос на создание приватного чата
       properties:
@@ -807,6 +1417,10 @@ components:
             type: string
             format: id,
             $ref: '#/components/schemas/Role'
+        corporate:
+          description: |
+            Является ли чат корпоративным
+          type: boolean
     UpdateGroupChatRequest:
       description: Запрос на обновление данных группового чата
       properties:
@@ -830,6 +1444,32 @@ components:
             type: string
             format: id,
             $ref: '#/components/schemas/Role'
+    UpdateGroupChatTitleOrIconRequest:
+      description: Запрос на обновление названия/иконки группового чата
+      properties:
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
+        value:
+          description: |
+            Новое значение
+          type: string
+    UpdateUserInGroupChatRequest:
+      description: Запрос на добавление/обновление/удаление пользователя группового чата
+      properties:
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
+        userId:
+          description: |
+            Идентификационный номер пользователя
+          type: string
+        userRole:
+          description: |
+            Роль пользователя в чате
+          $ref: "#/components/schemas/Role"
     UpdateChatMutedOrPinnedStatusRequest:
       description: Запрос на обновление статуса (мут/закреп) группового чата
       properties:
@@ -885,14 +1525,30 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MessageDataDto'
-        dateTime:
+    GetPageOfMessagesAfterLastCheckedMessageRequest:
+      description: Запрос на получение списка сообщений после последнего прочитанного
+      properties:
+        chatId:
           description: |
-            Время отправки сообщения
+            Идентификационный номер чата
           type: string
-          format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
-          example: "2000-10-31T01:30:00.000-05:00"
-    UpdateMessageListRequest:
-      description: Запрос на обновление списка сообщений
+        userId:
+          description: |
+            Идентификационный номер пользователя
+          type: string
+        pageNumber:
+          description: |
+            Номер страницы
+          minimum: 0
+          type: integer
+        pageSize:
+          description: |
+            Количество элементов на странице
+          minimum: 1
+          maximum: 50
+          type: integer
+    GetPageOfMessagesBeforeDateTimeRequest:
+      description: Запрос на получение списка сообщений до определённой даты по UTC
       properties:
         chatId:
           description: |
@@ -915,7 +1571,7 @@ components:
           type: integer
         dateTime:
           description: |
-            Время отправки последнего прочитанного сообщения (любым пользователем)
+            Время по UTC
           type: string
           format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
           example: "2000-10-31T01:30:00.000-05:00"
@@ -938,6 +1594,25 @@ components:
           description: |
             Идентификационный номер сообщения
           type: string
+    SetMessageListCheckedRequest:
+      description: Запрос на прочтение списка сообщений
+      properties:
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
+        userId:
+          description: |
+            Идентификационный номер пользователя
+          type: string
+        publisherId:
+          description: |
+            Идентификационный номер отправителя сообщения
+          type: string
+        messageIds:
+          description: |
+            Идентификационные номера сообщений
+          type: array
     FindMessageByValueRequest:
       description: Запрос на поиск сообщения по содержимому
       properties:
@@ -986,12 +1661,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MessageDataDto'
-        dateTime:
-          description: |
-            Время отправки последнего прочитанного сообщения (любым пользователем)
-          type: string
-          format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
-          example: "2000-10-31T01:30:00.000-05:00"
     EditMessageRequest:
       description: Запрос на изменение содержимого сообщения
       properties:
@@ -1021,7 +1690,66 @@ components:
           description: |
             Идентификационный номер сообщения
           type: string
-    UpdateUerIconRequest:
+    DeleteAllMessagesByIdRequest:
+      description: Запрос на удаление всех сообщений по id
+      properties:
+        chatId:
+          description: |
+            Идентификационный номер чата
+          type: string
+        messageIds:
+          description: |
+            Идентификационные номера сообщений
+          type: array
+    GetPageOfUsersByFieldLikeRequest:
+      description: Запрос на получение страницы пользователей по значению строкового поля
+      properties:
+        value:
+          description: |
+            Строковое значение
+          type: string
+        pageNumber:
+          description: |
+            Номер страницы
+          minimum: 0
+          type: integer
+        pageSize:
+          description: |
+            Количество элементов на странице
+          minimum: 1
+          maximum: 50
+          type: integer
+    GetPageOfUsersByDepartmentRequest:
+      description: Запрос на получение страницы пользователей по департаменту
+      properties:
+        departmentId:
+          description: |
+            id департамента
+          type: string
+          format: id
+        pageNumber:
+          description: |
+            Номер страницы
+          minimum: 0
+          type: integer
+        pageSize:
+          description: |
+            Количество элементов на странице
+          minimum: 1
+          maximum: 50
+          type: integer
+    UpdateUsernameRequest:
+      description: Запрос на изменение никнейма пользователя
+      properties:
+        userId:
+          description: |
+            Идентификационный номер пользователя
+          type: string
+        username:
+          description: |
+           Новый никнейм пользователя
+          type: string
+    UpdateUserIconRequest:
       description: Запрос на изменение аватарки пользователя
       properties:
         userId:
@@ -1032,6 +1760,175 @@ components:
           description: |
             Ссылка на иконку на файловом сервере
           type: string
+    GetPageOfDepartmentsRequest:
+      description: Запрос на получение страницы департаментов
+      properties:
+        pageNumber:
+          description: |
+            Номер страницы
+          minimum: 0
+          type: integer
+        pageSize:
+          description: |
+            Количество элементов на странице
+          minimum: 1
+          maximum: 100
+          type: integer
+    CreateDepartmentRequest:
+      description: Запрос на создание департамента
+      properties:
+        title:
+          description: |
+            Название департамента
+          type: string
+        parent:
+          description: |
+            Идентификационный номер родительского департамента
+          type: string
+    UpdateDepartmentRequest:
+      description: Запрос на обновление департамента
+      properties:
+        id:
+          description: |
+            Идентификационный номер департамента
+          type: string
+        title:
+          description: |
+            Название департамента
+          type: string
+        parent:
+          description: |
+            Идентификационный номер родительского департамента
+          type: string
+    GetPageOfEmployeesRequest:
+      description: Запрос на получение страницы работников
+      properties:
+        pageNumber:
+          description: |
+            Номер страницы
+          minimum: 0
+          type: integer
+        pageSize:
+          description: |
+            Количество элементов на странице
+          minimum: 1
+          maximum: 50
+          type: integer
+    GetPageOfEmployeesByDepartmentRequest:
+      description: Запрос на получение страницы работников по одному департаменту
+      properties:
+        departmentId:
+          description: |
+            id департамента
+          type: string
+          format: id
+        pageNumber:
+          description: |
+            Номер страницы
+          minimum: 0
+          type: integer
+        pageSize:
+          description: |
+            Количество элементов на странице
+          minimum: 1
+          maximum: 50
+          type: integer
+    GetPageOfEmployeesByFieldLikeRequest:
+      description: Запрос на получение страницы работников по строковому значению поля
+      properties:
+        value:
+          description: |
+            Строковое значение
+          type: string
+        pageNumber:
+          description: |
+            Номер страницы
+          minimum: 0
+          type: integer
+        pageSize:
+          description: |
+            Количество элементов на странице
+          minimum: 1
+          maximum: 50
+          type: integer
+    AddEmployeeRequest:
+      description: Запрос на добавление работника
+      properties:
+        fio:
+          description: |
+            ФИО пользователя
+          type: string
+          format: fio
+          example: "Dostoevsky Fyodor Mikhailovich"
+        phoneNumber:
+          description: |
+            Номер телефона
+          type: string
+          format: phoneNumber
+          pattern: "^(\\+7|8)[(]?\\d{3}[)]?[-\\s\\.]?\\d{3}[-\\s.]?\\d{4}$"
+          example: "88005553535"
+        email:
+          description: |
+            Электронная почта
+          type: string
+          format: email
+          pattern: "^[\\w.%+-]+@[a-z\\d.-]+\\.[a-z]{2,6}$"
+          example: "dostoevsky.fm@gmail.com"
+        department:
+          description: |
+            id отдела работника
+          type: string
+        position:
+          description: |
+            Позиция работника
+          type: string
+        superuser:
+          description: |
+            Является ли работник начальником отдела
+          type: boolean
+    UpdateEmployeeRequest:
+      description: Запрос на обновление данных работника
+      properties:
+        id:
+          description: |
+            Идентификационный номер работника
+          type: string
+        fio:
+          description: |
+            ФИО пользователя
+          type: string
+          format: fio
+          example: "Dostoevsky Fyodor Mikhailovich"
+        phoneNumber:
+          description: |
+            Номер телефона
+          type: string
+          format: phoneNumber
+          pattern: "^(\\+7|8)[(]?\\d{3}[)]?[-\\s\\.]?\\d{3}[-\\s.]?\\d{4}$"
+          example: "88005553535"
+        email:
+          description: |
+            Электронная почта
+          type: string
+          format: email
+          pattern: "^[\\w.%+-]+@[a-z\\d.-]+\\.[a-z]{2,6}$"
+          example: "dostoevsky.fm@gmail.com"
+        department:
+          description: |
+            id отдела работника
+          type: string
+        position:
+          description: |
+            Позиция работника
+          type: string
+        superuser:
+          description: |
+            Является ли работник начальником отдела
+          type: string
+        fired:
+          description: |
+            Уволен ли работник
+          type: string
 
     #   responses dto
     AuthenticationResponse:
@@ -1040,6 +1937,10 @@ components:
         id:
           description: |
             Идентификационный номер
+          type: string
+        employeeId:
+          description: |
+            Идентификационный номер работника
           type: string
         username:
           description: |
@@ -1070,6 +1971,10 @@ components:
           description: |
             Позиция работника
           type: string
+        superuser:
+          description: |
+            Является ли работник начальником отдела
+          type: boolean
     ChatCreationResponse:
       description: Возврат id созданного чата
       properties:
@@ -1078,8 +1983,24 @@ components:
             Идентификационный номер чата
           type: string
           pattern: id
-    PageOfMessages:
-      description: Возврат страницы сообщений
+    DepartmentCreationDto:
+      description: Возврат id созданного департамента
+      properties:
+        chatId:
+          description: |
+            Идентификационный номер департамента
+          type: string
+          pattern: id
+    EmployeeRegistrationResponse:
+      description: Возврат id созданного работника
+      properties:
+        chatId:
+          description: |
+            Идентификационный номер работника
+          type: string
+          pattern: id
+    Page:
+      description: Возврат страницы с контентом
       properties:
         number:
           description: |
@@ -1090,14 +2011,12 @@ components:
           description: |
             Количество элементов на странице
           minimum: 1
-          maximum: 50
+          maximum: 50 # для сообщений и пользователей и 25 для чатов
           type: integer
         content:
           description: |
-            Список сообщений
+            Список с контентом
           type: array
-          items:
-            $ref: '#/components/schemas/MessageDto'
     MessageSendingResponse:
       description: Возврат id созданного сообщения и его содержимого
       properties:
@@ -1155,6 +2074,10 @@ tags:
     description: Операции взаимодействия с пользователями
   - name: file
     description: Операции взаимодействия с файловым сервером
+  - name: department
+    description: Операции взаимодействия с департаментами
+  - name: employee
+    description: Операции взаимодействия с работниками
 
 servers:
   - url: http://localhost

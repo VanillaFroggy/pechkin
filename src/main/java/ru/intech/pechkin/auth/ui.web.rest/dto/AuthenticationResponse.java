@@ -18,4 +18,5 @@ public class AuthenticationResponse {
     private String email;
     private DepartmentDto department;
     private String position;
+    private Boolean superuser;
 }
