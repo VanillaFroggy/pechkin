@@ -3,11 +3,13 @@ package ru.intech.pechkin.corporate.infrastructure.service;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
+import org.springframework.validation.annotation.Validated;
 import ru.intech.pechkin.corporate.infrastructure.service.dto.*;
 
 import java.util.List;
 import java.util.UUID;
 
+@Validated
 public interface DepartmentService {
     List<DepartmentDto> getAllDepartments();
 
