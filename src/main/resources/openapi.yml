@@ -1605,13 +1605,10 @@ components:
           description: |
             Идентификационный номер пользователя
           type: string
-        publisherId:
+        messagesWithPublishers:
           description: |
-            Идентификационный номер отправителя сообщения
-          type: string
-        messageIds:
-          description: |
-            Идентификационные номера сообщений
+            Список (Map) из элементов формата (key : value) где key - id сообщения, а value - id отправителя сообщения |
+            пишется с использованием {} вместо []
           type: array
     FindMessageByValueRequest:
       description: Запрос на поиск сообщения по содержимому

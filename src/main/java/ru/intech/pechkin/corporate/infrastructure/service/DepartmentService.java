@@ -1,6 +1,7 @@
 package ru.intech.pechkin.corporate.infrastructure.service;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import ru.intech.pechkin.corporate.infrastructure.service.dto.*;
 
@@ -12,15 +13,15 @@ public interface DepartmentService {
 
     Page<DepartmentDto> getPageOfDepartments(@Valid GetPageOfDepartmentsDto dto);
 
-    DepartmentDto getDepartmentById(UUID departmentId);
+    DepartmentDto getDepartmentById(@NotNull UUID departmentId);
 
-    DepartmentDto getDepartmentByTitle(String title);
+    DepartmentDto getDepartmentByTitle(@NotNull String title);
 
-    List<DepartmentDto> getDepartmentsByTitleLike(String title);
+    List<DepartmentDto> getDepartmentsByTitleLike(@NotNull String title);
 
     DepartmentCreationDto createDepartment(@Valid CreateDepartmentDto dto);
 
     void updateDepartment(@Valid UpdateDepartmentDto dto);
 
-    void deleteDepartment(UUID departmentId);
+    void deleteDepartment(@NotNull UUID departmentId);
 }

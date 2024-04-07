@@ -1,5 +1,6 @@
 package ru.intech.pechkin.messenger.ui.web.rest.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,8 +23,8 @@ public class MessengerExceptionHandler {
         );
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException exception) {
+    @ExceptionHandler({IllegalArgumentException.class, ConstraintViolationException.class})
+    public ResponseEntity<String> handleIllegalArgumentException(Exception exception) {
         return new ResponseEntity<>(
                 exception.getMessage(),
                 HttpStatus.BAD_REQUEST

@@ -1,13 +1,15 @@
 package ru.intech.pechkin.corporate.infrastructure.service.dto;
 
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Data;
 
 @Data
 public class GetPageOfDepartmentsDto {
-    @Size()
+    @Min(0)
     private final int pageNumber;
 
-    @Size(min = 1, max = 100)
+    @Min(1)
+    @Max(100)
     private final int pageSize;
 }

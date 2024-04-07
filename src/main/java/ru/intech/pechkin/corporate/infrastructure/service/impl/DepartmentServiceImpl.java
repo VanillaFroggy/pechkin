@@ -1,6 +1,7 @@
 package ru.intech.pechkin.corporate.infrastructure.service.impl;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -44,7 +45,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
-    public Page<DepartmentDto> getPageOfDepartments(GetPageOfDepartmentsDto dto) {
+    public Page<DepartmentDto> getPageOfDepartments(@Valid GetPageOfDepartmentsDto dto) {
         Page<DepartmentDto> departmentDtos = new PageImpl<>(
                 departmentRepository.findAll(PageRequest.of(dto.getPageNumber(), dto.getPageSize()))
                         .stream()
@@ -56,7 +57,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
-    public DepartmentDto getDepartmentById(UUID departmentId) {
+    public DepartmentDto getDepartmentById(@NotNull UUID departmentId) {
         return mapper.departmentToDto(
                 departmentRepository.findById(departmentId)
                         .orElseThrow(NullPointerException::new)
@@ -64,7 +65,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
-    public DepartmentDto getDepartmentByTitle(String title) {
+    public DepartmentDto getDepartmentByTitle(@NotNull String title) {
         return mapper.departmentToDto(
                 departmentRepository.findByTitle(title)
                         .orElseThrow(NullPointerException::new)
@@ -72,7 +73,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
-    public List<DepartmentDto> getDepartmentsByTitleLike(String title) {
+    public List<DepartmentDto> getDepartmentsByTitleLike(@NotNull String title) {
         List<DepartmentDto> departmentDtos = departmentRepository.findByTitleLikeIgnoreCase(title)
                 .stream()
                 .map(mapper::departmentToDto)
@@ -122,7 +123,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
-    public void deleteDepartment(UUID departmentId) {
+    public void deleteDepartment(@NotNull UUID departmentId) {
         Page<Employee> employees;
         int counter = 0;
         do {
@@ -130,9 +131,7 @@ public class DepartmentServiceImpl implements DepartmentService {
                     departmentId,
                     PageRequest.of(counter, 2_000)
             );
-            employees.stream()
-                    .parallel()
-                    .forEach(employee -> employee.setDepartment(null));
+            employees.forEach(employee -> employee.setDepartment(null));
             employeeRepository.saveAll(employees);
             counter++;
         } while (!employees.isLast());

@@ -1,6 +1,7 @@
 package ru.intech.pechkin.corporate.infrastructure.service.impl;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,14 +45,14 @@ public class EmployeeServiceImpl implements EmployeeService {
     private String registrationLink;
 
     @Override
-    public Page<EmployeeDto> getPageOfEmployees(GetPageOfEmployeesDto dto) {
+    public Page<EmployeeDto> getPageOfEmployees(@Valid GetPageOfEmployeesDto dto) {
         Page<Employee> employees = employeeRepository.findAll(PageRequest.of(dto.getPageNumber(), dto.getPageSize()));
         checkPageEmptiness(employees);
         return getEmployeeDtosPage(employees);
     }
 
     @Override
-    public EmployeeDto getEmployeeById(UUID employeeId) {
+    public EmployeeDto getEmployeeById(@NotNull UUID employeeId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(NullPointerException::new);
         DepartmentDto departmentDto = null;
@@ -62,7 +63,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Page<EmployeeDto> getPageOfEmployeesByDepartment(GetPageOfEmployeesByDepartmentDto dto) {
+    public Page<EmployeeDto> getPageOfEmployeesByDepartment(@Valid GetPageOfEmployeesByDepartmentDto dto) {
         DepartmentDto departmentDto = departmentService.getDepartmentById(dto.getDepartmentId());
         Page<Employee> employees = employeeRepository.findAllByDepartment(
                 departmentDto.getId(),
@@ -85,7 +86,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Page<EmployeeDto> getPageOfEmployeesByDepartmentLike(GetPageOfEmployeesByFieldLikeDto dto) {
+    public Page<EmployeeDto> getPageOfEmployeesByDepartmentLike(@Valid GetPageOfEmployeesByFieldLikeDto dto) {
         Map<UUID, DepartmentDto> departmentDtos = departmentService.getDepartmentsByTitleLike(dto.getValue())
                 .stream()
                 .collect(Collectors.toMap(DepartmentDto::getId, departmentDto -> departmentDto));
@@ -107,7 +108,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Page<EmployeeDto> getPageOfEmployeesByFioLike(GetPageOfEmployeesByFieldLikeDto dto) {
+    public Page<EmployeeDto> getPageOfEmployeesByFioLike(@Valid GetPageOfEmployeesByFieldLikeDto dto) {
         Page<Employee> employees = employeeRepository.findByFioLikeIgnoreCase(
                 dto.getValue(),
                 PageRequest.of(dto.getPageNumber(), dto.getPageSize())
@@ -117,7 +118,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Page<EmployeeDto> getPageOfEmployeesByPositionLike(GetPageOfEmployeesByFieldLikeDto dto) {
+    public Page<EmployeeDto> getPageOfEmployeesByPositionLike(@Valid GetPageOfEmployeesByFieldLikeDto dto) {
         Page<Employee> employees = employeeRepository.findByPositionLikeIgnoreCase(
                 dto.getValue(),
                 PageRequest.of(dto.getPageNumber(), dto.getPageSize())
@@ -265,7 +266,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public void fireEmployee(UUID employeeId) {
+    public void fireEmployee(@NotNull UUID employeeId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(NullPointerException::new);
         removeEmployeeFromCorporateChat(

@@ -1,15 +1,18 @@
 package ru.intech.pechkin.corporate.infrastructure.service;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
+import org.springframework.validation.annotation.Validated;
 import ru.intech.pechkin.corporate.infrastructure.service.dto.*;
 
 import java.util.UUID;
 
+@Validated
 public interface EmployeeService {
-    Page<EmployeeDto> getPageOfEmployees(GetPageOfEmployeesDto dto);
+    Page<EmployeeDto> getPageOfEmployees(@Valid GetPageOfEmployeesDto dto);
 
-    EmployeeDto getEmployeeById(UUID employeeId);
+    EmployeeDto getEmployeeById(@NotNull UUID employeeId);
 
     Page<EmployeeDto> getPageOfEmployeesByDepartment(@Valid GetPageOfEmployeesByDepartmentDto dto);
 
@@ -23,5 +26,5 @@ public interface EmployeeService {
 
     void updateEmployee(@Valid UpdateEmployeeDto dto);
 
-    void fireEmployee(UUID employeeId);
+    void fireEmployee(@NotNull UUID employeeId);
 }

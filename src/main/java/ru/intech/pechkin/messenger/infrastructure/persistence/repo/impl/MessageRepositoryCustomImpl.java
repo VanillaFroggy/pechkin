@@ -1,8 +1,8 @@
 package ru.intech.pechkin.messenger.infrastructure.persistence.repo.impl;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -103,16 +103,9 @@ public class MessageRepositoryCustomImpl implements MessageRepositoryCustom {
 
         int startItem = pageable.getPageSize() * pageable.getPageNumber();
 
-        List<Message> pageList;
-
-        if (messages.size() < startItem) {
-            pageList = Collections.emptyList();
-        } else {
-            pageList = messages.subList(
-                    startItem,
-                    Math.min(startItem + pageable.getPageSize(), messages.size())
-            );
-        }
+        List<Message> pageList = messages.size() < startItem
+                ? Collections.emptyList()
+                : messages.subList(startItem, Math.min(startItem + pageable.getPageSize(), messages.size()));
 
         return new PageImpl<>(
                 pageList,

@@ -77,11 +77,11 @@ public class MessageController {
     @PutMapping("/setMessageListChecked")
     public ResponseEntity<Void> setMessageListChecked(@RequestBody SetMessageListCheckedRequest request) {
         messageService.setMessageListChecked(mapper.setMessageListCheckedRequestToDto(request));
-        request.getMessageIds().forEach(messageId ->
+        request.getMessagesWithPublishers().forEach((key, value) ->
                 sendMessageOverWebSocketByUserId(
-                        request.getPublisherId(),
+                        value,
                         "In chat with ID " + request.getChatId() +
-                                " your message with ID " + messageId + " has been checked"
+                                " your message with ID " + key + " has been checked"
                 )
         );
         return ResponseEntity.noContent().build();

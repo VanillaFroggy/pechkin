@@ -1,5 +1,7 @@
 package ru.intech.pechkin.messenger.infrastructure.service.impl;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,6 +21,7 @@ import ru.intech.pechkin.messenger.infrastructure.service.mapper.MessengerServic
 
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -31,7 +34,7 @@ public class UserServiceImpl implements UserService {
     private final MessengerServiceMapper mapper;
 
     @Override
-    public UserDto getUserById(UUID id) {
+    public UserDto getUserById(@NotNull UUID id) {
         User user = repository.findById(id)
                 .orElseThrow(NullPointerException::new);
         return mapper.userAndEployeeDtoToUserDto(
@@ -41,7 +44,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto getUserByUsername(String username) {
+    public UserDto getUserByUsername(@NotNull String username) {
         User user = repository.findByUsername(username)
                 .orElseThrow(NullPointerException::new);
         return mapper.userAndEployeeDtoToUserDto(
@@ -51,7 +54,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserDto> getPageOfUsersByUsernameLike(GetPageOfUsersByFieldLikeDto dto) {
+    public Page<UserDto> getPageOfUsersByUsernameLike(@Valid GetPageOfUsersByFieldLikeDto dto) {
         Page<User> users = repository.findAllByUsernameLikeIgnoreCase(
                 dto.getValue(),
                 PageRequest.of(dto.getPageNumber(), dto.getPageSize())
@@ -70,7 +73,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserDto> getPageOfUsersByDepartment(GetPageOfUsersByDepartmentDto dto) {
+    public Page<UserDto> getPageOfUsersByDepartment(@Valid GetPageOfUsersByDepartmentDto dto) {
         Page<EmployeeDto> employeeDtos = employeeService.getPageOfEmployeesByDepartment(
                 new GetPageOfEmployeesByDepartmentDto(
                         dto.getDepartmentId(),
@@ -83,7 +86,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserDto> getPageOfUsersByDepartmentLike(GetPageOfUsersByFieldLikeDto dto) {
+    public Page<UserDto> getPageOfUsersByDepartmentLike(@Valid GetPageOfUsersByFieldLikeDto dto) {
         Page<EmployeeDto> employeeDtos = employeeService.getPageOfEmployeesByDepartmentLike(
                 new GetPageOfEmployeesByFieldLikeDto(
                         dto.getValue(),
@@ -96,7 +99,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserDto> getPageOfUsersByFioLike(GetPageOfUsersByFieldLikeDto dto) {
+    public Page<UserDto> getPageOfUsersByFioLike(@Valid GetPageOfUsersByFieldLikeDto dto) {
         Page<EmployeeDto> employeeDtos = employeeService.getPageOfEmployeesByFioLike(
                 new GetPageOfEmployeesByFieldLikeDto(
                         dto.getValue(),
@@ -109,7 +112,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserDto> getPageOfUsersByPositionLike(GetPageOfUsersByFieldLikeDto dto) {
+    public Page<UserDto> getPageOfUsersByPositionLike(@Valid GetPageOfUsersByFieldLikeDto dto) {
         Page<EmployeeDto> employeeDtos = employeeService.getPageOfEmployeesByPositionLike(
                 new GetPageOfEmployeesByFieldLikeDto(
                         dto.getValue(),
@@ -128,7 +131,6 @@ public class UserServiceImpl implements UserService {
         return new PageImpl<>(
                 repository.findAllByEmployeeIdIn(employeeDtoMap.keySet(), employeeDtos.getPageable())
                         .stream()
-                        .parallel()
                         .map(user -> mapper.userAndEployeeDtoToUserDto(
                                 user,
                                 employeeDtoMap.get(user.getEmployeeId())
@@ -150,15 +152,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUsername(UpdateUsernameDto dto) {
+    public void updateUsername(@Valid UpdateUsernameDto dto) {
         User user = repository.findById(dto.getUserId())
                 .orElseThrow(NullPointerException::new);
+        Optional<User> optionalUser = repository.findByUsername(dto.getUsername());
+        if (optionalUser.isPresent() && !optionalUser.get().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("User with this username is already exists");
+        }
         user.setUsername(dto.getUsername());
         repository.save(user);
     }
 
     @Override
-    public void updateUserIcon(UpdateUserIconDto dto) {
+    public void updateUserIcon(@Valid UpdateUserIconDto dto) {
         User user = repository.findById(dto.getUserId())
                 .orElseThrow(NullPointerException::new);
         user.setIcon(dto.getIcon());
@@ -166,7 +172,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void blockUser(UUID id) {
+    public void blockUser(@NotNull UUID id) {
         User user = repository.findById(id)
                 .orElseThrow(NullPointerException::new);
         user.setBlocked(true);
@@ -174,7 +180,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void unblockUser(UUID id) {
+    public void unblockUser(@NotNull UUID id) {
         User user = repository.findById(id)
                 .orElseThrow(NullPointerException::new);
         user.setBlocked(false);

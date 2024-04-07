@@ -66,7 +66,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public Page<MessageDto> getPageOfMessagesBeforeDateTime(GetPageOfMessagesBeforeDateTimeDto dto) {
+    public Page<MessageDto> getPageOfMessagesBeforeDateTime(@Valid GetPageOfMessagesBeforeDateTimeDto dto) {
         return getMessageDtoPage(
                 dto.getUserId(),
                 dto.getChatId(),
@@ -107,10 +107,13 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void setMessageChecked(SetMessageCheckedDto dto) {
+    public void setMessageChecked(@Valid SetMessageCheckedDto dto) {
         List<UserChatCheckedMessage> userChatCheckedMessages =
                 userChatCheckedMessageRepository.findAllByUserIdInAndChatIdAndMessageIdAndChecked(
-                        getUsersIdSetToSetMessagesChecked(dto.getUserId(), dto.getPublisherId()),
+                        getUsersIdSetToSetMessagesChecked(
+                                dto.getUserId(),
+                                dto.getPublisherId() == null ? null : List.of(dto.getPublisherId())
+                        ),
                         dto.getChatId(),
                         dto.getMessageId(),
                         false
@@ -121,12 +124,12 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void setMessageListChecked(SetMessageListCheckedDto dto) {
+    public void setMessageListChecked(@Valid SetMessageListCheckedDto dto) {
         List<UserChatCheckedMessage> userChatCheckedMessages =
                 userChatCheckedMessageRepository.findAllByUserIdInAndChatIdAndMessageIdInAndChecked(
-                        getUsersIdSetToSetMessagesChecked(dto.getUserId(), dto.getPublisherId()),
+                        getUsersIdSetToSetMessagesChecked(dto.getUserId(), dto.getMessagesWithPublishers().values()),
                         dto.getChatId(),
-                        dto.getMessageIds(),
+                        dto.getMessagesWithPublishers().keySet(),
                         false
                 );
         checkCheckedMessagesListEmptiness(userChatCheckedMessages);
@@ -134,11 +137,13 @@ public class MessageServiceImpl implements MessageService {
         userChatCheckedMessageRepository.saveAll(userChatCheckedMessages);
     }
 
-    @NonNull
-    private static Set<UUID> getUsersIdSetToSetMessagesChecked(UUID userId, UUID publisher) {
-        return publisher == null
-                ? Set.of(userId)
-                : Set.of(userId, publisher);
+    private static Set<UUID> getUsersIdSetToSetMessagesChecked(UUID userId, Collection<UUID> publishers) {
+        if (publishers == null || publishers.stream().noneMatch(Objects::nonNull)) {
+            return Set.of(userId);
+        }
+        Set<UUID> userIds = new HashSet<>(publishers);
+        userIds.add(userId);
+        return userIds;
     }
 
     private static void checkCheckedMessagesListEmptiness(List<UserChatCheckedMessage> userChatCheckedMessages) {
@@ -299,7 +304,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void deleteMessage(DeleteMessageDto dto) {
+    public void deleteMessage(@Valid DeleteMessageDto dto) {
         Message message = messageRepository.findByIdAndChatId(dto.getMessageId(), dto.getChatId())
                 .orElseThrow(NullPointerException::new);
         messageDataRepository.deleteAllById(
@@ -314,13 +319,13 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void deleteAllMessagesById(DeleteAllMessagesByIdDto dto) {
+    public void deleteAllMessagesById(@Valid DeleteAllMessagesByIdDto dto) {
         List<Message> messages = messageRepository.findAllByChatIdAndIdIn(dto.getChatId(), dto.getMessageIds());
         messageDataRepository.deleteAllById(
-                messages.parallelStream()
-                        .flatMap(message -> message.getDatas().parallelStream())
+                messages.stream()
+                        .flatMap(message -> message.getDatas().stream())
                         .map(MessageData::getId)
-                        .toList()
+                        .collect(Collectors.toSet())
         );
         chatMessageDataMessageRepository.deleteAllByMessageIdInAndChatId(dto.getMessageIds(), dto.getChatId());
         userChatCheckedMessageRepository.deleteAllByMessageIdInAndChatId(dto.getMessageIds(), dto.getChatId());
@@ -422,7 +427,7 @@ public class MessageServiceImpl implements MessageService {
     private void createUserChatCheckedMessageForEveryUserInChat(Message message) {
         userChatCheckedMessageRepository.saveAll(
                 userRoleMutedPinnedChatRepository.findAllByChatId(message.getChatId())
-                        .parallelStream()
+                        .stream()
                         .map(userRoleMutedPinnedChat ->
                                 UserChatCheckedMessage.create(
                                         userRoleMutedPinnedChat.getUserId(),

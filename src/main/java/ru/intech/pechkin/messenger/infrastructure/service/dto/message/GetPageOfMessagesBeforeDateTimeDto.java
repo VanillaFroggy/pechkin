@@ -1,6 +1,8 @@
 package ru.intech.pechkin.messenger.infrastructure.service.dto.message;
 
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -9,14 +11,17 @@ import java.util.UUID;
 
 @Data
 public class GetPageOfMessagesBeforeDateTimeDto {
+    @NotNull
     private final UUID chatId;
 
+    @NotNull
     private final UUID userId;
 
-    @Size()
+    @Min(0)
     private final int pageNumber;
 
-    @Size(min = 1, max = 50)
+    @Min(1)
+    @Max(50)
     private final int pageSize;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

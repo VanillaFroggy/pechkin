@@ -1,6 +1,7 @@
 package ru.intech.pechkin.corporate.infrastructure.service.dto;
 
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Data;
 
 import java.util.UUID;
@@ -9,9 +10,10 @@ import java.util.UUID;
 public class GetPageOfEmployeesByDepartmentDto {
     private final UUID departmentId;
 
-    @Size
+    @Min(0)
     private final int pageNumber;
 
-    @Size(min = 1, max = 50)
+    @Min(1)
+    @Max(50)
     private final int pageSize;
 }

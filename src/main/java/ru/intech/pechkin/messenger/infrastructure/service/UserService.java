@@ -1,15 +1,18 @@
 package ru.intech.pechkin.messenger.infrastructure.service;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
+import org.springframework.validation.annotation.Validated;
 import ru.intech.pechkin.messenger.infrastructure.service.dto.user.*;
 
 import java.util.UUID;
 
+@Validated
 public interface UserService {
-    UserDto getUserById(UUID id);
+    UserDto getUserById(@NotNull UUID id);
 
-    UserDto getUserByUsername(String username);
+    UserDto getUserByUsername(@NotNull String username);
 
     Page<UserDto> getPageOfUsersByUsernameLike(@Valid GetPageOfUsersByFieldLikeDto dto);
 
@@ -23,9 +26,9 @@ public interface UserService {
 
     void updateUsername(@Valid UpdateUsernameDto dto);
 
-    void updateUserIcon(UpdateUserIconDto dto);
+    void updateUserIcon(@Valid UpdateUserIconDto dto);
 
-    void blockUser(UUID id);
+    void blockUser(@NotNull UUID id);
 
-    void unblockUser(UUID id);
+    void unblockUser(@NotNull UUID id);
 }

@@ -1,5 +1,6 @@
 package ru.intech.pechkin.auth.service.dto;
 
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
@@ -7,6 +8,7 @@ import java.util.UUID;
 
 @Data
 public class RegisterDto {
+    @NotNull
     private UUID employeeId;
 
     @Pattern(regexp = "^\\w{4,32}$")
