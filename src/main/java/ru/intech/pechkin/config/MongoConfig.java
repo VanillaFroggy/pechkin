@@ -1,6 +1,7 @@
 package ru.intech.pechkin.config;
 
 import lombok.NonNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -26,6 +27,9 @@ import java.util.List;
 public class MongoConfig extends AbstractMongoClientConfiguration {
     private final List<Converter<?, ?>> converters = new ArrayList<>();
 
+    @Value("${spring.data.mongodb.database}")
+    private String databaseName;
+
     @Bean
     public PlatformTransactionManager transactionManager(MongoDatabaseFactory dbFactory) {
         return new MongoTransactionManager(dbFactory);
@@ -34,7 +38,7 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     @NonNull
     @Override
     protected String getDatabaseName() {
-        return "messenger";
+        return databaseName;
     }
 
     @NonNull

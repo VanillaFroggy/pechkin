@@ -9,8 +9,9 @@ services:
       - "8080:8080"
     environment:
       SERVER_PORT: 8080
-      MONGODB_URI: mongodb://mongo/messenger
       SPRING_DATA_MONGODB_HOST: mongo
+      MONGODB_DB_NAME: messenger
+      MONGODB_AUTH_DB: admin
       MINIO_URL: http://minio:9000
       MAX_FILE_SIZE: "1GB"
       MAX_REQUEST_SIZE: "1GB"

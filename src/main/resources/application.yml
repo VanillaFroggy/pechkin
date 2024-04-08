@@ -5,10 +5,9 @@ spring:
     exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
   data:
     mongodb:
-      authentication-database: admin
-      database: messenger
-      port: 27017
+      authentication-database: ${MONGODB_AUTH_DB:admin}
       host: ${SPRING_DATA_MONGODB_HOST:mongo}
+      database: ${MONGODB_DB_NAME:messenger}
   servlet:
     multipart:
       enabled: true
