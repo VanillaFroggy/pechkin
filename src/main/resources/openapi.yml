@@ -1317,10 +1317,6 @@ components:
     GetPageOfChatsRequest:
       description: Запрос на получение страницы чатов
       properties:
-        chatId:
-          description: |
-            Идентификационный номер чата
-          type: string
         userId:
           description: |
             Идентификационный номер пользователя

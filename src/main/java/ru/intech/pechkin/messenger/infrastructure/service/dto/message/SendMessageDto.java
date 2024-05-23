@@ -14,7 +14,6 @@ public class SendMessageDto {
     @NotNull
     private UUID chatId;
 
-    @NotNull
     private UUID userId;
 
     @Size(min = 1, max = 10)

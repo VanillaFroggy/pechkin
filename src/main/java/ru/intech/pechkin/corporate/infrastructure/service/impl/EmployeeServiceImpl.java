@@ -201,6 +201,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (dto.getFired() && !employee.getFired()) {
             fireEmployee(dto.getId());
         } else if (!dto.getFired() && employee.getFired()) {
+            employee.setFired(false);
             updateUserBlockedStatus(employee.getId(), false);
         }
         employeeRepository.save(mapper.updateEmployeeDtoToEntity(dto));
