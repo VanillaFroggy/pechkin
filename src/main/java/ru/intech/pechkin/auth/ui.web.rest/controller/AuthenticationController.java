@@ -25,6 +25,7 @@ public class AuthenticationController {
         AuthenticationDto dto = service.register(mapper.registerRequestToDto(request));
         return ResponseEntity.ok()
                 .header("Authorization", dto.getToken())
+                .header("Access-Control-Expose-Headers", "Authorization")
                 .body(mapper.authenticationDtoToResponse(dto));
     }
 
@@ -33,6 +34,7 @@ public class AuthenticationController {
         AuthenticationDto dto = service.authenticate(mapper.authenticateRequestToDto(request));
         return ResponseEntity.ok()
                 .header("Authorization", dto.getToken())
+                .header("Access-Control-Expose-Headers", "Authorization")
                 .body(mapper.authenticationDtoToResponse(dto));
     }
 }
