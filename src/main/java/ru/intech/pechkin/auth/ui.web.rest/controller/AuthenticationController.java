@@ -1,5 +1,6 @@
 package ru.intech.pechkin.auth.ui.web.rest.controller;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,16 +23,20 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(@RequestBody RegisterRequest request) {
-        AuthenticationDto dto = service.register(mapper.registerRequestToDto(request));
-        return ResponseEntity.ok()
-                .header("Authorization", dto.getToken())
-                .header("Access-Control-Expose-Headers", "Authorization")
-                .body(mapper.authenticationDtoToResponse(dto));
+        return getAuthenticationResponseEntity(
+                service.register(mapper.registerRequestToDto(request))
+        );
     }
 
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticateRequest request) {
-        AuthenticationDto dto = service.authenticate(mapper.authenticateRequestToDto(request));
+        return getAuthenticationResponseEntity(
+                service.authenticate(mapper.authenticateRequestToDto(request))
+        );
+    }
+
+    @NonNull
+    private ResponseEntity<AuthenticationResponse> getAuthenticationResponseEntity(AuthenticationDto dto) {
         return ResponseEntity.ok()
                 .header("Authorization", dto.getToken())
                 .header("Access-Control-Expose-Headers", "Authorization")

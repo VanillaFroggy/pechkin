@@ -1,5 +1,6 @@
 package ru.intech.pechkin.auth.config;
 
+import com.google.common.collect.ImmutableList;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,10 +28,8 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**")
-                        .permitAll()
-                        .anyRequest()
-                        .authenticated())
+                        .requestMatchers("/api/v1/**")
+                        .permitAll())
                 .sessionManagement(sess ->
                         sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
@@ -42,13 +41,9 @@ public class SecurityConfiguration {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedOrigin("http://localhost:4200");
-        configuration.addAllowedMethod("GET");
-        configuration.addAllowedMethod("POST");
-        configuration.addAllowedMethod("PUT");
-        configuration.addAllowedMethod("DELETE");
-        configuration.addAllowedMethod("OPTIONS");
-        configuration.addAllowedHeader("Authorization");
-        configuration.addAllowedHeader("Content-Type");
+        configuration.addAllowedOrigin("http://localhost:8080");
+        configuration.addAllowedMethod("*");
+        configuration.setAllowedHeaders(ImmutableList.of("Authorization", "Cache-Control", "Content-Type"));
         configuration.setAllowCredentials(true);
         configuration.addExposedHeader("Authorization");
         configuration.setMaxAge(1800L);
