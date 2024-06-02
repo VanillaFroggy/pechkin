@@ -29,7 +29,7 @@ public class DepartmentController {
     }
 
     @GetMapping("/getPageOfDepartments")
-    public ResponseEntity<Page<DepartmentDto>> getPageOfDepartments(@RequestBody GetPageOfDepartmentsRequest request) {
+    public ResponseEntity<Page<DepartmentDto>> getPageOfDepartments(GetPageOfDepartmentsRequest request) {
         return new ResponseEntity<>(
                 departmentService.getPageOfDepartments(mapper.getPageOfDepartmentsRequestToDto(request)),
                 HttpStatus.OK

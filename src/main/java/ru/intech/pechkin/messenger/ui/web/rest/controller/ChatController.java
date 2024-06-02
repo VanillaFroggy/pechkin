@@ -24,7 +24,7 @@ public class ChatController {
     private final SimpMessagingTemplate messagingTemplate;
 
     @GetMapping("/getPageOfChats")
-    public ResponseEntity<Page<ChatDto>> getPageOfChats(@RequestBody GetPageOfChatsRequest request) {
+    public ResponseEntity<Page<ChatDto>> getPageOfChats(GetPageOfChatsRequest request) {
         return new ResponseEntity<>(
                 chatService.getPageOfChats(mapper.getPageOfChatsRequestToDto(request)),
                 HttpStatus.OK
@@ -32,7 +32,7 @@ public class ChatController {
     }
 
     @GetMapping("/getChatByIdAndUserId")
-    public ResponseEntity<ChatDto> getChatByIdAndUserId(@RequestBody GetChatByIdAndUserIdRequest request) {
+    public ResponseEntity<ChatDto> getChatByIdAndUserId(GetChatByIdAndUserIdRequest request) {
         return new ResponseEntity<>(
                 chatService.getChatByIdAndUserId(mapper.getChatByIdAndUserIdRequestToDto(request)),
                 HttpStatus.OK
@@ -40,7 +40,7 @@ public class ChatController {
     }
 
     @GetMapping("/getP2PChatByUsers")
-    public ResponseEntity<ChatDto> getP2PChatByUsers(@RequestBody GetP2PChatByUsersRequest request) {
+    public ResponseEntity<ChatDto> getP2PChatByUsers(GetP2PChatByUsersRequest request) {
         return new ResponseEntity<>(
                 chatService.getP2PChatByUsers(mapper.getP2PChatByUsersRequestToDto(request)),
                 HttpStatus.OK

@@ -22,7 +22,7 @@ public class MessageController {
     private final SimpMessagingTemplate messagingTemplate;
 
     @GetMapping("/getPageOfMessages")
-    public ResponseEntity<Page<MessageDto>> getPageOfMessages(@RequestBody GetPageOfMessagesRequest request) {
+    public ResponseEntity<Page<MessageDto>> getPageOfMessages(GetPageOfMessagesRequest request) {
         return new ResponseEntity<>(
                 messageService.getPageOfMessages(mapper.getPageOfMessagesRequestToDto(request)),
                 HttpStatus.OK
@@ -41,7 +41,7 @@ public class MessageController {
 
     @GetMapping("/getPageOfMessagesAfterLastCheckedMessage")
     public ResponseEntity<Page<MessageDto>> getPageOfMessagesAfterLastCheckedMessage(
-            @RequestBody GetPageOfMessagesAfterLastCheckedMessageRequest request
+            GetPageOfMessagesAfterLastCheckedMessageRequest request
     ) {
         return new ResponseEntity<>(
                 messageService.getPageOfMessagesAfterLastCheckedMessage(
@@ -53,7 +53,7 @@ public class MessageController {
 
     @GetMapping("/getPageOfMessagesBeforeDateTime")
     public ResponseEntity<Page<MessageDto>> getPageOfMessagesBeforeDateTime(
-            @RequestBody GetPageOfMessagesBeforeDateTimeRequest request
+            GetPageOfMessagesBeforeDateTimeRequest request
     ) {
         return new ResponseEntity<>(
                 messageService.getPageOfMessagesBeforeDateTime(
@@ -88,7 +88,7 @@ public class MessageController {
     }
 
     @GetMapping("/findMessageByValue")
-    public ResponseEntity<Page<MessageDto>> findMessageByValue(@RequestBody FindMessagesByValueRequest request) {
+    public ResponseEntity<Page<MessageDto>> findMessageByValue(FindMessagesByValueRequest request) {
         return new ResponseEntity<>(
                 messageService.findMessagesByValue(mapper.findMessagesByValueRequestToDto(request)),
                 HttpStatus.OK

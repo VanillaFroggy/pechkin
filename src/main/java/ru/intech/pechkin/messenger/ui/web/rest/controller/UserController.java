@@ -39,7 +39,7 @@ public class UserController {
     }
 
     @GetMapping("/getPageOfUsersByUsernameLike")
-    public ResponseEntity<Page<UserDto>> getPageOfUsersByUsernameLike(@RequestBody GetPageOfUsersByFieldLikeRequest request) {
+    public ResponseEntity<Page<UserDto>> getPageOfUsersByUsernameLike(GetPageOfUsersByFieldLikeRequest request) {
         return new ResponseEntity<>(
                 userService.getPageOfUsersByUsernameLike(mapper.getPageOfUsersByUsernameLikeRequestToDto(request)),
                 HttpStatus.OK
@@ -48,7 +48,7 @@ public class UserController {
 
     @GetMapping("/getPageOfUsersByDepartment")
     public ResponseEntity<Page<UserDto>> getPageOfUsersByDepartment(
-            @RequestBody GetPageOfUsersByDepartmentRequest request
+            GetPageOfUsersByDepartmentRequest request
     ) {
         return new ResponseEntity<>(
                 userService.getPageOfUsersByDepartment(
@@ -60,7 +60,7 @@ public class UserController {
 
     @GetMapping("/getPageOfUsersByDepartmentLike")
     public ResponseEntity<Page<UserDto>> getPageOfUsersByDepartmentLike(
-            @RequestBody GetPageOfUsersByFieldLikeRequest request
+            GetPageOfUsersByFieldLikeRequest request
     ) {
         return new ResponseEntity<>(
                 userService.getPageOfUsersByDepartmentLike(
@@ -72,7 +72,7 @@ public class UserController {
 
     @GetMapping("/getPageOfUsersByFioLike")
     public ResponseEntity<Page<UserDto>> getPageOfUsersByFioLike(
-            @RequestBody GetPageOfUsersByFieldLikeRequest request
+            GetPageOfUsersByFieldLikeRequest request
     ) {
         return new ResponseEntity<>(
                 userService.getPageOfUsersByFioLike(
@@ -84,7 +84,7 @@ public class UserController {
 
     @GetMapping("/getPageOfUsersByPositionLike")
     public ResponseEntity<Page<UserDto>> getPageOfUsersByPositionLike(
-            @RequestBody GetPageOfUsersByFieldLikeRequest request
+            GetPageOfUsersByFieldLikeRequest request
     ) {
         return new ResponseEntity<>(
                 userService.getPageOfUsersByPositionLike(

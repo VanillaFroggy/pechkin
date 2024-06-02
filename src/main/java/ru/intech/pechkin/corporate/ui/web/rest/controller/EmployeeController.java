@@ -21,7 +21,7 @@ public class EmployeeController {
     private final CorporateRestMapper mapper;
 
     @GetMapping("/getPageOfEmployees")
-    public ResponseEntity<Page<EmployeeDto>> getPageOfEmployees(@RequestBody GetPageOfEmployeesRequest request) {
+    public ResponseEntity<Page<EmployeeDto>> getPageOfEmployees(GetPageOfEmployeesRequest request) {
         return new ResponseEntity<>(
                 employeeService.getPageOfEmployees(mapper.getPageOfEmployeesRequestToDto(request)),
                 HttpStatus.OK
@@ -35,7 +35,7 @@ public class EmployeeController {
 
     @GetMapping("/getPageOfEmployeesByDepartment")
     public ResponseEntity<Page<EmployeeDto>> getPageOfEmployeesByDepartment(
-            @RequestBody GetPageOfEmployeesByDepartmentRequest request
+            GetPageOfEmployeesByDepartmentRequest request
     ) {
         return new ResponseEntity<>(
                 employeeService.getPageOfEmployeesByDepartment(
@@ -47,7 +47,7 @@ public class EmployeeController {
 
     @GetMapping("/getPageOfEmployeesByDepartmentLike")
     public ResponseEntity<Page<EmployeeDto>> getPageOfEmployeesByDepartmentLike(
-            @RequestBody GetPageOfEmployeesByFieldLikeRequest request
+            GetPageOfEmployeesByFieldLikeRequest request
     ) {
         return new ResponseEntity<>(
                 employeeService.getPageOfEmployeesByDepartmentLike(
@@ -59,7 +59,7 @@ public class EmployeeController {
 
     @GetMapping("/getPageOfEmployeesByFioLike")
     public ResponseEntity<Page<EmployeeDto>> getPageOfEmployeesByFioLike(
-            @RequestBody GetPageOfEmployeesByFieldLikeRequest request
+            GetPageOfEmployeesByFieldLikeRequest request
     ) {
         return new ResponseEntity<>(
                 employeeService.getPageOfEmployeesByFioLike(
@@ -71,7 +71,7 @@ public class EmployeeController {
 
     @GetMapping("/getPageOfEmployeesByPositionLike")
     public ResponseEntity<Page<EmployeeDto>> getPageOfEmployeesByPositionLike(
-            @RequestBody GetPageOfEmployeesByFieldLikeRequest request
+            GetPageOfEmployeesByFieldLikeRequest request
     ) {
         return new ResponseEntity<>(
                 employeeService.getPageOfEmployeesByPositionLike(
