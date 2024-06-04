@@ -2010,20 +2010,6 @@ components:
           description: |
             Список с контентом
           type: array
-    MessageSendingResponse:
-      description: Возврат id созданного сообщения и его содержимого
-      properties:
-        messageId:
-          description: |
-            Идентификационный номер сообщения
-          type: string
-          pattern: id
-        datas:
-          description: |
-            Массив содержимого сообщений разных типов
-          type: array
-          items:
-            $ref: '#/components/schemas/MessageData'
     UploadingFileResponse:
       description: Возврат ссылки на скачивание файла для дальнейшей обрезки и отправки в бд
       properties:
