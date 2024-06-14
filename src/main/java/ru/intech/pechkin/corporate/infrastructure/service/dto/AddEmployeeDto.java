@@ -14,7 +14,7 @@ public class AddEmployeeDto {
     @Pattern(regexp = "^(\\+7|8)[(]?\\d{3}[)]?[-\\s\\\\.]?\\d{3}[-\\s.]?\\d{4}$")
     private String phoneNumber;
 
-    @Pattern(regexp = "^[\\w.%+-]+@[a-z\\d.-]+\\\\.[a-z]{2,6}$")
+    @Pattern(regexp = "^[\\w.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
     private String email;
 
     private UUID department;

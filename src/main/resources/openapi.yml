@@ -1865,7 +1865,7 @@ components:
             Электронная почта
           type: string
           format: email
-          pattern: "^[\\w.%+-]+@[a-z\\d.-]+\\.[a-z]{2,6}$"
+          pattern: "^[\w.]+@([\w-]+\.)+[\w-]{2,4}$"
           example: "dostoevsky.fm@gmail.com"
         department:
           description: |
@@ -1904,7 +1904,7 @@ components:
             Электронная почта
           type: string
           format: email
-          pattern: "^[\\w.%+-]+@[a-z\\d.-]+\\.[a-z]{2,6}$"
+          pattern: "^[\w.]+@([\w-]+\.)+[\w-]{2,4}$"
           example: "dostoevsky.fm@gmail.com"
         department:
           description: |
