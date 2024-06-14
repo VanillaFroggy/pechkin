@@ -12,7 +12,6 @@ import java.util.UUID;
 @Data
 @Builder
 public class CreateGroupChatDto {
-    @NotNull
     private final UUID departmentId;
 
     @NotNull
