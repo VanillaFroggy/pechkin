@@ -22,7 +22,8 @@ import java.util.List;
 @EnableTransactionManagement
 @EnableMongoRepositories(basePackages = {
         "ru.intech.pechkin.messenger.infrastructure.persistence.repo",
-        "ru.intech.pechkin.corporate.infrastructure.persistence.repo"
+        "ru.intech.pechkin.corporate.infrastructure.persistence.repo",
+        "ru.intech.pechkin.file.infrastructure.persistence.repo"
 })
 public class MongoConfig extends AbstractMongoClientConfiguration {
     private final List<Converter<?, ?>> converters = new ArrayList<>();

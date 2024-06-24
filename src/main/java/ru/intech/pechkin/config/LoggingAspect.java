@@ -23,7 +23,7 @@ public class LoggingAspect {
     private void callAtChatService() {
     }
 
-    @Pointcut("execution(* ru.intech.pechkin.file.service.FileStorageService.*(..))")
+    @Pointcut("execution(* ru.intech.pechkin.file.infrastructure.service.FileStorageService.*(..))")
     private void callAtFileStorageService() {
     }
 

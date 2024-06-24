@@ -1,9 +1,9 @@
-package ru.intech.pechkin.file.service;
+package ru.intech.pechkin.file.infrastructure.service;
 
 import jakarta.validation.constraints.NotNull;
 import org.springframework.web.multipart.MultipartFile;
-import ru.intech.pechkin.file.service.dto.DownloadingFileResponse;
-import ru.intech.pechkin.file.service.dto.UploadingFileResponse;
+import ru.intech.pechkin.file.infrastructure.service.dto.DownloadingFileResponse;
+import ru.intech.pechkin.file.infrastructure.service.dto.UploadingFileResponse;
 
 import java.io.IOException;
 

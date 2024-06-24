@@ -1,4 +1,4 @@
-package ru.intech.pechkin.file.service.dto;
+package ru.intech.pechkin.file.infrastructure.service.dto;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
