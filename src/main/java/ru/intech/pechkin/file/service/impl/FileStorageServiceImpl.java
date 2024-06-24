@@ -1,12 +1,15 @@
 package ru.intech.pechkin.file.service.impl;
 
 import io.minio.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.intech.pechkin.file.service.FileStorageService;
+import ru.intech.pechkin.file.service.dto.DownloadingFileResponse;
 import ru.intech.pechkin.file.service.dto.UploadingFileResponse;
 
 import java.io.File;
@@ -23,7 +26,10 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     @SneakyThrows
-    public UploadingFileResponse uploadFile(String folder, MultipartFile file) {
+    public UploadingFileResponse uploadFile(@NotNull String folder, @NotNull MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("File is empty");
+        }
         Path filePath = File.createTempFile("temp", null).toPath();
         file.transferTo(filePath);
         return new UploadingFileResponse(
@@ -40,21 +46,35 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     @SneakyThrows
-    public byte[] downloadFile(String objectKey) {
-        byte[] fileData;
-        try (InputStream is = minioClient.getObject(
+    public DownloadingFileResponse downloadFile(@NotNull String objectKey) {
+        DownloadingFileResponse response;
+        InputStream is = InputStream.nullInputStream();
+        try {
+            is = getInputStream(objectKey);
+            response = new DownloadingFileResponse();
+            response.setContentType(new Tika().detect(is));
+            is.close();
+            is = getInputStream(objectKey);
+            response.setContent(is.readAllBytes());
+        } finally {
+            is.close();
+        }
+        return response;
+    }
+
+    @SneakyThrows
+    private InputStream getInputStream(String objectKey) {
+        return minioClient.getObject(
                 GetObjectArgs.builder()
                         .bucket(bucket)
                         .object(objectKey)
-                        .build())) {
-            fileData = is.readAllBytes();
-        }
-        return fileData;
+                        .build()
+        );
     }
 
     @Override
     @SneakyThrows
-    public void deleteFile(String objectKey) {
+    public void deleteFile(@NotNull String objectKey) {
         minioClient.statObject(
                 StatObjectArgs.builder()
                         .bucket(bucket)
